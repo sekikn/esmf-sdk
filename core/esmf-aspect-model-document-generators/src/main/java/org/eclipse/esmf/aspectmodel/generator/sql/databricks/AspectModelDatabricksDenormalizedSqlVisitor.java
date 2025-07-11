@@ -87,7 +87,8 @@ public class AspectModelDatabricksDenormalizedSqlVisitor
       databricksTypeMap = ImmutableMap.<String, DatabricksType> builder()
             .put( XSD.xstring.getURI(), DatabricksType.STRING )
             .put( XSD.xboolean.getURI(), DatabricksType.BOOLEAN )
-            .put( XSD.decimal.getURI(), new DatabricksType.DatabricksDecimal( Optional.of( config.decimalPrecision() ), Optional.of( config.decimalScale() ) ) )
+            .put( XSD.decimal.getURI(), new DatabricksType.DatabricksDecimal( Optional.of( config.decimalPrecision() ),
+                    Optional.of( config.decimalScale() ) ) )
             .put( XSD.integer.getURI(), new DatabricksType.DatabricksDecimal( Optional.of( config.decimalPrecision() ) ) )
             .put( XSD.xdouble.getURI(), DatabricksType.DOUBLE )
             .put( XSD.xfloat.getURI(), DatabricksType.FLOAT )

@@ -77,8 +77,8 @@ public class AspectModelSqlGeneratorTest {
       final Aspect aspect = TestResources.load( TestAspect.ASPECT_WITH_SIMPLE_TYPES ).aspect();
       assertThatCode( () -> {
          final DatabricksSqlGenerationConfig dialectSpecificConfig = DatabricksSqlGenerationConfigBuilder.builder()
-                 .decimalPrecision(38)
-                 .decimalScale(38)
+                 .decimalPrecision( 38 )
+                 .decimalScale( 38 )
                  .build();
          final SqlArtifact sqlArtifact = new AspectModelSqlGenerator( aspect, SqlGenerationConfigBuilder.builder()
                  .dialect( SqlGenerationConfig.Dialect.DATABRICKS )

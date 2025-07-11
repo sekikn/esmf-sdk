@@ -91,7 +91,8 @@ public class AspectToSqlCommand extends AbstractCommand {
 
    @CommandLine.Option(
            names = { "--decimal-scale", "-ds" },
-           description = "The scale to use for Databricks decimal columns, between 0 and the value of precision. (default: ${DEFAULT-VALUE})" )
+           description =
+                   "The scale to use for Databricks decimal columns, between 0 and the value of precision. (default: ${DEFAULT-VALUE})" )
    private int decimalScale = DatabricksSqlGenerationConfig.DECIMAL_DEFAULT_SCALE;
 
    @CommandLine.Option(
