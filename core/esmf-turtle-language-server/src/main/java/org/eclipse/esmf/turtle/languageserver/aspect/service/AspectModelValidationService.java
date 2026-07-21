@@ -16,6 +16,9 @@ package org.eclipse.esmf.turtle.languageserver.aspect.service;
 import java.net.URI;
 import java.util.List;
 
+import org.apache.jena.riot.RiotException;
+
+import org.eclipse.esmf.DiagnosticReport;
 import org.eclipse.esmf.aspectmodel.ValueParsingException;
 import org.eclipse.esmf.aspectmodel.loader.AspectModelLoader;
 import org.eclipse.esmf.aspectmodel.resolver.AspectModelFileLoader;
@@ -28,12 +31,10 @@ import org.eclipse.esmf.aspectmodel.validation.services.AspectModelValidator;
 import org.eclipse.esmf.turtle.languageserver.aspect.diagnostic.AspectViolationDiagnosticMapper;
 import org.eclipse.esmf.turtle.languageserver.aspect.navigation.ExternalModelFileCache;
 import org.eclipse.esmf.turtle.languageserver.lsp.ResolutionStrategyService;
-import org.eclipse.esmf.DiagnosticReport;
 import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.ResolutionStrategyAwareDiagnosticsProvider;
 import org.eclipse.esmf.turtle.languageserver.lsp.text.ParsedDocument;
 import org.eclipse.esmf.turtle.languageserver.turtle.TurtleService;
 
-import org.apache.jena.riot.RiotException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +70,7 @@ public class AspectModelValidationService extends TurtleService implements Resol
       try {
          LOG.debug( "[load] loading aspect model from {}", parsedDocument.getUri() );
          final RawAspectModelFile file =
-               AspectModelFileLoader.load( parsedDocument.turtleSyntaxTree(), URI.create( parsedDocument.getUri() ) );
+               AspectModelFileLoader.load( parsedDocument.turtleSyntaxTree(), parsedDocument.getUri() );
          final List<Violation> violations = validate( file, parsedDocument );
          logProcessingViolations( violations );
          return diagnosticMapper.mapValidationViolations( violations );
@@ -107,7 +108,7 @@ public class AspectModelValidationService extends TurtleService implements Resol
    }
 
    private AspectModelLoader loaderFor( final ParsedDocument parsedDocument ) {
-      final URI documentUri = URI.create( parsedDocument.getUri() );
+      final URI documentUri = parsedDocument.getUri();
       return documentUri.getScheme() == null
             ? new AspectModelLoader()
             : new AspectModelLoader( resolutionStrategyService.buildResolutionStrategyForDocument( parsedDocument ) );

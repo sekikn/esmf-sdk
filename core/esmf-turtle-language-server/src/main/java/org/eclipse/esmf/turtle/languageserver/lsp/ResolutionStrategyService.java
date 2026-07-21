@@ -4,8 +4,6 @@
 
 package org.eclipse.esmf.turtle.languageserver.lsp;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -16,16 +14,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.eclipse.esmf.aspectmodel.resolver.EitherStrategy;
 import org.eclipse.esmf.aspectmodel.resolver.FileSystemStrategy;
 import org.eclipse.esmf.aspectmodel.resolver.ResolutionStrategy;
-import org.eclipse.esmf.aspectmodel.resolver.exceptions.ModelResolutionException;
 import org.eclipse.esmf.aspectmodel.resolver.fs.FlatModelsRoot;
 import org.eclipse.esmf.aspectmodel.resolver.fs.StructuredModelsRoot;
 import org.eclipse.esmf.aspectmodel.resolver.github.GitHubStrategy;
 import org.eclipse.esmf.aspectmodel.resolver.github.GithubModelSourceConfig;
 import org.eclipse.esmf.turtle.languageserver.aspect.MetaModelStrategy;
-import org.eclipse.esmf.turtle.languageserver.lsp.config.LspModelResolutionConfigurationParser;
-import org.eclipse.esmf.turtle.languageserver.lsp.config.GithubResolutionConfiguration;
-import org.eclipse.esmf.turtle.languageserver.lsp.text.ParsedDocument;
 import org.eclipse.esmf.turtle.languageserver.aspect.navigation.GithubMaterializingStrategy;
+import org.eclipse.esmf.turtle.languageserver.lsp.config.GithubResolutionConfiguration;
+import org.eclipse.esmf.turtle.languageserver.lsp.config.LspModelResolutionConfigurationParser;
+import org.eclipse.esmf.turtle.languageserver.lsp.text.ParsedDocument;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,12 +44,7 @@ public class ResolutionStrategyService {
    }
 
    public ResolutionStrategy buildResolutionStrategyForDocument( final ParsedDocument parsedDocument ) {
-      final Path openFilePath;
-      try {
-         openFilePath = Path.of( new URI( parsedDocument.getUri() ) );
-      } catch ( final URISyntaxException e ) {
-         throw new ModelResolutionException( "Failed to parse URI: " + parsedDocument.getUri(), e );
-      }
+      final Path openFilePath = Path.of( parsedDocument.getUri() );
       final FileSystemStrategy structuredStrategy = new FileSystemStrategy(
             new StructuredModelsRoot( openFilePath.getParent().getParent().getParent() ) );
       final FileSystemStrategy flatStrategy = new FileSystemStrategy( new FlatModelsRoot( openFilePath.getParent() ) );

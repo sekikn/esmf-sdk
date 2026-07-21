@@ -177,8 +177,8 @@ public class AspectCrossFileDefinitionService extends TurtleService {
    }
 
    Optional<ParsedDocument> getOrLoadDocument( final Path filePath ) {
-      final String fileUri = filePath.toUri().toString();
-      final Document openDocument = openDocuments.get( fileUri );
+      final URI fileUri = filePath.toUri();
+      final Document openDocument = openDocuments.get( fileUri.toString() );
       if ( openDocument != null ) {
          return Optional.of( parserService.apply( openDocument ) );
       }

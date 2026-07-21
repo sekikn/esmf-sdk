@@ -48,7 +48,7 @@ public class AspectViolationDiagnosticMapper implements Function<List<Violation>
             .toList() );
    }
 
-   public DiagnosticReport mapParserException( final ParserException exception, final String sourceLocation ) {
+   public DiagnosticReport mapParserException( final ParserException exception, final URI sourceLocation ) {
       return new DiagnosticReport( new TurtleDocumentDiagnostic( exception.getMessage(), TurtleDiagnosticCode.E0003,
             sourceLocation, new Location( line( exception ), column( exception ), line( exception ), column( exception ) + 1 ) ) );
    }
@@ -83,7 +83,7 @@ public class AspectViolationDiagnosticMapper implements Function<List<Violation>
             Math.max( 0, violation.column() ) );
       return Optional.ofNullable( violation.location() )
             .<Diagnostic>map(
-                  location -> new AspectDocumentDiagnostic( violation.message(), code, location.toString(), diagnosticsLocation ) )
+                  location -> new AspectDocumentDiagnostic( violation.message(), code, location, diagnosticsLocation ) )
             .orElseGet( () -> new AspectDiagnostic( violation.message(), code ) );
    }
 
@@ -105,7 +105,6 @@ public class AspectViolationDiagnosticMapper implements Function<List<Violation>
          return new AspectDiagnostic( violation.message(), code );
       }
       return violation.sourceLocation()
-            .map( URI::toString )
             .<Diagnostic>map( sourceLocation -> new AspectDocumentDiagnostic( violation.message(), code, sourceLocation, location ) )
             .orElseGet( () -> new AspectDiagnostic( violation.message(), code ) );
    }

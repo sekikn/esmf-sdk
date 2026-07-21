@@ -44,13 +44,13 @@ public final class DiagnosticMapper {
          diagnostic.setMessage( lspDiagnostic.message() );
          diagnostic.setCode( lspDiagnostic.code().code() );
          if ( lspDiagnostic instanceof final DocumentDiagnostic documentDiagnostic ) {
-            if ( documentDiagnostic.sourceLocation().equals( sourceDocument.uri() ) ) {
+            if ( documentDiagnostic.sourceDocument().equals( sourceDocument.uri() ) ) {
                diagnostic.setRange( toRange( documentDiagnostic ) );
             } else {
                final DiagnosticRelatedInformation relatedInformation = new DiagnosticRelatedInformation();
                relatedInformation.setMessage( "Root cause of the problem is here" );
                final Location relatedLocation = new Location();
-               relatedLocation.setUri( documentDiagnostic.sourceLocation() );
+               relatedLocation.setUri( documentDiagnostic.sourceDocument().toString() );
                relatedLocation.setRange( toRange( documentDiagnostic ) );
                relatedInformation.setLocation( relatedLocation );
                diagnostic.setRelatedInformation( List.of( relatedInformation ) );
@@ -59,7 +59,7 @@ public final class DiagnosticMapper {
          } else {
             diagnostic.setRange( FALLBACK );
          }
-         result.computeIfAbsent( URI.create( sourceDocument.uri() ), _ -> new ArrayList<>() ).add( diagnostic );
+         result.computeIfAbsent( sourceDocument.uri(), _ -> new ArrayList<>() ).add( diagnostic );
       }
       return result;
    }

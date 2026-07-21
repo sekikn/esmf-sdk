@@ -13,6 +13,8 @@
 
 package org.eclipse.esmf.turtle.languageserver.aspect.diagnostic;
 
+import java.net.URI;
+
 import org.eclipse.esmf.Diagnostic;
 import org.eclipse.esmf.DocumentDiagnostic;
 import org.eclipse.esmf.Location;
@@ -20,12 +22,12 @@ import org.eclipse.esmf.Location;
 public record AspectDocumentDiagnostic(
       String message,
       AspectDiagnosticCode code,
-      String sourceLocation,
+      URI sourceDocument,
       Location location,
       Diagnostic.Severity severity
 ) implements DocumentDiagnostic {
    public AspectDocumentDiagnostic( final String message, final AspectDiagnosticCode code,
-         final String sourceLocation, final Location location ) {
-      this( message, code, sourceLocation, location, Diagnostic.Severity.ERROR );
+         final URI sourceDocument, final Location location ) {
+      this( message, code, sourceDocument, location, Diagnostic.Severity.ERROR );
    }
 }

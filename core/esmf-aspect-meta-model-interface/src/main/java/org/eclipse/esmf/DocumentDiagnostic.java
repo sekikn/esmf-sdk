@@ -13,6 +13,8 @@
 
 package org.eclipse.esmf;
 
+import java.net.URI;
+
 /**
  * A diagnostic that refers to a specific location within a document. This interface extends the
  * base Diagnostic interface and adds methods to retrieve the source location of the document and
@@ -24,7 +26,7 @@ public interface DocumentDiagnostic extends Diagnostic {
     *
     * @return the document source location
     */
-   String sourceLocation();
+   URI sourceDocument();
 
    /**
     * The location within the document this diagnostic refers to

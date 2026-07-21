@@ -13,6 +13,8 @@
 
 package org.eclipse.esmf.treesitterturtle;
 
+import java.net.URI;
+
 import org.eclipse.esmf.Diagnostic;
 import org.eclipse.esmf.DocumentDiagnostic;
 import org.eclipse.esmf.Location;
@@ -20,12 +22,12 @@ import org.eclipse.esmf.Location;
 public record TurtleDocumentDiagnostic(
       String message,
       TurtleDiagnosticCode code,
-      String sourceLocation,
+      URI sourceDocument,
       Location location,
       Diagnostic.Severity severity
 ) implements DocumentDiagnostic {
    public TurtleDocumentDiagnostic( final String message, final TurtleDiagnosticCode code,
-         final String sourceLocation, final Location location ) {
-      this( message, code, sourceLocation, location, Severity.ERROR );
+         final URI sourceDocument, final Location location ) {
+      this( message, code, sourceDocument, location, Severity.ERROR );
    }
 }

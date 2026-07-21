@@ -13,6 +13,7 @@
 
 package org.eclipse.esmf.turtle.languageserver.lsp.text;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -22,16 +23,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.eclipse.esmf.DiagnosticReport;
+import org.eclipse.esmf.turtle.languageserver.aspect.navigation.AspectCrossFileDefinitionService;
 import org.eclipse.esmf.turtle.languageserver.lsp.ResolutionStrategyService;
 import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.DiagnosticMapper;
-import org.eclipse.esmf.DiagnosticReport;
 import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.DiagnosticsProvider;
 import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.ResolutionStrategyAwareDiagnosticsProvider;
 import org.eclipse.esmf.turtle.languageserver.structure.DocumentSymbolService;
 import org.eclipse.esmf.turtle.languageserver.structure.TurtleTokenService;
 import org.eclipse.esmf.turtle.languageserver.turtle.TurtleCompletionService;
 import org.eclipse.esmf.turtle.languageserver.turtle.ValidationCoordinator;
-import org.eclipse.esmf.turtle.languageserver.aspect.navigation.AspectCrossFileDefinitionService;
 import org.eclipse.esmf.turtle.languageserver.turtle.navigation.TurtleDefinitionService;
 
 import org.eclipse.lsp4j.CompletionItem;
@@ -89,7 +90,7 @@ public class TurtleTextDocumentService implements TextDocumentService {
       final List<DiagnosticsProvider> diagnosticsProviders =
             Streams.stream( ServiceLoader.load( DiagnosticsProvider.class ).iterator() ).toList();
       diagnosticsProviders.forEach( provider -> {
-         if ( provider instanceof ResolutionStrategyAwareDiagnosticsProvider aware ) {
+         if ( provider instanceof final ResolutionStrategyAwareDiagnosticsProvider aware ) {
             aware.setResolutionStrategyService( resolutionStrategyService );
          }
       } );
@@ -123,7 +124,7 @@ public class TurtleTextDocumentService implements TextDocumentService {
       final String uri = params.getTextDocument().getUri();
       final String content = params.getTextDocument().getText();
       LOG.info( "[didOpen] uri={}, contentLength={}", uri, content.length() );
-      final Document document = new Document( uri, content );
+      final Document document = new Document( URI.create( uri ), content );
       documents.put( uri, document );
       turtleParserService.onOpen( document );
       final ParsedDocument parsedDocument = turtleParserService.apply( document );

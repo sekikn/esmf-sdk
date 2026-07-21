@@ -13,6 +13,7 @@
 
 package org.eclipse.esmf.turtle.languageserver.turtle;
 
+import java.net.URI;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -33,13 +34,13 @@ public class TurtleSyntaxDiagnosticsService implements DiagnosticsProvider {
             parsedDocument.sourceDocument().uri() ).toList() );
    }
 
-   private Stream<Diagnostic> checkNode( final TSNode node, final String sourceLocation ) {
+   private Stream<Diagnostic> checkNode( final TSNode node, final URI sourceLocation ) {
       return Stream.concat( node.isError() || node.isMissing() ? Stream.of( diagnosticForNode( node, sourceLocation ) ) : Stream.empty(),
             IntStream.range( 0, node.getChildCount() ).boxed().map( node::getChild )
                   .flatMap( child -> checkNode( child, sourceLocation ) ) );
    }
 
-   private TurtleDocumentDiagnostic diagnosticForNode( final TSNode node, final String sourceLocation ) {
+   private TurtleDocumentDiagnostic diagnosticForNode( final TSNode node, final URI sourceLocation ) {
       final String message;
       if ( node.isMissing() ) {
          message = "Syntax error: Missing '" + node.getGrammarType() + "'";

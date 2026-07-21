@@ -19,6 +19,7 @@ import java.net.URI;
 import java.util.List;
 
 import org.eclipse.esmf.Diagnostic;
+import org.eclipse.esmf.DiagnosticReport;
 import org.eclipse.esmf.aspectmodel.resolver.exceptions.ParserException;
 import org.eclipse.esmf.aspectmodel.shacl.violation.Violation;
 import org.eclipse.esmf.aspectmodel.validation.InvalidLexicalValueViolation;
@@ -27,7 +28,6 @@ import org.eclipse.esmf.aspectmodel.validation.ProcessingViolation;
 import org.eclipse.esmf.treesitterturtle.TurtleDiagnostic;
 import org.eclipse.esmf.treesitterturtle.TurtleDiagnosticCode;
 import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.DiagnosticMapper;
-import org.eclipse.esmf.DiagnosticReport;
 import org.eclipse.esmf.turtle.languageserver.lsp.text.Document;
 
 import org.eclipse.lsp4j.DiagnosticSeverity;
@@ -151,7 +151,7 @@ class AspectViolationDiagnosticMapperTest {
       final ParserException exception = new ParserException( 3, 5, "Triples not terminated by DOT", "source",
             URI.create( "test.ttl" ) );
 
-      final DiagnosticReport report = mapper.mapParserException( exception, "test.ttl" );
+      final DiagnosticReport report = mapper.mapParserException( exception, URI.create( "test.ttl" ) );
 
       assertThat( report.diagnostics() ).singleElement()
             .satisfies( diagnostic -> {

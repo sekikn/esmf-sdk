@@ -14,6 +14,7 @@
 package org.eclipse.esmf.turtle.languageserver.lsp.text;
 
 import java.io.InputStream;
+import java.net.URI;
 
 import org.eclipse.esmf.Location;
 import org.eclipse.esmf.treesitterturtle.TurtleSyntaxTree;
@@ -26,15 +27,19 @@ import org.jspecify.annotations.Nullable;
  * Implementation of a document based on a {@link Rope}.
  */
 public class Document implements TurtleSyntaxTree.TokenProvider {
-   private final String uri;
+   private final URI uri;
    private Rope content;
 
    public Document( final String uri, final String initialContent ) {
+      this( URI.create( uri ), initialContent );
+   }
+
+   public Document( final URI uri, final String initialContent ) {
       this.uri = uri;
       content = new Rope( initialContent );
    }
 
-   public String uri() {
+   public URI uri() {
       return uri;
    }
 
