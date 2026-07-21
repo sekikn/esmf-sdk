@@ -17,10 +17,10 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.eclipse.esmf.Diagnostic;
+import org.eclipse.esmf.DiagnosticReport;
 import org.eclipse.esmf.Location;
 import org.eclipse.esmf.treesitterturtle.TurtleDiagnosticCode;
 import org.eclipse.esmf.treesitterturtle.TurtleDocumentDiagnostic;
-import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.DiagnosticReport;
 import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.DiagnosticsProvider;
 import org.eclipse.esmf.turtle.languageserver.lsp.text.ParsedDocument;
 
@@ -33,7 +33,7 @@ public class TurtleSyntaxDiagnosticsService implements DiagnosticsProvider {
             parsedDocument.sourceDocument().uri() ).toList() );
    }
 
-   private Stream<Diagnostic<?>> checkNode( final TSNode node, final String sourceLocation ) {
+   private Stream<Diagnostic> checkNode( final TSNode node, final String sourceLocation ) {
       return Stream.concat( node.isError() || node.isMissing() ? Stream.of( diagnosticForNode( node, sourceLocation ) ) : Stream.empty(),
             IntStream.range( 0, node.getChildCount() ).boxed().map( node::getChild )
                   .flatMap( child -> checkNode( child, sourceLocation ) ) );

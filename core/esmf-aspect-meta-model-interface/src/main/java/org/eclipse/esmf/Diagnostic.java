@@ -6,16 +6,14 @@ package org.eclipse.esmf;
 
 /**
  * Generic diagnostic interface representing a problem found during document processing.
- *
- * @param <C> the concrete code type used to classify this diagnostic
  */
-public interface Diagnostic<C extends Diagnostic.Code> {
+public interface Diagnostic {
    /**
     * The code identifying this diagnostic
     *
     * @return the code
     */
-   C code();
+   Diagnostic.Code code();
 
    /**
     * The human-readable message for this diagnostic
@@ -30,15 +28,6 @@ public interface Diagnostic<C extends Diagnostic.Code> {
     * @return the severity
     */
    Severity severity();
-
-   /**
-    * Indicates whether this diagnostic is related to a certain location in a document
-    *
-    * @return true if it is related to a certain location
-    */
-   default boolean hasLocation() {
-      return false;
-   }
 
    /**
     * Identifies the kind of problem.

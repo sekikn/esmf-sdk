@@ -17,10 +17,8 @@ package org.eclipse.esmf;
  * A diagnostic that refers to a specific location within a document. This interface extends the
  * base Diagnostic interface and adds methods to retrieve the source location of the document and
  * the specific location within that document that the diagnostic refers to.
- *
- * @param <C> the type of diagnostics code
  */
-public interface DocumentDiagnostic<C extends Diagnostic.Code> extends Diagnostic<C> {
+public interface DocumentDiagnostic extends Diagnostic {
    /**
     * Identifier for the location of the document which this diagnostic refers to
     *
@@ -34,9 +32,4 @@ public interface DocumentDiagnostic<C extends Diagnostic.Code> extends Diagnosti
     * @return the location within the document
     */
    Location location();
-
-   @Override
-   default boolean hasLocation() {
-      return true;
-   }
 }

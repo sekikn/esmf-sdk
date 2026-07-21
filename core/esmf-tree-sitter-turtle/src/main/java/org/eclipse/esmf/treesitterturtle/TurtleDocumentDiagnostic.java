@@ -23,7 +23,7 @@ public record TurtleDocumentDiagnostic(
       String sourceLocation,
       Location location,
       Diagnostic.Severity severity
-) implements DocumentDiagnostic<TurtleDiagnosticCode> {
+) implements DocumentDiagnostic {
    public TurtleDocumentDiagnostic( final String message, final TurtleDiagnosticCode code,
          final String sourceLocation, final Location location ) {
       this( message, code, sourceLocation, location, Severity.ERROR );

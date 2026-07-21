@@ -23,7 +23,7 @@ public record AspectDocumentDiagnostic(
       String sourceLocation,
       Location location,
       Diagnostic.Severity severity
-) implements DocumentDiagnostic<AspectDiagnosticCode> {
+) implements DocumentDiagnostic {
    public AspectDocumentDiagnostic( final String message, final AspectDiagnosticCode code,
          final String sourceLocation, final Location location ) {
       this( message, code, sourceLocation, location, Diagnostic.Severity.ERROR );

@@ -16,7 +16,7 @@ package org.eclipse.esmf.turtle.languageserver.lsp.text;
 import java.util.List;
 
 import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.DiagnosticMapper;
-import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.DiagnosticReport;
+import org.eclipse.esmf.DiagnosticReport;
 
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.services.LanguageClient;

@@ -19,7 +19,7 @@ public record AspectDiagnostic(
       String message,
       AspectDiagnosticCode code,
       Diagnostic.Severity severity
-) implements Diagnostic<AspectDiagnosticCode> {
+) implements Diagnostic {
    public AspectDiagnostic( final String message, final AspectDiagnosticCode code ) {
       this( message, code, Severity.ERROR );
    }

@@ -21,6 +21,7 @@ import java.util.function.Function;
 import org.apache.jena.rdf.model.RDFNode;
 
 import org.eclipse.esmf.Diagnostic;
+import org.eclipse.esmf.DiagnosticReport;
 import org.eclipse.esmf.Location;
 import org.eclipse.esmf.aspectmodel.ValueParsingException;
 import org.eclipse.esmf.aspectmodel.resolver.exceptions.ParserException;
@@ -32,7 +33,6 @@ import org.eclipse.esmf.aspectmodel.validation.InvalidSyntaxViolation;
 import org.eclipse.esmf.aspectmodel.validation.ProcessingViolation;
 import org.eclipse.esmf.treesitterturtle.TurtleDiagnosticCode;
 import org.eclipse.esmf.treesitterturtle.TurtleDocumentDiagnostic;
-import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.DiagnosticReport;
 
 public class AspectViolationDiagnosticMapper implements Function<List<Violation>, DiagnosticReport> {
    public static final String PROCESSING_ERROR_MESSAGE = "Model validation failed. See language server logs for details.";
@@ -44,7 +44,7 @@ public class AspectViolationDiagnosticMapper implements Function<List<Violation>
 
    public DiagnosticReport mapValidationViolations( final List<Violation> violations ) {
       return new DiagnosticReport( violations.stream()
-            .<Diagnostic<?>>flatMap( violation -> mapViolation( violation ).stream() )
+            .<Diagnostic>flatMap( violation -> mapViolation( violation ).stream() )
             .toList() );
    }
 
@@ -62,7 +62,7 @@ public class AspectViolationDiagnosticMapper implements Function<List<Violation>
             new AspectDiagnostic( PROCESSING_ERROR_MESSAGE, new AspectDiagnosticCode( ProcessingViolation.ERROR_CODE ) ) );
    }
 
-   private Optional<Diagnostic<AspectDiagnosticCode>> mapViolation( final Violation violation ) {
+   private Optional<Diagnostic> mapViolation( final Violation violation ) {
       if ( violation instanceof InvalidSyntaxViolation ) {
          return Optional.empty();
       }
@@ -75,31 +75,27 @@ public class AspectViolationDiagnosticMapper implements Function<List<Violation>
       return Optional.of( mapSemanticViolation( violation ) );
    }
 
-   private Diagnostic<AspectDiagnosticCode> mapLexicalViolation( final InvalidLexicalValueViolation violation ) {
+   private Diagnostic mapLexicalViolation( final InvalidLexicalValueViolation violation ) {
       final AspectDiagnosticCode code = new AspectDiagnosticCode( InvalidLexicalValueViolation.ERROR_CODE );
       final Location diagnosticsLocation = new Location( Math.max( 0, violation.line() - 1 ),
             Math.max( 0, violation.column() - 1 ),
             Math.max( 0, violation.line() - 1 ),
             Math.max( 0, violation.column() ) );
       return Optional.ofNullable( violation.location() )
-            .<Diagnostic<AspectDiagnosticCode>>map( location -> new AspectDocumentDiagnostic(
-                  violation.message(),
-                  code,
-                  location.toString(),
-                  diagnosticsLocation
-            ) )
+            .<Diagnostic>map(
+                  location -> new AspectDocumentDiagnostic( violation.message(), code, location.toString(), diagnosticsLocation ) )
             .orElseGet( () -> new AspectDiagnostic( violation.message(), code ) );
    }
 
-   private Diagnostic<AspectDiagnosticCode> mapProcessingViolation( final ProcessingViolation violation ) {
+   private Diagnostic mapProcessingViolation( final ProcessingViolation violation ) {
       return mapViolationWithOptionalLocation( violation, new AspectDiagnosticCode( ProcessingViolation.ERROR_CODE ) );
    }
 
-   private Diagnostic<AspectDiagnosticCode> mapSemanticViolation( final Violation violation ) {
+   private Diagnostic mapSemanticViolation( final Violation violation ) {
       return mapViolationWithOptionalLocation( violation, new AspectDiagnosticCode( violation.errorCode() ) );
    }
 
-   private Diagnostic<AspectDiagnosticCode> mapViolationWithOptionalLocation( final Violation violation, final AspectDiagnosticCode code ) {
+   private Diagnostic mapViolationWithOptionalLocation( final Violation violation, final AspectDiagnosticCode code ) {
       final Location location = Optional.ofNullable( violation.highlight() )
             .map( RDFNode::asNode )
             .flatMap( TokenRegistry::getToken )
@@ -110,12 +106,7 @@ public class AspectViolationDiagnosticMapper implements Function<List<Violation>
       }
       return violation.sourceLocation()
             .map( URI::toString )
-            .<Diagnostic<AspectDiagnosticCode>>map( sourceLocation -> new AspectDocumentDiagnostic(
-                  violation.message(),
-                  code,
-                  sourceLocation,
-                  location
-            ) )
+            .<Diagnostic>map( sourceLocation -> new AspectDocumentDiagnostic( violation.message(), code, sourceLocation, location ) )
             .orElseGet( () -> new AspectDiagnostic( violation.message(), code ) );
    }
 

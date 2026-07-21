@@ -36,14 +36,14 @@ import org.eclipse.lsp4j.Range;
 public final class DiagnosticMapper {
    private static final Range FALLBACK = new Range( new Position( 0, 0 ), new Position( 0, 0 ) );
 
-   public Map<URI, List<Diagnostic>> apply( final Document sourceDocument, final DiagnosticReport report ) {
+   public Map<URI, List<Diagnostic>> apply( final Document sourceDocument, final org.eclipse.esmf.DiagnosticReport report ) {
       final Map<URI, List<Diagnostic>> result = new HashMap<>();
-      for ( final org.eclipse.esmf.Diagnostic<?> lspDiagnostic : report.diagnostics() ) {
+      for ( final org.eclipse.esmf.Diagnostic lspDiagnostic : report.diagnostics() ) {
          final Diagnostic diagnostic = new Diagnostic();
          diagnostic.setSeverity( toDiagnosticSeverity( lspDiagnostic.severity() ) );
          diagnostic.setMessage( lspDiagnostic.message() );
          diagnostic.setCode( lspDiagnostic.code().code() );
-         if ( lspDiagnostic instanceof final DocumentDiagnostic<?> documentDiagnostic ) {
+         if ( lspDiagnostic instanceof final DocumentDiagnostic documentDiagnostic ) {
             if ( documentDiagnostic.sourceLocation().equals( sourceDocument.uri() ) ) {
                diagnostic.setRange( toRange( documentDiagnostic ) );
             } else {
@@ -73,7 +73,7 @@ public final class DiagnosticMapper {
       };
    }
 
-   private Range toRange( final DocumentDiagnostic<?> diagnostic ) {
+   private Range toRange( final DocumentDiagnostic diagnostic ) {
       return new Range( new Position( diagnostic.location().fromLine(), diagnostic.location().fromColumn() ),
             new Position( diagnostic.location().toLine(), diagnostic.location().toColumn() ) );
    }

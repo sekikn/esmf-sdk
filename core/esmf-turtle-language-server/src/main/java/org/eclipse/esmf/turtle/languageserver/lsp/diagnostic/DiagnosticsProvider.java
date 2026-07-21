@@ -26,7 +26,7 @@ public interface DiagnosticsProvider {
     * @param document the document
     * @return the corresponding diagnostics report
     */
-   DiagnosticReport validate( ParsedDocument document );
+   org.eclipse.esmf.DiagnosticReport validate( ParsedDocument document );
 
    /**
     * The diagnostics provider can either be "fast" where it can be executed immediately on every model

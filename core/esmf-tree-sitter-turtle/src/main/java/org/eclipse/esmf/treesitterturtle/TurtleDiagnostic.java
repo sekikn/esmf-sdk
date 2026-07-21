@@ -19,7 +19,7 @@ public record TurtleDiagnostic(
       String message,
       TurtleDiagnosticCode code,
       Diagnostic.Severity severity
-) implements Diagnostic<TurtleDiagnosticCode> {
+) implements Diagnostic {
    public TurtleDiagnostic( final String message, final TurtleDiagnosticCode code ) {
       this( message, code, Severity.ERROR );
    }

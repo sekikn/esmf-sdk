@@ -11,20 +11,18 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package org.eclipse.esmf.turtle.languageserver.lsp.diagnostic;
+package org.eclipse.esmf;
 
 import java.util.List;
-
-import org.eclipse.esmf.Diagnostic;
 
 import com.google.common.collect.Streams;
 
 public record DiagnosticReport(
-      List<Diagnostic<?>> diagnostics
+      List<Diagnostic> diagnostics
 ) {
    public static final DiagnosticReport EMPTY = new DiagnosticReport( List.of() );
 
-   public DiagnosticReport( final Diagnostic<?> diagnostic ) {
+   public DiagnosticReport( final Diagnostic diagnostic ) {
       this( List.of( diagnostic ) );
    }
 
