@@ -16,21 +16,24 @@ package org.eclipse.esmf.aspectmodel.validation;
 import java.net.URI;
 import java.util.Optional;
 
+import org.eclipse.esmf.DocumentDiagnostic;
+import org.eclipse.esmf.Location;
 import org.eclipse.esmf.aspectmodel.shacl.violation.EvaluationContext;
 import org.eclipse.esmf.aspectmodel.shacl.violation.Violation;
+
+import org.jspecify.annotations.Nullable;
 
 /**
  * Meta violation: Syntax error in source file
  *
  * @param violationSpecificMessage the message for this violation
- * @param line the line in the source file
- * @param column the column in the source file
- * @param location the source location of the violation
+ * @param source the source code of the source document
+ * @param location the location in the source file
+ * @param sourceDocument the source location of the violation
  */
 public record InvalidSyntaxViolation(
-      String violationSpecificMessage, String source, long line, long column, URI location
-)
-      implements Violation {
+      String violationSpecificMessage, String source, Location location, URI sourceDocument
+) implements Violation, DocumentDiagnostic {
    public static final String ERROR_CODE = "ERR_SYNTAX";
 
    @Override
@@ -39,7 +42,7 @@ public record InvalidSyntaxViolation(
    }
 
    @Override
-   public EvaluationContext context() {
+   public @Nullable EvaluationContext context() {
       return null;
    }
 
@@ -50,7 +53,7 @@ public record InvalidSyntaxViolation(
 
    @Override
    public Optional<URI> sourceLocation() {
-      return Optional.of( location() );
+      return Optional.of( sourceDocument() );
    }
 
    @Override

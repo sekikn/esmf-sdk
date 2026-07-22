@@ -26,4 +26,8 @@ public record Location(
       int fromColumn,
       int toLine,
       int toColumn
-) {}
+) {
+   public Location( final int fromLine, final int fromColumn ) {
+      this( fromLine, fromColumn, fromLine, fromColumn );
+   }
+}

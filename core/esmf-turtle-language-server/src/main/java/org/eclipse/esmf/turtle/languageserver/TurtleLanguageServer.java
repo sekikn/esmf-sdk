@@ -77,7 +77,6 @@ public class TurtleLanguageServer implements LanguageServer, LanguageClientAware
       capabilities.setSemanticTokensProvider(
             new SemanticTokensWithRegistrationOptions( TurtleTokenService.SUPPORTED_TOKEN_TYPES, true, false ) );
       capabilities.setDocumentSymbolProvider( new DocumentSymbolOptions( "Turtle Document Symbols" ) );
-
       return CompletableFuture.completedFuture( new InitializeResult( capabilities ) );
    }
 

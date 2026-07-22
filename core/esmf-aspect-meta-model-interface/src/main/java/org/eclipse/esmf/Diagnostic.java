@@ -27,7 +27,9 @@ public interface Diagnostic {
     *
     * @return the severity
     */
-   Severity severity();
+   default Severity severity() {
+      return Severity.ERROR;
+   }
 
    /**
     * Identifies the kind of problem.

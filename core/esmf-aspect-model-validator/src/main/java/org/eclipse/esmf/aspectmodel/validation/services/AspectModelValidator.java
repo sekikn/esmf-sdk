@@ -27,6 +27,7 @@ import org.apache.jena.query.ARQ;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 
+import org.eclipse.esmf.Location;
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
 import org.eclipse.esmf.aspectmodel.RdfUtil;
 import org.eclipse.esmf.aspectmodel.ValueParsingException;
@@ -104,9 +105,9 @@ public class AspectModelValidator implements Validator<Violation, List<Violation
          return Either.right( model );
       } catch ( final ParserException exception ) {
          // Regular syntax errors
+         final Location location = new Location( (int) exception.getLine() - 1, (int) exception.getColumn() - 1 );
          return Either.left( List.of( new InvalidSyntaxViolation(
-               exception.getMessage(), exception.getSourceDocument(), exception.getLine(), exception.getColumn(),
-               exception.getSourceLocation() ) ) );
+               exception.getMessage(), exception.getSourceDocument(), location, exception.getSourceLocation() ) ) );
       } catch ( final ValueParsingException exception ) {
          // Failure to parse value literals
          final String sourceLine = exception.getSourceDocument().lines().toList().get( (int) exception.getLine() - 1 );

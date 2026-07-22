@@ -87,7 +87,7 @@ class AspectDocumentValidationServiceTest {
       final DiagnosticReport report = service.validate( parsedDocument( TestAspect.ASPECT ) );
       assertThat( report.diagnostics() ).singleElement()
             .satisfies( diagnostic -> {
-               assertThat( diagnostic.code().code() ).isEqualTo( TurtleDiagnosticCode.E0003.code() );
+               assertThat( diagnostic.code().code() ).isEqualTo( TurtleDiagnosticCode.ERR_SYNTAX.code() );
                assertThat( diagnostic.message() ).isEqualTo( "Triples not terminated by DOT" );
             } );
    }

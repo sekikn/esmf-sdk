@@ -19,6 +19,12 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.vocabulary.XSD;
+
 import org.eclipse.esmf.aspectmodel.loader.AspectModelLoader;
 import org.eclipse.esmf.aspectmodel.resolver.modelfile.MetaModelFile;
 import org.eclipse.esmf.aspectmodel.shacl.fix.Fix;
@@ -36,15 +42,11 @@ import org.eclipse.esmf.test.TestAspect;
 import org.eclipse.esmf.test.TestProperty;
 import org.eclipse.esmf.test.TestResources;
 
-import io.vavr.control.Either;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.vocabulary.XSD;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+
+import io.vavr.control.Either;
 
 class AspectModelValidatorTest {
    AspectModelValidator validator = new AspectModelValidator();
@@ -175,8 +177,8 @@ class AspectModelValidatorTest {
       final List<Violation> violations = validator.validateModel( invalidTurtleSyntax );
       assertThat( violations ).hasSize( 1 );
       final InvalidSyntaxViolation violation = (InvalidSyntaxViolation) violations.getFirst();
-      assertThat( violation.line() ).isEqualTo( 17 );
-      assertThat( violation.column() ).isEqualTo( 4 );
+      assertThat( violation.location().fromLine() ).isEqualTo( 17 );
+      assertThat( violation.location().fromColumn() ).isEqualTo( 4 );
       assertThat( violation.violationSpecificMessage() ).contains( "Triples not terminated by DOT" );
    }
 
@@ -194,8 +196,8 @@ class AspectModelValidatorTest {
       final List<Violation> violations = validator.validateModel( invalidTurtleSyntax );
       assertThat( violations ).hasSize( 1 );
       final InvalidSyntaxViolation violation = (InvalidSyntaxViolation) violations.getFirst();
-      assertThat( violation.line() ).isEqualTo( 12 );
-      assertThat( violation.column() ).isEqualTo( 1 );
+      assertThat( violation.location().fromLine() ).isEqualTo( 12 );
+      assertThat( violation.location().fromColumn() ).isEqualTo( 1 );
       assertThat( violation.violationSpecificMessage() ).contains( "Not implemented (formulae, graph literals)" );
    }
 

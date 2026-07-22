@@ -21,6 +21,12 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.apache.jena.rdf.model.Literal;
+import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.vocabulary.XSD;
+
 import org.eclipse.esmf.aspectmodel.RdfUtil;
 import org.eclipse.esmf.aspectmodel.resolver.exceptions.ModelResolutionException;
 import org.eclipse.esmf.aspectmodel.shacl.Shape;
@@ -82,12 +88,6 @@ import org.eclipse.esmf.aspectmodel.validation.InvalidLexicalValueViolation;
 import org.eclipse.esmf.aspectmodel.validation.InvalidSyntaxViolation;
 import org.eclipse.esmf.aspectmodel.validation.ProcessingViolation;
 import org.eclipse.esmf.aspectmodel.validation.RegularExpressionConstraintViolation;
-
-import org.apache.jena.rdf.model.Literal;
-import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.vocabulary.XSD;
 
 /**
  * Formats one or multiple {@link Violation}s in a human-readable way and provides detailed
@@ -265,10 +265,11 @@ public class DetailedViolationFormatter extends ViolationFormatter {
     */
    @Override
    public String visitInvalidSyntaxViolation( final InvalidSyntaxViolation violation ) {
-      return formatViolation( violation, () -> String.format( "line: %d%n", violation.line() )
-            + String.format( "column: %d%n", violation.column() )
+      return formatViolation( violation, () -> String.format( "line: %d%n", violation.location().fromLine() + 1 )
+            + String.format( "column: %d%n", violation.location().fromColumn() + 1 )
             + String.format( "source-context: |%n" )
-            + formatSourceLines( sourceContext( violation.source(), violation.line() ), violation.line() ) );
+            + formatSourceLines( sourceContext( violation.source(), violation.location().fromLine() + 1 ),
+                  violation.location().fromLine() + 1 ) );
    }
 
    protected String formatSourceLines( final Map<Integer, String> lines, final long focusLine ) {

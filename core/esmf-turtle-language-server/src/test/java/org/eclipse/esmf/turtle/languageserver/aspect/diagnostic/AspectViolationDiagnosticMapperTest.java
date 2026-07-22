@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.eclipse.esmf.Diagnostic;
 import org.eclipse.esmf.DiagnosticReport;
+import org.eclipse.esmf.Location;
 import org.eclipse.esmf.aspectmodel.resolver.exceptions.ParserException;
 import org.eclipse.esmf.aspectmodel.shacl.violation.Violation;
 import org.eclipse.esmf.aspectmodel.validation.InvalidLexicalValueViolation;
@@ -40,7 +41,7 @@ class AspectViolationDiagnosticMapperTest {
    void ignoresInvalidSyntaxViolationFromSemanticDiagnostics() {
       final AspectViolationDiagnosticMapper mapper = new AspectViolationDiagnosticMapper();
       final InvalidSyntaxViolation violation = new InvalidSyntaxViolation(
-            "broken syntax", "source", 3, 5, URI.create( "test.ttl" ) );
+            "broken syntax", "source", new Location( 3, 5 ), URI.create( "test.ttl" ) );
 
       final DiagnosticReport report = mapper.mapValidationViolations( List.of( violation ) );
 
@@ -155,7 +156,7 @@ class AspectViolationDiagnosticMapperTest {
 
       assertThat( report.diagnostics() ).singleElement()
             .satisfies( diagnostic -> {
-               assertThat( diagnostic.code().code() ).isEqualTo( TurtleDiagnosticCode.E0003.code() );
+               assertThat( diagnostic.code().code() ).isEqualTo( TurtleDiagnosticCode.ERR_SYNTAX.code() );
                assertThat( diagnostic.message() ).isEqualTo( "Triples not terminated by DOT" );
             } );
    }
@@ -203,7 +204,7 @@ class AspectViolationDiagnosticMapperTest {
       final DiagnosticMapper mapper = new DiagnosticMapper();
       final Document document = new Document( "test.ttl", "" );
       final DiagnosticReport report = new DiagnosticReport( new TurtleDiagnostic(
-            "warning", TurtleDiagnosticCode.E0000, Diagnostic.Severity.WARNING ) );
+            "warning", TurtleDiagnosticCode.ERR_UNCATEGORIZED, Diagnostic.Severity.WARNING ) );
 
       final List<org.eclipse.lsp4j.Diagnostic> diagnostics = mapper.apply( document, report ).entrySet().iterator().next().getValue();
 
@@ -217,7 +218,7 @@ class AspectViolationDiagnosticMapperTest {
       final DiagnosticMapper mapper = new DiagnosticMapper();
       final Document document = new Document( "test.ttl", "" );
       final DiagnosticReport report = new DiagnosticReport( new TurtleDiagnostic(
-            "warning", TurtleDiagnosticCode.E0000, Diagnostic.Severity.WARNING ) );
+            "warning", TurtleDiagnosticCode.ERR_UNCATEGORIZED, Diagnostic.Severity.WARNING ) );
 
       final List<org.eclipse.lsp4j.Diagnostic> diagnostics = mapper.apply( document, report ).entrySet().iterator().next().getValue();
 

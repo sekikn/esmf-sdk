@@ -116,16 +116,16 @@ public class ViolationFormatter implements Function<List<Violation>, String>, Vi
             final String enhancedMessage = String.format( "[%s] %s", errorCode, violation.message() );
             builder.append( String.format( "> %s%n", enhancedMessage ) );
             // Add documentation link for context-free violations
-            builder.append( ERROR_CODES_DOC_STRING
-                  + errorCode.toLowerCase().replace( "_", "-" ) );
+            builder.append( ERROR_CODES_DOC_STRING )
+                  .append( errorCode.toLowerCase().replace( "_", "-" ) );
          } else {
             final String errorCode = violation.errorCode();
             final String enhancedMessage = String.format( "[%s] %s", errorCode, violation.message() );
             builder.append( String.format( "> %s: %n", enhancedMessage ) );
             builder.append( indent( violation.accept( this ), 2 ) ).append( System.lineSeparator() );
             // Add documentation link
-            builder.append( ERROR_CODES_DOC_STRING
-                  + errorCode.toLowerCase().replace( "_", "-" ) );
+            builder.append( ERROR_CODES_DOC_STRING )
+                  .append( errorCode.toLowerCase().replace( "_", "-" ) );
          }
          builder.append( System.lineSeparator() );
       }
@@ -199,8 +199,8 @@ public class ViolationFormatter implements Function<List<Violation>, String>, Vi
 
    @Override
    public String visitInvalidSyntaxViolation( final InvalidSyntaxViolation violation ) {
-      return formatter.formatError( 1, sourceContext( violation.source(), violation.line() ),
-            (int) violation.line(), (int) violation.column() - 1,
+      return formatter.formatError( 1, sourceContext( violation.source(), violation.location().fromLine() + 1 ),
+            violation.location().fromLine() + 1, violation.location().fromColumn(),
             violation.violationSpecificMessage(), violation.sourceLocation() );
    }
 

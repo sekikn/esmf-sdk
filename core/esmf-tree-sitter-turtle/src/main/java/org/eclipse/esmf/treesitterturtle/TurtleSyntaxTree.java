@@ -205,9 +205,9 @@ public class TurtleSyntaxTree {
             .map( child -> nodeForTsNode( child, content ) )
             .toList();
       if ( inputNode.isError() ) {
-         return new Error( inputNode.getType(), TurtleDiagnosticCode.E0003, location, children );
+         return new Error( inputNode.getType(), TurtleDiagnosticCode.ERR_SYNTAX, location, children );
       } else if ( inputNode.isMissing() ) {
-         return new Error( inputNode.getType(), TurtleDiagnosticCode.E0004, location, children );
+         return new Error( inputNode.getType(), TurtleDiagnosticCode.ERR_MISSING_TOKEN, location, children );
       }
       final Supplier<String> token = () -> new String(
             // bytes

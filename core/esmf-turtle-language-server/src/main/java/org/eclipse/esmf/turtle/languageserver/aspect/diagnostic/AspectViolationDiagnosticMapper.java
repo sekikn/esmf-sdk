@@ -49,7 +49,7 @@ public class AspectViolationDiagnosticMapper implements Function<List<Violation>
    }
 
    public DiagnosticReport mapParserException( final ParserException exception, final URI sourceLocation ) {
-      return new DiagnosticReport( new TurtleDocumentDiagnostic( exception.getMessage(), TurtleDiagnosticCode.E0003,
+      return new DiagnosticReport( new TurtleDocumentDiagnostic( exception.getMessage(), TurtleDiagnosticCode.ERR_SYNTAX,
             sourceLocation, new Location( line( exception ), column( exception ), line( exception ), column( exception ) + 1 ) ) );
    }
 

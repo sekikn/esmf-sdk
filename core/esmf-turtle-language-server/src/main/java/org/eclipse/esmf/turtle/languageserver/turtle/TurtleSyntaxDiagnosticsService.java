@@ -49,6 +49,6 @@ public class TurtleSyntaxDiagnosticsService implements DiagnosticsProvider {
       }
       final Location location = new Location( node.getStartPoint().getRow(), node.getStartPoint().getColumn(), node.getEndPoint().getRow(),
             node.getEndPoint().getColumn() );
-      return new TurtleDocumentDiagnostic( message, TurtleDiagnosticCode.E0003, sourceLocation, location );
+      return new TurtleDocumentDiagnostic( message, TurtleDiagnosticCode.ERR_SYNTAX, sourceLocation, location );
    }
 }

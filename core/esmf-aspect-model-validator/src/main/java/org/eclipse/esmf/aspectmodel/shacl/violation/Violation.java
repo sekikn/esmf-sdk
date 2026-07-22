@@ -19,6 +19,7 @@ import java.util.Optional;
 
 import org.apache.jena.rdf.model.RDFNode;
 
+import org.eclipse.esmf.Diagnostic;
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
 import org.eclipse.esmf.aspectmodel.resolver.parser.SmartToken;
 import org.eclipse.esmf.aspectmodel.resolver.parser.TokenRegistry;
@@ -39,7 +40,22 @@ import org.jspecify.annotations.Nullable;
  * To handle information specific to each type of violation, implement {@link Visitor} and call
  * {@link #accept(Visitor)} on the violation(s).
  */
-public interface Violation {
+public interface Violation extends Diagnostic {
+   @Override
+   default Diagnostic.Code code() {
+      return new Diagnostic.Code() {
+         @Override
+         public String code() {
+            return errorCode();
+         }
+
+         @Override
+         public String description() {
+            return message();
+         }
+      };
+   }
+
    /**
     * The error code that identifies this type of violation
     */
@@ -225,6 +241,7 @@ public interface Violation {
       return AppliesTo.WHOLE_ELEMENT;
    }
 
+   @Override
    default String message() {
       final String nodeShapeMessage = context().shape().attributes().message().map( message -> message.replaceAll( "\\.$", "" )
             + ", more specifically: " ).orElse( "" );

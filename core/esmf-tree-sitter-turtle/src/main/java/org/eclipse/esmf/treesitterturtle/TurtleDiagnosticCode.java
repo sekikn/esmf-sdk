@@ -16,11 +16,9 @@ package org.eclipse.esmf.treesitterturtle;
 import org.eclipse.esmf.Diagnostic;
 
 public enum TurtleDiagnosticCode implements Diagnostic.Code {
-   E0000( "No more info available" ),
-   E0001( "Could not load document" ),
-   E0002( "Document validation failed" ),
-   E0003( "Syntax error" ),
-   E0004( "Missing token" );
+   ERR_UNCATEGORIZED( "No more info available" ),
+   ERR_SYNTAX( "Syntax error" ),
+   ERR_MISSING_TOKEN( "Missing token" );
 
    private final String description;
 
