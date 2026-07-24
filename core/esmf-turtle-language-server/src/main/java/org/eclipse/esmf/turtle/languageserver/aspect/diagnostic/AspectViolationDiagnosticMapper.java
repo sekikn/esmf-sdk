@@ -36,6 +36,7 @@ import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.DiagnosticReport;
 
 public class AspectViolationDiagnosticMapper implements Function<List<Violation>, DiagnosticReport> {
    public static final String PROCESSING_ERROR_MESSAGE = "Model validation failed. See language server logs for details.";
+   private static final String ERROR_CODES_DOC_LINK = "https://eclipse-esmf.github.io/esmf-developer-guide/tooling-guide/error-codes.html#";
 
    @Override
    public DiagnosticReport apply( final List<Violation> violations ) {
@@ -59,7 +60,9 @@ public class AspectViolationDiagnosticMapper implements Function<List<Violation>
 
    public DiagnosticReport processingFailureReport() {
       return new DiagnosticReport(
-            new AspectDiagnostic( PROCESSING_ERROR_MESSAGE, new AspectDiagnosticCode( ProcessingViolation.ERROR_CODE ) ) );
+            new AspectDiagnostic( PROCESSING_ERROR_MESSAGE,
+                  new AspectDiagnosticCode( ProcessingViolation.ERROR_CODE,
+                        Optional.of( ERROR_CODES_DOC_LINK + ProcessingViolation.ERROR_CODE.toUpperCase().replace( "_", "-" ) ) ) ) );
    }
 
    private Optional<Diagnostic<AspectDiagnosticCode>> mapViolation( final Violation violation ) {
@@ -76,7 +79,7 @@ public class AspectViolationDiagnosticMapper implements Function<List<Violation>
    }
 
    private Diagnostic<AspectDiagnosticCode> mapLexicalViolation( final InvalidLexicalValueViolation violation ) {
-      final AspectDiagnosticCode code = new AspectDiagnosticCode( InvalidLexicalValueViolation.ERROR_CODE );
+      final AspectDiagnosticCode code = new AspectDiagnosticCode( InvalidLexicalValueViolation.ERROR_CODE, Optional.empty() );
       final Location diagnosticsLocation = new Location( Math.max( 0, violation.line() - 1 ),
             Math.max( 0, violation.column() - 1 ),
             Math.max( 0, violation.line() - 1 ),
@@ -92,11 +95,13 @@ public class AspectViolationDiagnosticMapper implements Function<List<Violation>
    }
 
    private Diagnostic<AspectDiagnosticCode> mapProcessingViolation( final ProcessingViolation violation ) {
-      return mapViolationWithOptionalLocation( violation, new AspectDiagnosticCode( ProcessingViolation.ERROR_CODE ) );
+      return mapViolationWithOptionalLocation( violation,
+            new AspectDiagnosticCode( ProcessingViolation.ERROR_CODE,
+                  Optional.of( ERROR_CODES_DOC_LINK + violation.errorCode().toUpperCase().replace( "_", "-" ) ) ) );
    }
 
    private Diagnostic<AspectDiagnosticCode> mapSemanticViolation( final Violation violation ) {
-      return mapViolationWithOptionalLocation( violation, new AspectDiagnosticCode( violation.errorCode() ) );
+      return mapViolationWithOptionalLocation( violation, new AspectDiagnosticCode( violation.errorCode(), Optional.empty() ) );
    }
 
    private Diagnostic<AspectDiagnosticCode> mapViolationWithOptionalLocation( final Violation violation, final AspectDiagnosticCode code ) {

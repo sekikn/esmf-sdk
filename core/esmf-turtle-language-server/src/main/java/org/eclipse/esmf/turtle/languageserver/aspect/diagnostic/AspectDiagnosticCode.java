@@ -13,13 +13,21 @@
 
 package org.eclipse.esmf.turtle.languageserver.aspect.diagnostic;
 
+import java.util.Optional;
+
 import org.eclipse.esmf.Diagnostic;
 
 public record AspectDiagnosticCode(
-      String code
+      String code,
+      Optional<String> href
 ) implements Diagnostic.Code {
    @Override
    public String description() {
       return code;
+   }
+
+   @Override
+   public Optional<String> href() {
+      return href;
    }
 }
