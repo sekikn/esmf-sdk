@@ -503,7 +503,7 @@ public class AspectModelJsonSchemaVisitor implements AspectVisitor<JsonNode, Obj
       }
 
       return switch ( getSchemaTypeForAspectType( typeResource ) ) {
-         case NUMBER -> getNumberNode( value.getValue() ).getOrElse( FACTORY.numberNode( 0 ) );
+         case NUMBER, INTEGER -> getNumberNode( value.getValue() ).getOrElse( FACTORY.numberNode( 0 ) );
          case STRING -> FACTORY.stringNode( value.getValue().toString() );
          case BOOLEAN -> FACTORY.booleanNode( (boolean) value.getValue() );
          default -> throw new DocumentGenerationException( "Could not convert value " + value + " to JSON" );
