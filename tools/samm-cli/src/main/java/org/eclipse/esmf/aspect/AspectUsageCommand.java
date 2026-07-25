@@ -44,6 +44,30 @@ import picocli.CommandLine;
 public class AspectUsageCommand extends AbstractCommand {
    public static final String COMMAND_NAME = "usage";
 
+   /**
+    * The list of supported aspect usage output formats
+    */
+   private enum AspectUsageFormat {
+      TABLE, CSV;
+
+      @Override
+      public String toString() {
+         return switch ( this ) {
+            case TABLE -> "table";
+            case CSV -> "csv";
+         };
+      }
+
+      /**
+       * Returns a formatted list of the valid formats
+       *
+       * @return the list of formats
+       */
+      public static String allValues() {
+         return String.join( ", ", java.util.stream.Stream.of( values() ).map( AspectUsageFormat::toString ).toList() );
+      }
+   }
+
    @CommandLine.ParentCommand
    public AspectCommand parentCommand;
 
@@ -52,6 +76,11 @@ public class AspectUsageCommand extends AbstractCommand {
       names = { "--details" },
       description = "Print detailed reports on errors" )
    private boolean details = false;
+
+   @CommandLine.Option(
+      names = { "--format", "-f" },
+      description = "Output format. Valid options are ${COMPLETION-CANDIDATES}. Default is ${DEFAULT-VALUE}." )
+   private AspectUsageFormat format = AspectUsageFormat.TABLE;
 
    @CommandLine.Mixin
    private LoggingMixin loggingMixin;
@@ -92,6 +121,16 @@ public class AspectUsageCommand extends AbstractCommand {
          System.exit( 0 );
       }
 
+      if ( AspectUsageFormat.CSV == format ) {
+         printCsvOutput( references );
+      } else if ( AspectUsageFormat.TABLE == format ) {
+         printTableOutput( references );
+      } else {
+         throw new CommandException( "Invalid format: " + format + ". Valid formats are " + AspectUsageFormat.allValues() );
+      }
+   }
+
+   private void printTableOutput( final List<Reference> references ) {
       final String[] headerParts = new String[] { "Element", "in file", "Points to", "in file" };
       final int[] columnWidth = Arrays.stream( headerParts ).mapToInt( String::length ).toArray();
       for ( final Reference reference : references ) {
@@ -115,5 +154,31 @@ public class AspectUsageCommand extends AbstractCommand {
                reference.pointee(),
                reference.pointeeSource() );
       } );
+   }
+
+   private void printCsvOutput( final List<Reference> references ) {
+      // Print CSV header
+      System.out.println( "Element,in file,Points to,in file" );
+
+      // Print data rows
+      references.stream().sorted( Comparator.comparing( reference -> reference.pointer().toString() ) ).forEach( reference -> {
+         // Escape CSV fields that contain commas or quotes
+         final String element = escapeCsvField( reference.pointer().toString() );
+         final String inFile = escapeCsvField( reference.pointerSource().toString() );
+         final String pointsTo = escapeCsvField( reference.pointee().toString() );
+         final String pointsToFile = escapeCsvField( reference.pointeeSource().toString() );
+         System.out.printf( "%s,%s,%s,%s%n", element, inFile, pointsTo, pointsToFile );
+      } );
+   }
+
+   private String escapeCsvField( final String field ) {
+      // If field contains comma, quote, or newline, escape it
+      if ( field.contains( "," ) || field.contains( "\"" ) || field.contains( "\n" ) ) {
+         // Escape quotes by doubling them
+         final String escaped = field.replace( "\"", "\"\"" );
+         // Wrap in quotes
+         return "\"" + escaped + "\"";
+      }
+      return field;
    }
 }
