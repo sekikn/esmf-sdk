@@ -11,20 +11,16 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package org.eclipse.esmf.turtle.languageserver.turtle.navigation;
+package org.eclipse.esmf.turtle.languageserver.aspect;
 
-import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
@@ -36,8 +32,8 @@ import org.eclipse.esmf.aspectmodel.resolver.modelfile.MetaModelFile;
 import org.eclipse.esmf.aspectmodel.resolver.modelfile.RawAspectModelFileBuilder;
 import org.eclipse.esmf.aspectmodel.urn.AspectModelUrn;
 import org.eclipse.esmf.aspectmodel.urn.ElementType;
+import org.eclipse.esmf.turtle.languageserver.aspect.navigation.ExternalModelFileCache;
 
-import net.harawata.appdirs.AppDirsFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFNode;
 import org.slf4j.Logger;
@@ -65,19 +61,6 @@ public class MetaModelStrategy implements ResolutionStrategy {
 
    private static final Map<String, List<String>> ELEMENT_TYPE_FILENAMES = buildElementTypeFilenames();
 
-   private static final Path META_MODEL_TURTLE_PATH = Path.of( AppDirsFactory.getInstance().getUserCacheDir( "esmf", "1", "esmf" ) );
-   private final Map<String, Path> extractedFiles = new ConcurrentHashMap<>();
-
-   public MetaModelStrategy() {
-      if ( !Files.exists( META_MODEL_TURTLE_PATH ) ) {
-         try {
-            Files.createDirectories( META_MODEL_TURTLE_PATH );
-         } catch ( final IOException exception ) {
-            throw new ModelResolutionException( "Unable to create model cache directory at " + META_MODEL_TURTLE_PATH, exception );
-         }
-      }
-   }
-
    @Override
    public AspectModelFile apply( final AspectModelUrn urn, final ResolutionStrategySupport support ) {
       if ( ElementType.NONE.equals( urn.getElementType() ) ) {
@@ -102,7 +85,7 @@ public class MetaModelStrategy implements ResolutionStrategy {
          }
          final AspectModelFile candidate = AspectModelFileLoader.load( url.get() );
          if ( hasSubject( candidate.sourceModel(), urnString ) ) {
-            final Path tempFile = extractToTempDir( elementType, version, filename,
+            final Path tempFile = ExternalModelFileCache.materialize( elementType + "-" + version + "-" + filename,
                   candidate.sourceRepresentation() );
             return RawAspectModelFileBuilder.builder()
                   .sourceRepresentation( candidate.sourceRepresentation() )
@@ -122,22 +105,6 @@ public class MetaModelStrategy implements ResolutionStrategy {
 
    private boolean hasSubject( final Model model, final String urnString ) {
       return model.contains( model.createResource( urnString ), null, (RDFNode) null );
-   }
-
-   private Path extractToTempDir( final String elementType, final String version, final String filename,
-         final String content ) {
-      final String cacheKey = elementType + "/" + version + "/" + filename;
-      return extractedFiles.computeIfAbsent( cacheKey, key -> {
-         final String uniqueName = elementType + "-" + version + "-" + filename;
-         final Path target = META_MODEL_TURTLE_PATH.resolve( uniqueName );
-         try {
-            Files.writeString( target, content );
-            LOG.debug( "[meta-model-strategy] extracted {} to {}", cacheKey, target );
-         } catch ( final IOException e ) {
-            throw new ModelResolutionException( "Could not extract meta model file " + cacheKey, e );
-         }
-         return target;
-      } );
    }
 
    /**
@@ -183,13 +150,5 @@ public class MetaModelStrategy implements ResolutionStrategy {
    @Override
    public Stream<AspectModelFile> loadContentsForNamespace( final AspectModelUrn namespace ) {
       return Stream.empty();
-   }
-
-   public static boolean isMetaModelUri( final String uri ) {
-      try {
-         return Path.of( new URI( uri ) ).getParent().toAbsolutePath().equals( META_MODEL_TURTLE_PATH.toAbsolutePath() );
-      } catch ( final URISyntaxException e ) {
-         return false;
-      }
    }
 }
