@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.eclipse.esmf.AbstractCommand;
 import org.eclipse.esmf.InputHandler;
 import org.eclipse.esmf.LoggingMixin;
@@ -163,22 +164,11 @@ public class AspectUsageCommand extends AbstractCommand {
       // Print data rows
       references.stream().sorted( Comparator.comparing( reference -> reference.pointer().toString() ) ).forEach( reference -> {
          // Escape CSV fields that contain commas or quotes
-         final String element = escapeCsvField( reference.pointer().toString() );
-         final String inFile = escapeCsvField( reference.pointerSource().toString() );
-         final String pointsTo = escapeCsvField( reference.pointee().toString() );
-         final String pointsToFile = escapeCsvField( reference.pointeeSource().toString() );
+         final String element = StringEscapeUtils.escapeCsv( reference.pointer().toString() );
+         final String inFile = StringEscapeUtils.escapeCsv( reference.pointerSource().toString() );
+         final String pointsTo = StringEscapeUtils.escapeCsv( reference.pointee().toString() );
+         final String pointsToFile = StringEscapeUtils.escapeCsv( reference.pointeeSource().toString() );
          System.out.printf( "%s,%s,%s,%s%n", element, inFile, pointsTo, pointsToFile );
       } );
-   }
-
-   private String escapeCsvField( final String field ) {
-      // If field contains comma, quote, or newline, escape it
-      if ( field.contains( "," ) || field.contains( "\"" ) || field.contains( "\n" ) ) {
-         // Escape quotes by doubling them
-         final String escaped = field.replace( "\"", "\"\"" );
-         // Wrap in quotes
-         return "\"" + escaped + "\"";
-      }
-      return field;
    }
 }
