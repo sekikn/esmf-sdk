@@ -971,7 +971,7 @@ Each of the `tenant-id`, `namespace`, `version` and `aspect-name` channel parame
 https://www.asyncapi.com/docs/reference/specification/v3.1.0#parameterObject[Parameter Object] only when the
 corresponding placeholder (`\{tenant-id}`, `{namespace}`, `{version}`, `{aspect-name}`) is literally present in the
 channel address, so the `parameters` section always matches what the address actually uses. If no explicit channel
-address is configured via `--channel-address`/`-ca` (Maven: `channelAddress`), the default address
+address is configured via `--channel-address`/`-ca`, the default address
 `/{tenant-id}/{namespace}/{version}/{aspect-name}` is used, so all four parameters are included. If an explicit
 channel address is configured, only the placeholders it contains result in a channel parameter; any placeholder
 missing from the address is omitted.
