@@ -4,6 +4,8 @@
 
 package org.eclipse.esmf;
 
+import java.util.Optional;
+
 /**
  * Generic diagnostic interface representing a problem found during document processing.
  *
@@ -47,6 +49,10 @@ public interface Diagnostic<C extends Diagnostic.Code> {
       String code();
 
       String description();
+
+      default Optional<String> href() {
+         return Optional.empty();
+      }
    }
 
    enum Severity {
