@@ -249,9 +249,10 @@ of model resolution] for more information.
                                      changes in the report .                                                                 |
                                    | _--force_ : When a new file is to be created but it already exists in the file system,
                                      the operation will be cancelled, unless `--force` is used.                              |
-.1+| [[aspect-usage]] aspect <model> usage | Shows where model elements are used in an Aspect. `model` can be an Aspect Model
+.2+| [[aspect-usage]] aspect <model> usage | Shows where model elements are used in an Aspect. `model` can be an Aspect Model
                                      file or an element URN. If `model` is a URN, at least one `--models-root` must also be
                                      specified.                                                                              | `samm aspect AspectModelFile.ttl usage`
+                                   | _--format, -f_ : Specifies the output format. Valid values are `table` (default) and `csv`. | `samm aspect AspectModelFile.ttl usage --format csv`
 .3+| [[aas-to-aspect]] aas <aas file> to aspect | Translate Asset Administration Shell (AAS) Submodel Templates to
                                      Aspect Models                                                                           | `samm aas AssetAdminShell.aasx to aspect`
                                    | _--output-directory, -d_ : output directory to write files to (default:

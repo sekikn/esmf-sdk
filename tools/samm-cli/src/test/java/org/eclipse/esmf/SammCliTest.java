@@ -1513,6 +1513,47 @@ class SammCliTest extends SammCliAbstractTest {
    }
 
    @Test
+   void testAspectUsageWithCsvFormat() {
+      final ExecutionResult result =
+            sammCli.runAndExpectSuccess( "--disable-color", "aspect", defaultInputFile, "usage", "--format", "csv" );
+      assertThat( result.stderr() ).isEmpty();
+      // CSV output should start with header line
+      assertThat( result.stdout() ).startsWith( "Element,in file,Points to,in file" );
+      // Should contain some data rows in CSV format (with commas, not pipes)
+      assertThat( result.stdout() ).contains( "," );
+      assertThat( result.stdout() ).doesNotContain( "|" );
+   }
+
+   @Test
+   void testAspectUsageWithCsvFormatShortOption() {
+      final ExecutionResult result = sammCli.runAndExpectSuccess( "--disable-color", "aspect", defaultInputFile, "usage", "-f", "csv" );
+      assertThat( result.stderr() ).isEmpty();
+      // CSV output should start with header line
+      assertThat( result.stdout() ).startsWith( "Element,in file,Points to,in file" );
+      // Should contain some data rows in CSV format (with commas, not pipes)
+      assertThat( result.stdout() ).contains( "," );
+      assertThat( result.stdout() ).doesNotContain( "|" );
+   }
+
+   @Test
+   void testAspectUsageDefaultFormatIsTable() {
+      final ExecutionResult result = sammCli.runAndExpectSuccess( "--disable-color", "aspect", defaultInputFile, "usage" );
+      assertThat( result.stderr() ).isEmpty();
+      // Default table output should contain pipe characters
+      assertThat( result.stdout() ).contains( "|" );
+      // Should not contain commas in the header
+      assertThat( result.stdout() ).doesNotStartWith( "Element,in file,Points to,in file" );
+   }
+
+   @Test
+   void testAspectUsageInvalidFormat() {
+      final ExecutionResult result = sammCli.apply( "--disable-color", "aspect", defaultInputFile, "usage", "--format", "invalid" );
+      assertThat( result.exitStatus() ).isEqualTo( 2 );
+      assertThat( result.stdout() ).isEmpty();
+      assertThat( result.stderr() ).contains( "Invalid value for option '--format'" );
+   }
+
+   @Test
    void testPackageWithoutSubcommand() {
       final ExecutionResult result = sammCli.apply( "--disable-color", "package" );
       assertThat( result.exitStatus() ).isEqualTo( 2 );
