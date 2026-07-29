@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.eclipse.esmf.turtle.languageserver.aspect.navigation.AspectCrossFileDefinitionService;
 import org.eclipse.esmf.turtle.languageserver.lsp.ResolutionStrategyService;
 import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.DiagnosticMapper;
 import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.DiagnosticReport;
@@ -31,7 +32,6 @@ import org.eclipse.esmf.turtle.languageserver.structure.DocumentSymbolService;
 import org.eclipse.esmf.turtle.languageserver.structure.TurtleTokenService;
 import org.eclipse.esmf.turtle.languageserver.turtle.TurtleCompletionService;
 import org.eclipse.esmf.turtle.languageserver.turtle.ValidationCoordinator;
-import org.eclipse.esmf.turtle.languageserver.aspect.navigation.AspectCrossFileDefinitionService;
 import org.eclipse.esmf.turtle.languageserver.turtle.navigation.TurtleDefinitionService;
 
 import org.eclipse.lsp4j.CompletionItem;
@@ -83,13 +83,13 @@ public class TurtleTextDocumentService implements TextDocumentService {
       turtleDefinitionService = new TurtleDefinitionService();
       turtleCompletionService = new TurtleCompletionService();
       turtleParserService = new TreeSitterTurtleParserService();
-      tokenService = new TurtleTokenService( turtleParserService );
+      tokenService = new TurtleTokenService();
       aspectCrossFileDefinitionService = new AspectCrossFileDefinitionService( turtleParserService, documents, resolutionStrategyService );
       documentSymbolService = new DocumentSymbolService( turtleParserService );
       final List<DiagnosticsProvider> diagnosticsProviders =
             Streams.stream( ServiceLoader.load( DiagnosticsProvider.class ).iterator() ).toList();
       diagnosticsProviders.forEach( provider -> {
-         if ( provider instanceof ResolutionStrategyAwareDiagnosticsProvider aware ) {
+         if ( provider instanceof final ResolutionStrategyAwareDiagnosticsProvider aware ) {
             aware.setResolutionStrategyService( resolutionStrategyService );
          }
       } );
@@ -176,11 +176,12 @@ public class TurtleTextDocumentService implements TextDocumentService {
    public CompletableFuture<SemanticTokens> semanticTokensFull( final SemanticTokensParams params ) {
       final String uri = params.getTextDocument().getUri();
       final Document document = documents.get( uri );
+      final ParsedDocument parsedDocument = turtleParserService.apply( document );
       LOG.info( "[semanticTokensFull] URI={}", uri );
       if ( document == null ) {
          return CompletableFuture.completedFuture( new SemanticTokens( List.of() ) );
       }
-      return CompletableFuture.supplyAsync( () -> tokenService.buildSemanticTokens( document ), asyncExecutor );
+      return CompletableFuture.supplyAsync( () -> tokenService.buildSemanticTokens( parsedDocument ), asyncExecutor );
    }
 
    @Override
