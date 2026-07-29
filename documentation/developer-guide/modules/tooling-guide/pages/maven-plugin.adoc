@@ -391,7 +391,10 @@ Configuration Properties:
 | `githubServerId` | The id of the `<server>` entry describing the GitHub repository to resolve models from. | `String` | none | {nok}
 | `outputDirectory` | The path to the directory where the generated AsyncAPI Specification will be written to. | `String` | none | {ok}
 | `applicationId` | Sets the application id, e.g. an identifying URL | `String` | none | {nok}
-| `channelAddress` | Sets the channel address (i.e., for MQTT, the topic's name) | `String` | none | {nok}
+| `channelAddress` | Sets the channel address (i.e., for MQTT, the topic's name). Each of the
+  `tenant-id`, `namespace`, `version` and `aspect-name` placeholders present in the address is
+  rendered as a channel parameter in the generated specification; if a placeholder is missing from
+  the address, its parameter is omitted. | `String` | `/\{tenant-id}/{namespace}/{version}/{aspect-name}` | {nok}
 | `useSemanticApiVersion` | Use the complete semantic version of the Aspect Model as the version of the Aspect API. | `Boolean` | `false` | {nok}
 | `outputFormat` | The format of the resulting AsyncAPI Specification. May be either JSON or YAML. | `String` | none | {ok}
 | `separateFiles` | Create separate files for each schema. | `Boolean` | `false` | {nok}
