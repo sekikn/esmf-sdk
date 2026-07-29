@@ -25,6 +25,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.eclipse.esmf.Location;
+import org.eclipse.esmf.aspectmodel.RdfUtil;
+import org.eclipse.esmf.metamodel.datatype.SammType;
 import org.eclipse.esmf.metamodel.vocabulary.SammNs;
 import org.eclipse.esmf.treesitterturtle.ParserTokenType;
 import org.eclipse.esmf.treesitterturtle.TurtleSyntaxTree;
@@ -204,6 +206,25 @@ public class TurtleTokenService {
          case ParserTokenType.SYMBOL_DOUBLE_CARET -> SemanticTokenTypes.Decorator;
          case ParserTokenType.SYMBOL_FULL_STOP -> SemanticTokenTypes.Decorator;
          case ParserTokenType.SYMBOL_SEMICOLON -> SemanticTokenTypes.Decorator;
+         case ParserTokenType.RDF_LITERAL -> {
+            if ( node.childWithType( ParserTokenType.SYMBOL_DOUBLE_CARET ).isPresent() ) {
+               // Typed literal
+               yield node.childWithType( ParserTokenType.PREFIXED_NAME )
+                     .map( TurtleSyntaxTree.Node::content )
+                     .map( RdfUtil::fullUri )
+                     .map( typeUri -> SammType.forUri( typeUri )
+                           .filter( sammType -> sammType instanceof SammType.NumericType<?> )
+                           .map( _ -> SemanticTokenTypes.Number )
+                           .orElse( SemanticTokenTypes.String ) )
+                     .orElse( "" );
+            } else if ( node.childWithType( ParserTokenType.LANG_TAG ).isPresent() ) {
+               // rdf:langString
+               yield SemanticTokenTypes.String;
+            } else {
+               // plain string
+               yield SemanticTokenTypes.String;
+            }
+         }
          default -> "";
       };
       if ( semanticToken.isEmpty() ) {

@@ -85,8 +85,7 @@ public abstract non-sealed class SammXsdType<T> extends XSDDatatype implements S
                      SammType.BYTE, SammType.SHORT, SammType.INT, SammType.LONG, SammType.UNSIGNED_BYTE, SammType.UNSIGNED_SHORT,
                      SammType.UNSIGNED_INT, SammType.UNSIGNED_LONG, SammType.POSITIVE_INTEGER, SammType.NON_NEGATIVE_INTEGER,
                      SammType.NEGATIVE_INTEGER, SammType.NON_POSITIVE_INTEGER, SammType.HEX_BINARY, SammType.BASE64_BINARY,
-                     SammType.ANY_URI,
-                     SammType.LANG_STRING, SammType.CURIE
+                     SammType.ANY_URI, SammType.LANG_STRING, SammType.CURIE
                );
                allTypesCache = local;
             }
@@ -213,16 +212,27 @@ public abstract non-sealed class SammXsdType<T> extends XSDDatatype implements S
    /**
     * Returns the Java class corresponding to a XSD type in a given meta model version.
     *
+    * @param typeUri the datatype URI
+    * @return the java class
+    */
+   public static Class<?> getJavaTypeForMetaModelType( final String typeUri ) {
+      return ALL_TYPES
+            .stream()
+            .filter( xsdType -> xsdType.getURI().equals( typeUri ) )
+            .map( RDFDatatype::getJavaClass )
+            .findAny()
+            .orElseThrow( () -> new IllegalStateException( "Invalid data type " + typeUri + " found in model." ) );
+
+   }
+
+   /**
+    * Returns the Java class corresponding to a XSD type in a given meta model version.
+    *
     * @param type the resource of the data type
     * @return the java class
     */
    public static Class<?> getJavaTypeForMetaModelType( final Resource type ) {
-      return ALL_TYPES
-            .stream()
-            .filter( xsdType -> xsdType.getURI().equals( type.getURI() ) )
-            .map( RDFDatatype::getJavaClass )
-            .findAny()
-            .orElseThrow( () -> new IllegalStateException( "Invalid data type " + type + " found in model." ) );
+      return getJavaTypeForMetaModelType( type.getURI() );
    }
 
    @Override
