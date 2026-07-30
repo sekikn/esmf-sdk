@@ -18,6 +18,5 @@ public final class RdfDatatypeUris {
    // Jena's RDF vocabulary can trigger order-sensitive Jena runtime initialization.
    public static final String LANG_STRING = "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString";
 
-   private RdfDatatypeUris() {
-   }
+   private RdfDatatypeUris() {}
 }
