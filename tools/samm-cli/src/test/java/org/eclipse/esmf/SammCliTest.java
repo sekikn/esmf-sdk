@@ -1070,7 +1070,7 @@ class SammCliTest extends SammCliAbstractTest {
       assertThat( result.exitStatus() ).isZero();
       assertThat( result.stdout() ).isNotEmpty();
       assertThat( result.stdout() ).contains( "asyncapi: 3.1.0" );
-      assertThat( result.stdout() ).contains( "address: /org.eclipse.esmf.test/1.0.0/AspectWithEntity" );
+      assertThat( result.stdout() ).contains( "address: \"/{tenant-id}/{namespace}/{version}/{aspect-name}\"" );
       assertThat( result.stderr() ).isEmpty();
    }
 
@@ -1510,6 +1510,47 @@ class SammCliTest extends SammCliAbstractTest {
             "--github", "eclipse-esmf/esmf-sdk", "--github-directory", remoteModelsDirectory );
       assertThat( result.stderr() ).isEmpty();
       assertThat( result.stdout() ).contains( TestModel.TEST_NAMESPACE + "testProperty" );
+   }
+
+   @Test
+   void testAspectUsageWithCsvFormat() {
+      final ExecutionResult result =
+            sammCli.runAndExpectSuccess( "--disable-color", "aspect", defaultInputFile, "usage", "--format", "csv" );
+      assertThat( result.stderr() ).isEmpty();
+      // CSV output should start with header line
+      assertThat( result.stdout() ).startsWith( "Element,in file,Points to,in file" );
+      // Should contain some data rows in CSV format (with commas, not pipes)
+      assertThat( result.stdout() ).contains( "," );
+      assertThat( result.stdout() ).doesNotContain( "|" );
+   }
+
+   @Test
+   void testAspectUsageWithCsvFormatShortOption() {
+      final ExecutionResult result = sammCli.runAndExpectSuccess( "--disable-color", "aspect", defaultInputFile, "usage", "-f", "csv" );
+      assertThat( result.stderr() ).isEmpty();
+      // CSV output should start with header line
+      assertThat( result.stdout() ).startsWith( "Element,in file,Points to,in file" );
+      // Should contain some data rows in CSV format (with commas, not pipes)
+      assertThat( result.stdout() ).contains( "," );
+      assertThat( result.stdout() ).doesNotContain( "|" );
+   }
+
+   @Test
+   void testAspectUsageDefaultFormatIsTable() {
+      final ExecutionResult result = sammCli.runAndExpectSuccess( "--disable-color", "aspect", defaultInputFile, "usage" );
+      assertThat( result.stderr() ).isEmpty();
+      // Default table output should contain pipe characters
+      assertThat( result.stdout() ).contains( "|" );
+      // Should not contain commas in the header
+      assertThat( result.stdout() ).doesNotStartWith( "Element,in file,Points to,in file" );
+   }
+
+   @Test
+   void testAspectUsageInvalidFormat() {
+      final ExecutionResult result = sammCli.apply( "--disable-color", "aspect", defaultInputFile, "usage", "--format", "invalid" );
+      assertThat( result.exitStatus() ).isEqualTo( 2 );
+      assertThat( result.stdout() ).isEmpty();
+      assertThat( result.stderr() ).contains( "Invalid value for option '--format'" );
    }
 
    @Test
