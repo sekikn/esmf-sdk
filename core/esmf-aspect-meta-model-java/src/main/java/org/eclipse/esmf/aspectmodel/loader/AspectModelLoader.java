@@ -50,6 +50,7 @@ import org.apache.jena.vocabulary.XSD;
 import org.eclipse.esmf.aspectmodel.AspectLoadingException;
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
 import org.eclipse.esmf.aspectmodel.RdfUtil;
+import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.aspectmodel.resolver.AspectModelFileLoader;
 import org.eclipse.esmf.aspectmodel.resolver.EitherStrategy;
 import org.eclipse.esmf.aspectmodel.resolver.FileSystemStrategy;
@@ -141,14 +142,11 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
    /**
     * An interface to the AspectModelValidator that validates RDF graphs of the single files before
     * instantiating {@link ModelElement}s
-    *
-    * @param <P> the "problem" type that describes loading or validation failures
-    * @param <C> the "collection of problem" type that constitutes a validation report
     */
-   public class AspectModelLoaderWithValidation<P, C extends Collection<? super P>> {
-      private final Validator<P, C> validator;
+   public class AspectModelLoaderWithValidation {
+      private final Validator validator;
 
-      private AspectModelLoaderWithValidation( final Validator<P, C> validator ) {
+      private AspectModelLoaderWithValidation( final Validator validator ) {
          this.validator = validator;
       }
 
@@ -161,9 +159,9 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
        * @return the validation report on failure ({@link Try.Failure}) or the Aspect Model on success
        *         ({@link Try.Success})
        */
-      private <T> Either<C, AspectModel> callInternalLoader( final Function<T, AspectModel> loader, final T argument ) {
+      private <T> Either<ViolationReport, AspectModel> callInternalLoader( final Function<T, AspectModel> loader, final T argument ) {
          mergedModelValidator = model -> {
-            final C result = validator.validateModel( model );
+            final ViolationReport result = validator.validateModel( model );
             if ( !result.isEmpty() ) {
                throw validator.cancelValidation( result );
             }
@@ -182,10 +180,10 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
        * @return the validation report on failure ({@link Try.Failure}) or the Aspect Model on success
        *         ({@link Try.Success})
        */
-      private <T, U> Either<C, AspectModel> callInternalLoader( final BiFunction<T, U, AspectModel> loader, final T argument1,
+      private <T, U> Either<ViolationReport, AspectModel> callInternalLoader( final BiFunction<T, U, AspectModel> loader, final T argument1,
             final U argument2 ) {
          mergedModelValidator = identifiedModel -> {
-            final C result = validator.validateModel( identifiedModel );
+            final ViolationReport result = validator.validateModel( identifiedModel );
             if ( !result.isEmpty() ) {
                throw validator.cancelValidation( result );
             }
@@ -196,56 +194,56 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
       /**
        * Sets up validation, then delegates to {@link AspectModelLoader#load(File)}
        */
-      public Either<C, AspectModel> load( final File file ) {
+      public Either<ViolationReport, AspectModel> load( final File file ) {
          return callInternalLoader( AspectModelLoader.this::load, file );
       }
 
       /**
        * Sets up validation, then delegates to {@link AspectModelLoader#load(Collection)}
        */
-      public Either<C, AspectModel> load( final Collection<File> files ) {
+      public Either<ViolationReport, AspectModel> load( final Collection<File> files ) {
          return callInternalLoader( AspectModelLoader.this::load, files );
       }
 
       /**
        * Sets up validation, then delegates to {@link AspectModelLoader#load(AspectModelUrn)}
        */
-      public Either<C, AspectModel> load( final AspectModelUrn aspectModelUrn ) {
+      public Either<ViolationReport, AspectModel> load( final AspectModelUrn aspectModelUrn ) {
          return callInternalLoader( AspectModelLoader.this::load, aspectModelUrn );
       }
 
       /**
        * Sets up validation, then delegates to {@link AspectModelLoader#loadNamespace(AspectModelUrn)}
        */
-      public Either<C, AspectModel> loadNamespace( final AspectModelUrn namespaceUrn ) {
+      public Either<ViolationReport, AspectModel> loadNamespace( final AspectModelUrn namespaceUrn ) {
          return callInternalLoader( AspectModelLoader.this::loadNamespace, namespaceUrn );
       }
 
       /**
        * Sets up validation, then delegates to {@link AspectModelLoader#loadUrns(Collection)}
        */
-      public Either<C, AspectModel> loadUrns( final Collection<AspectModelUrn> urns ) {
+      public Either<ViolationReport, AspectModel> loadUrns( final Collection<AspectModelUrn> urns ) {
          return callInternalLoader( AspectModelLoader.this::loadUrns, urns );
       }
 
       /**
        * Sets up validation, then delegates to {@link AspectModelLoader#load(InputStream, URI)}
        */
-      public Either<C, AspectModel> load( final InputStream inputStream, final URI sourceLocation ) {
+      public Either<ViolationReport, AspectModel> load( final InputStream inputStream, final URI sourceLocation ) {
          return callInternalLoader( AspectModelLoader.this::load, inputStream, sourceLocation );
       }
 
       /**
        * Sets up validation, then delegates to {@link AspectModelLoader#loadNamespacePackage(File)}
        */
-      public Either<C, AspectModel> loadNamespacePackage( final File namespacePackage ) {
+      public Either<ViolationReport, AspectModel> loadNamespacePackage( final File namespacePackage ) {
          return callInternalLoader( AspectModelLoader.this::loadNamespacePackage, namespacePackage );
       }
 
       /**
        * Sets up validation, then delegates to {@link AspectModelLoader#loadNamespacePackage(byte[], URI)}
        */
-      public Either<C, AspectModel> loadNamespacePackage( final byte[] binaryContent, final URI location ) {
+      public Either<ViolationReport, AspectModel> loadNamespacePackage( final byte[] binaryContent, final URI location ) {
          return callInternalLoader( AspectModelLoader.this::loadNamespacePackage, binaryContent, location );
       }
 
@@ -253,14 +251,14 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
        * Sets up validation, then delegates to
        * {@link AspectModelLoader#loadNamespacePackage(InputStream, URI)}
        */
-      public Either<C, AspectModel> loadNamespacePackage( final InputStream inputStream, final URI location ) {
+      public Either<ViolationReport, AspectModel> loadNamespacePackage( final InputStream inputStream, final URI location ) {
          return callInternalLoader( AspectModelLoader.this::loadNamespacePackage, inputStream, location );
       }
 
       /**
        * Sets up validation, then delegates to {@link AspectModelLoader#loadAspectModelFiles(Collection)}
        */
-      public Either<C, AspectModel> loadAspectModelFiles( final Collection<AspectModelFile> inputFiles ) {
+      public Either<ViolationReport, AspectModel> loadAspectModelFiles( final Collection<AspectModelFile> inputFiles ) {
          return callInternalLoader( AspectModelLoader.this::loadAspectModelFiles, inputFiles );
       }
    }
@@ -270,12 +268,10 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
     * validate loaded files
     *
     * @param validator the validator to use
-    * @param <P> the "problem" type that describes loading or validation failures
-    * @param <C> the "collection of problem" type that constitutes a validation report
     * @return the view to this AspectModelLoader
     */
-   public <P, C extends Collection<? super P>> AspectModelLoaderWithValidation<P, C> withValidation( final Validator<P, C> validator ) {
-      return new AspectModelLoaderWithValidation<>( validator );
+   public AspectModelLoaderWithValidation withValidation( final Validator validator ) {
+      return new AspectModelLoaderWithValidation( validator );
    }
 
    /**

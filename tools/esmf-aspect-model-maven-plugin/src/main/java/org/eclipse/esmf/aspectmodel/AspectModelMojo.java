@@ -168,10 +168,10 @@ public abstract class AspectModelMojo extends AbstractMojo {
       final AspectModelLoader aspectModelLoader = createAspectModelLoader();
       for ( final String inputUrn : includes ) {
          final AspectModelUrn urn = AspectModelUrn.fromUrn( inputUrn );
-         final Either<List<Violation>, AspectModel> loadingResult =
+         final Either<ViolationReport, AspectModel> loadingResult =
                new AspectModelValidator().loadModel( () -> aspectModelLoader.load( urn ) );
          if ( loadingResult.isLeft() ) {
-            final List<Violation> violations = loadingResult.getLeft();
+            final ViolationReport violations = loadingResult.getLeft();
             final String errorMessage = detailedValidationMessages
                   ? new DetailedViolationFormatter().apply( violations )
                   : new ViolationFormatter().apply( violations );

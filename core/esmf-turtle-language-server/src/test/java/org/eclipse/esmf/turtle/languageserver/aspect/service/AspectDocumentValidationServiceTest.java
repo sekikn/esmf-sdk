@@ -18,11 +18,10 @@ import static org.eclipse.esmf.turtle.languageserver.aspect.TestUtil.emptyParsed
 import static org.eclipse.esmf.turtle.languageserver.aspect.TestUtil.parsedDocument;
 
 import java.net.URI;
-import java.util.List;
 import java.util.function.Supplier;
 
+import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.aspectmodel.resolver.exceptions.ParserException;
-import org.eclipse.esmf.aspectmodel.Violation;
 import org.eclipse.esmf.aspectmodel.validation.InvalidLexicalValueViolation;
 import org.eclipse.esmf.aspectmodel.validation.ProcessingViolation;
 import org.eclipse.esmf.aspectmodel.validation.services.AspectModelValidator;
@@ -32,7 +31,6 @@ import org.eclipse.esmf.treesitterturtle.TurtleViolationCode;
 import org.eclipse.esmf.turtle.languageserver.aspect.diagnostic.AspectDocumentViolation;
 import org.eclipse.esmf.turtle.languageserver.aspect.diagnostic.AspectViolationDiagnosticMapper;
 import org.eclipse.esmf.turtle.languageserver.aspect.diagnostic.TestViolation;
-import org.eclipse.esmf.aspectmodel.ViolationReport;
 
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
@@ -53,7 +51,7 @@ class AspectDocumentValidationServiceTest {
       final RuntimeException failure = new RuntimeException( "secret internal details" );
       final AspectModelValidationService service = new AspectModelValidationService( new AspectModelValidator() {
          @Override
-         public List<Violation> validateModel( final Supplier<AspectModel> aspectModelSupplier ) {
+         public ViolationReport validateModel( final Supplier<AspectModel> aspectModelSupplier ) {
             throw failure;
          }
       } );
@@ -79,7 +77,7 @@ class AspectDocumentValidationServiceTest {
    void parserExceptionIsMappedToSyntaxFallbackDiagnostic() {
       final AspectModelValidationService service = new AspectModelValidationService( new AspectModelValidator() {
          @Override
-         public List<Violation> validateModel( final Supplier<AspectModel> aspectModelSupplier ) {
+         public ViolationReport validateModel( final Supplier<AspectModel> aspectModelSupplier ) {
             throw new ParserException( 3, 5, "Triples not terminated by DOT", "source", URI.create( "test.ttl" ) );
          }
       } );
@@ -96,8 +94,8 @@ class AspectDocumentValidationServiceTest {
    void ordinaryValidationViolationsAreMapped() {
       final AspectModelValidationService service = new AspectModelValidationService( new AspectModelValidator() {
          @Override
-         public List<Violation> validateModel( final Supplier<AspectModel> aspectModelSupplier ) {
-            return List.of( new TestViolation( "ERR_TEST", "semantic problem" ) );
+         public ViolationReport validateModel( final Supplier<AspectModel> aspectModelSupplier ) {
+            return new ViolationReport( new TestViolation( "ERR_TEST", "semantic problem" ) );
          }
       } );
 
@@ -115,8 +113,8 @@ class AspectDocumentValidationServiceTest {
 
       final AspectModelValidationService service = new AspectModelValidationService( new AspectModelValidator() {
          @Override
-         public List<Violation> validateModel( final Supplier<AspectModel> aspectModelSupplier ) {
-            return List.of( new ProcessingViolation( "processing violation", cause ) );
+         public ViolationReport validateModel( final Supplier<AspectModel> aspectModelSupplier ) {
+            return new ViolationReport( new ProcessingViolation( "processing violation", cause ) );
          }
       } );
       final Logger logger = (Logger) LoggerFactory.getLogger( AspectModelValidationService.class );

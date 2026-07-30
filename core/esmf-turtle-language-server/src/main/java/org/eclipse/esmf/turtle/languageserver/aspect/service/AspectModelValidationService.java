@@ -14,13 +14,11 @@
 package org.eclipse.esmf.turtle.languageserver.aspect.service;
 
 import java.net.URI;
-import java.util.List;
 
 import org.apache.jena.riot.RiotException;
 
-import org.eclipse.esmf.aspectmodel.Violation;
-import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.aspectmodel.ValueParsingException;
+import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.aspectmodel.loader.AspectModelLoader;
 import org.eclipse.esmf.aspectmodel.resolver.AspectModelFileLoader;
 import org.eclipse.esmf.aspectmodel.resolver.exceptions.ParserException;
@@ -40,7 +38,7 @@ import org.slf4j.LoggerFactory;
 
 public class AspectModelValidationService extends TurtleService implements ResolutionStrategyAwareViolationProvider {
    private static final Logger LOG = LoggerFactory.getLogger( AspectModelValidationService.class );
-   private final Validator<Violation, List<Violation>> validator;
+   private final Validator validator;
    private final AspectViolationDiagnosticMapper diagnosticMapper = new AspectViolationDiagnosticMapper();
    private ResolutionStrategyService resolutionStrategyService;
 
@@ -48,11 +46,11 @@ public class AspectModelValidationService extends TurtleService implements Resol
       this( new AspectModelValidator(), new ResolutionStrategyService() );
    }
 
-   public AspectModelValidationService( final Validator<Violation, List<Violation>> validator ) {
+   public AspectModelValidationService( final Validator validator ) {
       this( validator, new ResolutionStrategyService() );
    }
 
-   public AspectModelValidationService( final Validator<Violation, List<Violation>> validator,
+   public AspectModelValidationService( final Validator validator,
          final ResolutionStrategyService resolutionStrategyService ) {
       this.validator = validator;
       this.resolutionStrategyService = resolutionStrategyService;
@@ -71,9 +69,9 @@ public class AspectModelValidationService extends TurtleService implements Resol
          LOG.debug( "[load] loading aspect model from {}", parsedDocument.getUri() );
          final RawAspectModelFile file =
                AspectModelFileLoader.load( parsedDocument.turtleSyntaxTree(), parsedDocument.getUri() );
-         final List<Violation> violations = validate( file, parsedDocument );
+         final ViolationReport violations = validate( file, parsedDocument );
          logProcessingViolations( violations );
-         return diagnosticMapper.mapValidationViolations( violations );
+         return violations;
       } catch ( final RiotException _ ) {
          // Tree-sitter owns ordinary syntax diagnostics. ParserException below keeps Jena-only syntax
          // fallback visible.
@@ -88,17 +86,17 @@ public class AspectModelValidationService extends TurtleService implements Resol
       }
    }
 
-   private void logProcessingViolations( final List<Violation> violations ) {
-      violations.stream()
+   private void logProcessingViolations( final ViolationReport violations ) {
+      violations.violations().stream()
             .filter( ProcessingViolation.class::isInstance )
             .map( ProcessingViolation.class::cast )
             .forEach( violation -> LOG.warn( "[validation] aspect model processing failed: {}", violation.message(), violation.cause() ) );
    }
 
-   private List<Violation> validate( final RawAspectModelFile file, final ParsedDocument parsedDocument ) {
+   private ViolationReport validate( final RawAspectModelFile file, final ParsedDocument parsedDocument ) {
       final AspectModelLoader documentLoader = loaderFor( parsedDocument );
-      final List<Violation> violations = validate( file, documentLoader );
-      LOG.debug( "[validate] validation finished for {} with {} violation(s)", parsedDocument.getUri(), violations.size() );
+      final ViolationReport violations = validate( file, documentLoader );
+      LOG.debug( "[validate] validation finished for {} with {} violation(s)", parsedDocument.getUri(), violations.violations().size() );
       return violations;
    }
 
@@ -114,7 +112,7 @@ public class AspectModelValidationService extends TurtleService implements Resol
             : new AspectModelLoader( resolutionStrategyService.buildResolutionStrategyForDocument( parsedDocument ) );
    }
 
-   private List<Violation> validate( final RawAspectModelFile file, final AspectModelLoader modelLoader ) {
+   private ViolationReport validate( final RawAspectModelFile file, final AspectModelLoader modelLoader ) {
       return validator.validateModel( () -> modelLoader.loadRawAspectModelFile( file ) );
    }
 

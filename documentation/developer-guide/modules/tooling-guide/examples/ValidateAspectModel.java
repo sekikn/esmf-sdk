@@ -39,7 +39,7 @@ public class ValidateAspectModel {
       // tag::validate[]
 
       // tag::violations[]
-      final List<Violation> violations = new AspectModelValidator().validateModel( aspectModel );
+      final List<Violation> violations = new AspectModelValidator().validateModel( aspectModel ).violations();
       if ( violations.isEmpty() ) {
          // Aspect Model is valid!
          return;

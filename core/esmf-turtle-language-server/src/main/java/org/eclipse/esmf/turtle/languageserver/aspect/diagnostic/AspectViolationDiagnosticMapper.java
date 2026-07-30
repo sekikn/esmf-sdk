@@ -19,9 +19,9 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import org.eclipse.esmf.aspectmodel.Location;
+import org.eclipse.esmf.aspectmodel.ValueParsingException;
 import org.eclipse.esmf.aspectmodel.Violation;
 import org.eclipse.esmf.aspectmodel.ViolationReport;
-import org.eclipse.esmf.aspectmodel.ValueParsingException;
 import org.eclipse.esmf.aspectmodel.resolver.exceptions.ParserException;
 import org.eclipse.esmf.aspectmodel.validation.InvalidLexicalValueViolation;
 import org.eclipse.esmf.aspectmodel.validation.InvalidSyntaxViolation;
@@ -61,13 +61,6 @@ public class AspectViolationDiagnosticMapper implements Function<List<Violation>
          return Optional.empty();
       }
       return Optional.of( violation );
-      // if ( violation instanceof final InvalidLexicalValueViolation lexicalViolation ) {
-      // return Optional.of( mapLexicalViolation( lexicalViolation ) );
-      // }
-      // if ( violation instanceof final ProcessingViolation processingViolation ) {
-      // return Optional.of( mapProcessingViolation( processingViolation ) );
-      // }
-      // return Optional.of( mapSemanticViolation( violation ) );
    }
 
    private Violation mapLexicalViolation( final InvalidLexicalValueViolation violation ) {
@@ -77,11 +70,6 @@ public class AspectViolationDiagnosticMapper implements Function<List<Violation>
             Math.max( 0, violation.location().fromLine() ),
             Math.max( 0, violation.location().fromColumn() + 1 ) );
       return new AspectDocumentViolation( violation.message(), code, violation.sourceDocument(), diagnosticsLocation );
-      // return Optional.of( violation.location() )
-      // .<Diagnostic>map(
-      // _ -> new AspectDocumentDiagnostic( violation.message(), code, violation.sourceDocument(),
-      // diagnosticsLocation ) )
-      // .orElseGet( () -> new AspectDiagnostic( violation.message(), code ) );
    }
 
    private InvalidLexicalValueViolation lexicalViolation( final ValueParsingException exception ) {

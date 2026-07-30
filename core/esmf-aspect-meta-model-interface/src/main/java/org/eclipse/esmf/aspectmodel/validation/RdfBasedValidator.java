@@ -13,17 +13,14 @@
 
 package org.eclipse.esmf.aspectmodel.validation;
 
-import java.util.Collection;
-
 import org.apache.jena.rdf.model.Model;
+
+import org.eclipse.esmf.aspectmodel.ViolationReport;
 
 /**
  * Generic validator for Aspect Models on the raw RDF input
- *
- * @param <P> the "problem" type that describes loading or validation failures
- * @param <C> the "collection of problem" type that constitutes a validation report
  */
-public interface RdfBasedValidator<P, C extends Collection<? super P>> {
+public interface RdfBasedValidator {
    /**
     * Validates a complete RDF input (i.e., this model is expected to contain all necessary
     * definitions, including meta model definitions)
@@ -31,5 +28,5 @@ public interface RdfBasedValidator<P, C extends Collection<? super P>> {
     * @param model the input model
     * @return the validation report
     */
-   C validateModel( Model model );
+   ViolationReport validateModel( Model model );
 }

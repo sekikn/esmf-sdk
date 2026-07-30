@@ -28,13 +28,13 @@ import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 import org.eclipse.esmf.aspectmodel.Violation;
+import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.aspectmodel.validation.ProcessingViolation;
 import org.eclipse.esmf.aspectmodel.validation.services.AspectModelValidator;
 import org.eclipse.esmf.metamodel.AspectModel;
 import org.eclipse.esmf.test.TestAspect;
 import org.eclipse.esmf.turtle.languageserver.aspect.diagnostic.AspectViolationDiagnosticMapper;
 import org.eclipse.esmf.turtle.languageserver.aspect.service.AspectModelValidationService;
-import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.ViolationProvider;
 import org.eclipse.esmf.turtle.languageserver.lsp.text.Document;
 import org.eclipse.esmf.turtle.languageserver.lsp.text.ParsedDocument;
@@ -103,7 +103,7 @@ class ValidationCoordinatorTest {
             new AspectModelValidationService(
                   new AspectModelValidator() {
                      @Override
-                     public List<Violation> validateModel( final Supplier<AspectModel> aspectModelSupplier ) {
+                     public ViolationReport validateModel( final Supplier<AspectModel> aspectModelSupplier ) {
                         throw failure;
                      }
                   }

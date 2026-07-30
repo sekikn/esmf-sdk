@@ -25,10 +25,10 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.ResourceFactory;
 
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
+import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.aspectmodel.loader.AspectModelLoader;
 import org.eclipse.esmf.aspectmodel.resolver.modelfile.RawAspectModelFileBuilder;
 import org.eclipse.esmf.aspectmodel.resolver.parser.PlainTextFormatter;
-import org.eclipse.esmf.aspectmodel.Violation;
 import org.eclipse.esmf.aspectmodel.validation.services.AspectModelValidator;
 import org.eclipse.esmf.aspectmodel.validation.services.ViolationFormatter;
 import org.eclipse.esmf.metamodel.AspectModel;
@@ -266,9 +266,9 @@ public class RustLikeFormatterTest {
       MODEL_WITH_CYCLES, :a
       """ )
    void testSemanticValidationFormatting( final InvalidTestAspect testModel, final String highlightToken ) {
-      final Either<List<Violation>, AspectModel> result = TestResources.loadWithValidation( testModel, new AspectModelValidator() );
+      final Either<ViolationReport, AspectModel> result = TestResources.loadWithValidation( testModel, new AspectModelValidator() );
       assertThat( result.isLeft() ).isTrue();
-      final List<Violation> violations = result.getLeft();
+      final ViolationReport violations = result.getLeft();
       final String report = new ViolationFormatter().apply( violations );
       // Report contains highlight marker
       assertThat( report ).contains( " " + "^".repeat( highlightToken.length() ) + " " );
@@ -284,9 +284,9 @@ public class RustLikeFormatterTest {
             "INVALID_SYNTAX"
       } )
    void testSyntaxErrorFormatting( final InvalidTestAspect testModel ) {
-      final Either<List<Violation>, AspectModel> result = TestResources.loadWithValidation( testModel, new AspectModelValidator() );
+      final Either<ViolationReport, AspectModel> result = TestResources.loadWithValidation( testModel, new AspectModelValidator() );
       assertThat( result.isLeft() ).isTrue();
-      final List<Violation> violations = result.getLeft();
+      final ViolationReport violations = result.getLeft();
       final String report = new ViolationFormatter( new PlainTextFormatter() ).apply( violations );
       assertThat( report ).contains( "Syntax" );
       // Report contains source file location
@@ -308,10 +308,10 @@ public class RustLikeFormatterTest {
             .headerComment( rawFile2.headerComment() )
             .build();
 
-      final Either<List<Violation>, AspectModel> result = new AspectModelLoader().withValidation( new AspectModelValidator() )
+      final Either<ViolationReport, AspectModel> result = new AspectModelLoader().withValidation( new AspectModelValidator() )
             .loadAspectModelFiles( List.of( file1, file2 ) );
       assertThat( result.isLeft() ).isTrue();
-      final List<Violation> violations = result.getLeft();
+      final ViolationReport violations = result.getLeft();
       final String report = new ViolationFormatter().apply( violations );
       assertThat( report ).contains( "Duplicate definition" );
    }

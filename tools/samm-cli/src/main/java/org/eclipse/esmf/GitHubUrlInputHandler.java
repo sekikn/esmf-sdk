@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
-import org.eclipse.esmf.aspectmodel.Violation;
+import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.aspectmodel.loader.AspectModelLoader;
 import org.eclipse.esmf.aspectmodel.resolver.GitHubFileLocation;
 import org.eclipse.esmf.aspectmodel.resolver.ResolutionStrategy;
@@ -75,7 +75,7 @@ public class GitHubUrlInputHandler extends AbstractInputHandler {
       final AspectModelUrn urn = AspectModelUrn.from( location.namespaceMainPart(), location.version(), expectedAspectName() )
             .getOrElseThrow( () -> new CommandException( "Could not construct valid Aspect Model URN from input URL: " + url ) );
       final Function<AspectModelLoader, AspectModel> loaderFunction = validate
-            ? ( (Function<AspectModelLoader, Either<List<Violation>, AspectModel>>) loader -> loader.withValidation( validator )
+            ? ( (Function<AspectModelLoader, Either<ViolationReport, AspectModel>>) loader -> loader.withValidation( validator )
                   .load( urn ) ).andThen( this::getAspectModelOrPrintValidationReport )
             : ( aspectModelLoader -> aspectModelLoader.load( urn ) );
       return applyAspectModelLoader( loaderFunction );

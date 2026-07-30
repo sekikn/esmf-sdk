@@ -57,10 +57,10 @@ import org.eclipse.digitaltwin.aas4j.v3.model.impl.DefaultSubmodel;
 import org.eclipse.digitaltwin.aas4j.v3.model.impl.DefaultSubmodelElementCollection;
 import org.eclipse.digitaltwin.aas4j.v3.model.impl.DefaultSubmodelElementList;
 
+import org.eclipse.esmf.aspectmodel.Violation;
 import org.eclipse.esmf.aspectmodel.generator.AspectArtifact;
 import org.eclipse.esmf.aspectmodel.loader.AspectModelLoader;
 import org.eclipse.esmf.aspectmodel.serializer.AspectSerializer;
-import org.eclipse.esmf.aspectmodel.Violation;
 import org.eclipse.esmf.aspectmodel.validation.services.AspectModelValidator;
 import org.eclipse.esmf.aspectmodel.validation.services.ViolationFormatter;
 import org.eclipse.esmf.metamodel.Aspect;
@@ -111,7 +111,7 @@ class AasToAspectModelGeneratorTest {
             }
          } );
 
-         final List<Violation> violations = new AspectModelValidator().validateModel( aspectModel );
+         final List<Violation> violations = new AspectModelValidator().validateModel( aspectModel ).violations();
          if ( !violations.isEmpty() ) {
             final String report = new ViolationFormatter().apply( violations );
             System.out.println( report );
@@ -392,7 +392,7 @@ class AasToAspectModelGeneratorTest {
       final String result = AspectSerializer.INSTANCE.aspectToString( aspect );
       final AspectModel aspectModel = new AspectModelLoader().load( new ByteArrayInputStream( result.getBytes() ), URI.create(
             "urn:samm:org.eclipse.esmf.test:1.0.0#TestAspect" ) );
-      assertThat( new AspectModelValidator().validateModel( aspectModel ) ).isEmpty();
+      assertThat( new AspectModelValidator().validateModel( aspectModel ).violations() ).isEmpty();
    }
 
    private static Environment buildTemplateEnvironment( final SubmodelElement submodelElement ) {

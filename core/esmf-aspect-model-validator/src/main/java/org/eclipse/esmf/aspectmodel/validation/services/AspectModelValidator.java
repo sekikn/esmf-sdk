@@ -27,15 +27,16 @@ import org.apache.jena.query.ARQ;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 
-import org.eclipse.esmf.aspectmodel.Location;
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
+import org.eclipse.esmf.aspectmodel.Location;
 import org.eclipse.esmf.aspectmodel.RdfUtil;
 import org.eclipse.esmf.aspectmodel.ValueParsingException;
+import org.eclipse.esmf.aspectmodel.Violation;
+import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.aspectmodel.loader.AspectModelLoader;
 import org.eclipse.esmf.aspectmodel.resolver.exceptions.ParserException;
 import org.eclipse.esmf.aspectmodel.resolver.modelfile.MetaModelFile;
 import org.eclipse.esmf.aspectmodel.shacl.ShaclValidator;
-import org.eclipse.esmf.aspectmodel.Violation;
 import org.eclipse.esmf.aspectmodel.validation.InvalidLexicalValueViolation;
 import org.eclipse.esmf.aspectmodel.validation.InvalidSyntaxViolation;
 import org.eclipse.esmf.aspectmodel.validation.ProcessingViolation;
@@ -49,7 +50,7 @@ import io.vavr.control.Either;
 /**
  * Uses SHACL to validate an Aspect Model against the defined semantics of the Aspect Meta Model.
  */
-public class AspectModelValidator implements Validator<Violation, List<Violation>> {
+public class AspectModelValidator implements Validator {
    private final ShaclValidator shaclValidator;
    private static boolean arqInitialized = false;
 
@@ -78,8 +79,8 @@ public class AspectModelValidator implements Validator<Violation, List<Violation
     * @return a list of {@link Violation}s. An empty list indicates that the model is valid.
     */
    @Override
-   public List<Violation> validateModel( final Supplier<AspectModel> aspectModelSupplier ) {
-      final Either<List<Violation>, AspectModel> result = loadModel( aspectModelSupplier );
+   public ViolationReport validateModel( final Supplier<AspectModel> aspectModelSupplier ) {
+      final Either<ViolationReport, AspectModel> result = loadModel( aspectModelSupplier );
       if ( result.isLeft() ) {
          return result.getLeft();
       }
@@ -98,7 +99,7 @@ public class AspectModelValidator implements Validator<Violation, List<Violation
     *         {@link Either.Left} with a list of {@link Violation}s.
     */
    @Override
-   public Either<List<Violation>, AspectModel> loadModel( final Supplier<AspectModel> aspectModelLoader ) {
+   public Either<ViolationReport, AspectModel> loadModel( final Supplier<AspectModel> aspectModelLoader ) {
       final AspectModel model;
       try {
          model = aspectModelLoader.get();
@@ -106,12 +107,12 @@ public class AspectModelValidator implements Validator<Violation, List<Violation
       } catch ( final ParserException exception ) {
          // Regular syntax errors
          final Location location = new Location( (int) exception.getLine() - 1, (int) exception.getColumn() - 1 );
-         return Either.left( List.of( new InvalidSyntaxViolation(
+         return Either.left( new ViolationReport( new InvalidSyntaxViolation(
                exception.getMessage(), exception.getSourceDocument(), location, exception.getSourceLocation() ) ) );
       } catch ( final ValueParsingException exception ) {
          // Failure to parse value literals
          final String sourceLine = exception.getSourceDocument().lines().toList().get( (int) exception.getLine() - 1 );
-         return Either.left( List.of( new InvalidLexicalValueViolation( exception.getType(), exception.getValue(),
+         return Either.left( new ViolationReport( new InvalidLexicalValueViolation( exception.getType(), exception.getValue(),
                new Location( (int) exception.getLine(), (int) exception.getColumn() ), sourceLine, exception.getSourceLocation() ) ) );
       } catch ( final CancelValidation cancelValidation ) {
          // The validation was short-circuited by the aspectModelLoader function
@@ -120,21 +121,21 @@ public class AspectModelValidator implements Validator<Violation, List<Violation
          // // TODO handle e.hightlight
       } catch ( final Exception exception ) {
          // Any other exception, e.g., resolution exception
-         return Either.left( List.of( new ProcessingViolation( exception.getMessage(), exception ) ) );
+         return Either.left( new ViolationReport( new ProcessingViolation( exception.getMessage(), exception ) ) );
       }
    }
 
    private static class CancelValidation extends RuntimeException {
-      private final List<Violation> violations;
+      private final ViolationReport violations;
 
-      private CancelValidation( final List<Violation> violations ) {
+      private CancelValidation( final ViolationReport violations ) {
          this.violations = violations;
       }
    }
 
    @SuppressWarnings( "unchecked" )
    @Override
-   public <E extends RuntimeException> E cancelValidation( final List<Violation> violations ) {
+   public <E extends RuntimeException> E cancelValidation( final ViolationReport violations ) {
       return (E) new CancelValidation( violations );
    }
 
@@ -145,7 +146,7 @@ public class AspectModelValidator implements Validator<Violation, List<Violation
     * @return a list of {@link Violation}s. An empty list indicates that the model is valid.
     */
    @Override
-   public List<Violation> validateModel( final AspectModel aspectModel ) {
+   public ViolationReport validateModel( final AspectModel aspectModel ) {
       final Model mergedModel = buildMergedModel( aspectModel.files() );
       return validateModel( mergedModel );
    }
@@ -169,8 +170,8 @@ public class AspectModelValidator implements Validator<Violation, List<Violation
     * @return a list of {@link Violation}s. An empty list indicates that the model is valid.
     */
    @Override
-   public List<Violation> validateModel( final Model model ) {
-      return Stream.<Supplier<RdfBasedValidator<Violation, List<Violation>>>>of(
+   public ViolationReport validateModel( final Model model ) {
+      return Stream.<Supplier<RdfBasedValidator>>of(
             () -> shaclValidator,
             ModelCycleDetector::new,
             RegularExpressionExampleValueValidator::new
@@ -178,7 +179,7 @@ public class AspectModelValidator implements Validator<Violation, List<Violation
             .map( validator -> validator.get().validateModel( model ) )
             .filter( result -> !result.isEmpty() )
             .findFirst()
-            .orElse( List.of() );
+            .orElse( ViolationReport.EMPTY );
    }
 
    /**

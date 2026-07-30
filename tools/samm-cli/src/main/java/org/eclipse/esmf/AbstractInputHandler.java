@@ -20,7 +20,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.eclipse.esmf.aspectmodel.Violation;
+import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.aspectmodel.loader.AspectModelLoader;
 import org.eclipse.esmf.aspectmodel.resolver.ExternalResolverStrategy;
 import org.eclipse.esmf.aspectmodel.resolver.FileSystemStrategy;
@@ -124,7 +124,7 @@ public abstract class AbstractInputHandler implements InputHandler {
       return new AspectModelLoader( resolutionStrategies() );
    }
 
-   protected AspectModel getAspectModelOrPrintValidationReport( final Either<List<Violation>, AspectModel> validModelOrViolations ) {
+   protected AspectModel getAspectModelOrPrintValidationReport( final Either<ViolationReport, AspectModel> validModelOrViolations ) {
       if ( validModelOrViolations.isLeft() ) {
          System.out.println( violationFormatter.apply( validModelOrViolations.getLeft() ) );
          System.exit( 1 );
@@ -134,7 +134,7 @@ public abstract class AbstractInputHandler implements InputHandler {
    }
 
    protected AspectModel applyAspectModelLoader( final Function<AspectModelLoader, AspectModel> loader ) {
-      final Either<List<Violation>, AspectModel> validModelOrViolations = validator.loadModel( () -> loader.apply( aspectModelLoader() ) );
+      final Either<ViolationReport, AspectModel> validModelOrViolations = validator.loadModel( () -> loader.apply( aspectModelLoader() ) );
       return getAspectModelOrPrintValidationReport( validModelOrViolations );
    }
 
@@ -160,7 +160,7 @@ public abstract class AbstractInputHandler implements InputHandler {
 
    @Override
    public String validateAspectModel() {
-      final List<Violation> violations = validator.validateModel( loadAspectModel() );
+      final ViolationReport violations = validator.validateModel( loadAspectModel() );
       return violationFormatter.apply( violations );
    }
 }

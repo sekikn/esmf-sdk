@@ -28,17 +28,18 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
+import org.apache.commons.io.IOUtils;
+
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
+import org.eclipse.esmf.aspectmodel.Violation;
 import org.eclipse.esmf.aspectmodel.loader.AspectModelLoader;
 import org.eclipse.esmf.aspectmodel.resolver.GithubRepository;
 import org.eclipse.esmf.aspectmodel.resolver.ResolutionStrategy;
 import org.eclipse.esmf.aspectmodel.shacl.violation.SparqlConstraintViolation;
-import org.eclipse.esmf.aspectmodel.Violation;
 import org.eclipse.esmf.aspectmodel.urn.AspectModelUrn;
 import org.eclipse.esmf.aspectmodel.validation.services.AspectModelValidator;
 import org.eclipse.esmf.metamodel.AspectModel;
 
-import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -149,7 +150,7 @@ public class GitHubStrategyTest {
       final AspectModel batteryPass = new AspectModelLoader( gitHubStrategy ).load( batteryPassUrn );
 
       final AspectModelValidator validator = new AspectModelValidator();
-      final List<Violation> violations = validator.validateModel( batteryPass );
+      final List<Violation> violations = validator.validateModel( batteryPass ).violations();
       assertThat( violations ).hasOnlyElementsOfType( SparqlConstraintViolation.class );
    }
 }
