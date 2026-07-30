@@ -477,7 +477,8 @@ class AasToAspectModelGeneratorTest {
       final AasToAspectModelGenerator aspectModelGenerator = AasToAspectModelGenerator.fromEnvironment( environment );
       final Aspect aspect = aspectModelGenerator.generate().map( AspectArtifact::getContent ).findFirst().orElseThrow();
 
-      final String result = assertValidSerializedAspect( aspect, URI.create( "urn:samm:%s:1.0.0#ProductCondition".formatted( namespace ) ) );
+      final String result =
+            assertValidSerializedAspect( aspect, URI.create( "urn:samm:%s:1.0.0#ProductCondition".formatted( namespace ) ) );
       assertThat( result ).contains( ":numberOfFullCyclesProperty a samm:Property" );
       assertThat( result ).contains( ":numberOfFullCycles a samm:Entity" );
       assertThat( result ).doesNotContain( ":numberOfFullCycles a samm:Property" );
