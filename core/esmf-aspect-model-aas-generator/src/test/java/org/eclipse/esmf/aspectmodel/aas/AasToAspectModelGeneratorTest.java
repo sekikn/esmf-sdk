@@ -492,9 +492,11 @@ class AasToAspectModelGeneratorTest {
 
    private static Stream<Arguments> dbpRegressionAasxFiles() {
       return Stream.of(
-            "submodel-templates/published/Digital Battery Passport/2_Handover Documentation/1/0/IDTA 02035-2_DBP-Part-2_HandoverDocumentation.aasx",
+            "submodel-templates/published/Digital Battery Passport/"
+                  + "2_Handover Documentation/1/0/IDTA 02035-2_DBP-Part-2_HandoverDocumentation.aasx",
             "submodel-templates/published/Digital Battery Passport/5_Product Condition/1/0/IDTA 02035-5_DBP-Part-5_ProductCondition.aasx",
-            "submodel-templates/published/Digital Battery Passport/6_Material Composition/1/0/IDTA 02035-6_DBP-Part-6_MaterialComposition.aasx",
+            "submodel-templates/published/Digital Battery Passport/6_Material Composition/1/0/"
+                  + "IDTA 02035-6_DBP-Part-6_MaterialComposition.aasx",
             "submodel-templates/published/Digital Battery Passport/7_Circularity/1/0/IDTA 02035-7_DBP-Part-7_Circularity.aasx"
       ).map( Arguments::of );
    }
