@@ -24,7 +24,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
 
-import org.eclipse.esmf.DiagnosticReport;
+import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.turtle.languageserver.lsp.request.ValidateDocumentParams;
 import org.eclipse.esmf.turtle.languageserver.lsp.text.TurtleTextDocumentService;
 import org.eclipse.esmf.turtle.languageserver.lsp.workspace.TurtleWorkspaceService;
@@ -107,9 +107,9 @@ public class TurtleLanguageServer implements LanguageServer, LanguageClientAware
    }
 
    @JsonRequest( "turtle/aspectValidation/validateDocument" )
-   public CompletableFuture<DiagnosticReport> validateDocument( final ValidateDocumentParams params ) {
+   public CompletableFuture<ViolationReport> validateDocument( final ValidateDocumentParams params ) {
       if ( params == null || params.uri() == null ) {
-         return CompletableFuture.completedFuture( DiagnosticReport.EMPTY );
+         return CompletableFuture.completedFuture( ViolationReport.EMPTY );
       }
       return textDocumentService.validateDocument( params.uri() );
    }

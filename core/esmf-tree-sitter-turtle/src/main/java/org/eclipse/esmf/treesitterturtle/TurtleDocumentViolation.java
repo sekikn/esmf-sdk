@@ -11,23 +11,23 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package org.eclipse.esmf.turtle.languageserver.aspect.diagnostic;
+package org.eclipse.esmf.treesitterturtle;
 
 import java.net.URI;
 
-import org.eclipse.esmf.Diagnostic;
-import org.eclipse.esmf.DocumentDiagnostic;
-import org.eclipse.esmf.Location;
+import org.eclipse.esmf.aspectmodel.DocumentViolation;
+import org.eclipse.esmf.aspectmodel.Location;
+import org.eclipse.esmf.aspectmodel.Violation;
 
-public record AspectDocumentDiagnostic(
+public record TurtleDocumentViolation(
       String message,
-      AspectDiagnosticCode code,
+      TurtleViolationCode code,
       URI sourceDocument,
       Location location,
-      Diagnostic.Severity severity
-) implements DocumentDiagnostic {
-   public AspectDocumentDiagnostic( final String message, final AspectDiagnosticCode code,
+      Violation.Severity severity
+) implements DocumentViolation {
+   public TurtleDocumentViolation( final String message, final TurtleViolationCode code,
          final URI sourceDocument, final Location location ) {
-      this( message, code, sourceDocument, location, Diagnostic.Severity.ERROR );
+      this( message, code, sourceDocument, location, Violation.Severity.ERROR );
    }
 }

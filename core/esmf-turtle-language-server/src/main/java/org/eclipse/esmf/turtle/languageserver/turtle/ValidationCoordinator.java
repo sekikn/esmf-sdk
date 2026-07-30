@@ -27,8 +27,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 
-import org.eclipse.esmf.DiagnosticReport;
-import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.DiagnosticsProvider;
+import org.eclipse.esmf.aspectmodel.ViolationReport;
+import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.ViolationProvider;
 import org.eclipse.esmf.turtle.languageserver.lsp.text.Document;
 import org.eclipse.esmf.turtle.languageserver.lsp.text.ParsedDocument;
 
@@ -39,32 +39,32 @@ public class ValidationCoordinator implements AutoCloseable {
    private static final Logger LOG = LoggerFactory.getLogger( ValidationCoordinator.class );
    private static final long IDLE_VALIDATION_DELAY_SECONDS = 4L;
 
-   private final List<DiagnosticsProvider> diagnosticsProviders;
-   private final BiConsumer<Document, DiagnosticReport> onValidationComplete;
+   private final List<ViolationProvider> violationProviders;
+   private final BiConsumer<Document, ViolationReport> onValidationComplete;
    private final ExecutorService executorService;
    private final ScheduledExecutorService scheduler;
 
    private final Map<Document, CompletableFuture<?>> runningValidations = new ConcurrentHashMap<>();
    private final Map<Document, ScheduledFuture<?>> scheduledValidations = new ConcurrentHashMap<>();
    private final Map<Document, AtomicLong> generations = new ConcurrentHashMap<>();
-   private final Map<Document, DiagnosticReport> fastValidationResults = new ConcurrentHashMap<>();
+   private final Map<Document, ViolationReport> fastValidationResults = new ConcurrentHashMap<>();
 
    public ValidationCoordinator(
-         final List<DiagnosticsProvider> diagnosticsProviders,
-         final BiConsumer<Document, DiagnosticReport> onValidationComplete ) {
-      this.diagnosticsProviders = diagnosticsProviders;
+         final List<ViolationProvider> violationProviders,
+         final BiConsumer<Document, ViolationReport> onValidationComplete ) {
+      this.violationProviders = violationProviders;
       this.onValidationComplete = onValidationComplete;
       executorService = Executors.newSingleThreadExecutor( Thread.ofPlatform().name( "semantic-models-validation-", 0 ).factory() );
       scheduler = Executors.newSingleThreadScheduledExecutor(
             Thread.ofPlatform().name( "semantic-models-validation-debounce-", 0 ).factory() );
    }
 
-   private DiagnosticReport validateFast( final ParsedDocument parsedDocument ) {
-      final DiagnosticReport result = diagnosticsProviders.stream()
-            .filter( provider -> provider.type().equals( DiagnosticsProvider.Type.FAST ) )
+   private ViolationReport validateFast( final ParsedDocument parsedDocument ) {
+      final ViolationReport result = violationProviders.stream()
+            .filter( provider -> provider.type().equals( ViolationProvider.Type.FAST ) )
             .map( provider -> provider.validate( parsedDocument ) )
-            .reduce( DiagnosticReport::merge )
-            .orElse( DiagnosticReport.EMPTY );
+            .reduce( ViolationReport::merge )
+            .orElse( ViolationReport.EMPTY );
       fastValidationResults.put( parsedDocument.sourceDocument(), result );
       return result;
    }
@@ -136,11 +136,11 @@ public class ValidationCoordinator implements AutoCloseable {
       }
    }
 
-   public CompletableFuture<DiagnosticReport> validateAsync( final ParsedDocument parsedDocument ) {
+   public CompletableFuture<ViolationReport> validateAsync( final ParsedDocument parsedDocument ) {
       final Document document = parsedDocument.sourceDocument();
       cancelRunningValidation( document );
       final long generation = generations.computeIfAbsent( document, ignored -> new AtomicLong() ).incrementAndGet();
-      final CompletableFuture<DiagnosticReport> future = CompletableFuture.supplyAsync(
+      final CompletableFuture<ViolationReport> future = CompletableFuture.supplyAsync(
             () -> validate( parsedDocument ),
             executorService
       );
@@ -167,13 +167,13 @@ public class ValidationCoordinator implements AutoCloseable {
       return future;
    }
 
-   private DiagnosticReport validate( final ParsedDocument parsedDocument ) {
-      return diagnosticsProviders.stream()
-            .filter( provider -> provider.type().equals( DiagnosticsProvider.Type.DELAYED ) )
+   private ViolationReport validate( final ParsedDocument parsedDocument ) {
+      return violationProviders.stream()
+            .filter( provider -> provider.type().equals( ViolationProvider.Type.DELAYED ) )
             .map( provider -> provider.validate( parsedDocument ) )
-            .reduce( DiagnosticReport::merge )
-            .orElse( DiagnosticReport.EMPTY )
-            .merge( fastValidationResults.getOrDefault( parsedDocument.sourceDocument(), DiagnosticReport.EMPTY ) );
+            .reduce( ViolationReport::merge )
+            .orElse( ViolationReport.EMPTY )
+            .merge( fastValidationResults.getOrDefault( parsedDocument.sourceDocument(), ViolationReport.EMPTY ) );
    }
 
    private Throwable unwrap( final Throwable throwable ) {

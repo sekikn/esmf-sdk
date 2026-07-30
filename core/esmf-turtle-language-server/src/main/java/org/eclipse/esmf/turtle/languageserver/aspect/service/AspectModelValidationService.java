@@ -18,27 +18,27 @@ import java.util.List;
 
 import org.apache.jena.riot.RiotException;
 
-import org.eclipse.esmf.DiagnosticReport;
+import org.eclipse.esmf.aspectmodel.Violation;
+import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.aspectmodel.ValueParsingException;
 import org.eclipse.esmf.aspectmodel.loader.AspectModelLoader;
 import org.eclipse.esmf.aspectmodel.resolver.AspectModelFileLoader;
 import org.eclipse.esmf.aspectmodel.resolver.exceptions.ParserException;
 import org.eclipse.esmf.aspectmodel.resolver.modelfile.RawAspectModelFile;
-import org.eclipse.esmf.aspectmodel.shacl.violation.Violation;
 import org.eclipse.esmf.aspectmodel.validation.ProcessingViolation;
 import org.eclipse.esmf.aspectmodel.validation.Validator;
 import org.eclipse.esmf.aspectmodel.validation.services.AspectModelValidator;
 import org.eclipse.esmf.turtle.languageserver.aspect.diagnostic.AspectViolationDiagnosticMapper;
 import org.eclipse.esmf.turtle.languageserver.aspect.navigation.ExternalModelFileCache;
 import org.eclipse.esmf.turtle.languageserver.lsp.ResolutionStrategyService;
-import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.ResolutionStrategyAwareDiagnosticsProvider;
+import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.ResolutionStrategyAwareViolationProvider;
 import org.eclipse.esmf.turtle.languageserver.lsp.text.ParsedDocument;
 import org.eclipse.esmf.turtle.languageserver.turtle.TurtleService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AspectModelValidationService extends TurtleService implements ResolutionStrategyAwareDiagnosticsProvider {
+public class AspectModelValidationService extends TurtleService implements ResolutionStrategyAwareViolationProvider {
    private static final Logger LOG = LoggerFactory.getLogger( AspectModelValidationService.class );
    private final Validator<Violation, List<Violation>> validator;
    private final AspectViolationDiagnosticMapper diagnosticMapper = new AspectViolationDiagnosticMapper();
@@ -63,9 +63,9 @@ public class AspectModelValidationService extends TurtleService implements Resol
    }
 
    @Override
-   public DiagnosticReport validate( final ParsedDocument parsedDocument ) {
+   public ViolationReport validate( final ParsedDocument parsedDocument ) {
       if ( !shouldValidateDocument( parsedDocument ) ) {
-         return DiagnosticReport.EMPTY;
+         return ViolationReport.EMPTY;
       }
       try {
          LOG.debug( "[load] loading aspect model from {}", parsedDocument.getUri() );
@@ -77,14 +77,14 @@ public class AspectModelValidationService extends TurtleService implements Resol
       } catch ( final RiotException _ ) {
          // Tree-sitter owns ordinary syntax diagnostics. ParserException below keeps Jena-only syntax
          // fallback visible.
-         return DiagnosticReport.EMPTY;
+         return ViolationReport.EMPTY;
       } catch ( final ParserException exception ) {
          return diagnosticMapper.mapParserException( exception, parsedDocument.getUri() );
       } catch ( final ValueParsingException exception ) {
          return diagnosticMapper.mapValueParsingException( exception );
       } catch ( final Exception exception ) {
          LOG.error( "[validate] unexpected runtime failure for {}", parsedDocument.getUri(), exception );
-         return diagnosticMapper.processingFailureReport();
+         return diagnosticMapper.processingFailureReport( exception );
       }
    }
 

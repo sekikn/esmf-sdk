@@ -18,9 +18,7 @@ import java.io.File;
 import java.util.List;
 
 import org.eclipse.esmf.aspectmodel.loader.AspectModelLoader;
-import org.eclipse.esmf.aspectmodel.shacl.fix.Fix;
-import org.eclipse.esmf.aspectmodel.shacl.violation.EvaluationContext;
-import org.eclipse.esmf.aspectmodel.shacl.violation.Violation;
+import org.eclipse.esmf.aspectmodel.Violation;
 import org.eclipse.esmf.aspectmodel.validation.services.AspectModelValidator;
 import org.eclipse.esmf.aspectmodel.validation.services.DetailedViolationFormatter;
 import org.eclipse.esmf.aspectmodel.validation.services.ViolationFormatter;
@@ -46,11 +44,9 @@ public class ValidateAspectModel {
          // Aspect Model is valid!
          return;
       } else {
-         for (Violation violation : violations) {
-            String errorCode = violation.errorCode();
+         for ( Violation violation : violations ) {
+            Violation.Code errorCode = violation.code();
             String message = violation.message();
-            EvaluationContext context = violation.context();
-            List<Fix> fixes = violation.fixes();
          }
       }
       // end::violations[]
@@ -58,10 +54,11 @@ public class ValidateAspectModel {
       final String validationReport = new ViolationFormatter().apply( violations ); // <1>
       final String detailedReport = new DetailedViolationFormatter().apply( violations );
 
-      class MyViolationVisitor implements Violation.Visitor<String> { // <2>
+      // TODO
+      class MyViolationVisitor /*implements Violation.Visitor<String>*/ { // <2>
          // ...
          // end::validate[]
-         @Override
+//         @Override
          public String visit( final Violation violation ) {
             return null;
          }
@@ -69,10 +66,10 @@ public class ValidateAspectModel {
       }
 
       // Turn the list of Violations into a list of custom descriptions
-      final Violation.Visitor<String> visitor = new MyViolationVisitor();
-      final List<String> result = violations.stream()
-            .map( violation -> violation.accept( visitor ) )
-            .toList();
+//      final Violation.Visitor<String> visitor = new MyViolationVisitor();
+//      final List<String> result = violations.stream()
+//            .map( violation -> violation.accept( visitor ) )
+//            .toList();
       // end::validate[]
    }
 }

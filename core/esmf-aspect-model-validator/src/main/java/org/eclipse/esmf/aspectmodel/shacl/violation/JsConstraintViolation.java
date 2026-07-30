@@ -41,7 +41,7 @@ import org.apache.jena.rdf.model.RDFNode;
 public record JsConstraintViolation(
       EvaluationContext context, String constraintMessage, JsLibrary library, String functionName,
       Map<String, Object> bindings
-) implements Violation {
+) implements ShaclViolation {
    public static final String ERROR_CODE = "ERR_JAVASCRIPT";
 
    @Override

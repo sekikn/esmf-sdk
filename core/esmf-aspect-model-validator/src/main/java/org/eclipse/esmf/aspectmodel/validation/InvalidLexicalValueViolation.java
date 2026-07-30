@@ -14,13 +14,12 @@
 package org.eclipse.esmf.aspectmodel.validation;
 
 import java.net.URI;
-import java.util.Optional;
-
-import org.eclipse.esmf.aspectmodel.RdfUtil;
-import org.eclipse.esmf.aspectmodel.shacl.violation.EvaluationContext;
-import org.eclipse.esmf.aspectmodel.shacl.violation.Violation;
 
 import org.apache.jena.rdf.model.Resource;
+
+import org.eclipse.esmf.aspectmodel.DocumentViolation;
+import org.eclipse.esmf.aspectmodel.Location;
+import org.eclipse.esmf.aspectmodel.RdfUtil;
 
 /**
  * A value (literal) value was given with an invalid value, e.g., "9999"^^xsd:byte
@@ -28,40 +27,26 @@ import org.apache.jena.rdf.model.Resource;
  * @param type the URI of the type
  * @param value the invalid value
  * @param location the source location of the violation
+ * @param sourceLine the line in the source document containing the problem
+ * @param sourceDocument the source location of the violation
  */
 public record InvalidLexicalValueViolation(
-      Resource type, Object value, int line, int column, String sourceLine, URI location
-)
-      implements Violation {
+      Resource type, Object value, Location location, String sourceLine, URI sourceDocument
+) implements DocumentViolation {
    public static final String ERROR_CODE = "ERR_INVALID_LEXICAL_VALUE";
 
-   @Override
-   public String errorCode() {
-      return ERROR_CODE;
+   public InvalidLexicalValueViolation( final Resource type, final Object value, final int fromLine, final int toLine,
+         final String sourceLine, final URI sourceDocument ) {
+      this( type, value, new Location( fromLine, toLine ), sourceLine, sourceDocument );
    }
 
    @Override
-   public EvaluationContext context() {
-      return null;
-   }
-
-   @Override
-   public String violationSpecificMessage() {
-      return "'%s' is no valid value for type %s".formatted( value, RdfUtil.curie( type.getURI() ) );
+   public Code code() {
+      return () -> ERROR_CODE;
    }
 
    @Override
    public String message() {
-      return "Invalid value";
-   }
-
-   @Override
-   public Optional<URI> sourceLocation() {
-      return Optional.of( location() );
-   }
-
-   @Override
-   public <T> T accept( final Visitor<T> visitor ) {
-      return visitor.visitInvalidLexicalValueViolation( this );
+      return "'%s' is no valid value for type %s".formatted( value, RdfUtil.curie( type.getURI() ) );
    }
 }

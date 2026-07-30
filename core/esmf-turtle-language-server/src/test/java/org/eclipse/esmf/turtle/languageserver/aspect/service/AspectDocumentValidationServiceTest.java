@@ -22,17 +22,17 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import org.eclipse.esmf.aspectmodel.resolver.exceptions.ParserException;
-import org.eclipse.esmf.aspectmodel.shacl.violation.Violation;
+import org.eclipse.esmf.aspectmodel.Violation;
 import org.eclipse.esmf.aspectmodel.validation.InvalidLexicalValueViolation;
 import org.eclipse.esmf.aspectmodel.validation.ProcessingViolation;
 import org.eclipse.esmf.aspectmodel.validation.services.AspectModelValidator;
 import org.eclipse.esmf.metamodel.AspectModel;
 import org.eclipse.esmf.test.TestAspect;
-import org.eclipse.esmf.treesitterturtle.TurtleDiagnosticCode;
-import org.eclipse.esmf.turtle.languageserver.aspect.diagnostic.AspectDocumentDiagnostic;
+import org.eclipse.esmf.treesitterturtle.TurtleViolationCode;
+import org.eclipse.esmf.turtle.languageserver.aspect.diagnostic.AspectDocumentViolation;
 import org.eclipse.esmf.turtle.languageserver.aspect.diagnostic.AspectViolationDiagnosticMapper;
 import org.eclipse.esmf.turtle.languageserver.aspect.diagnostic.TestViolation;
-import org.eclipse.esmf.DiagnosticReport;
+import org.eclipse.esmf.aspectmodel.ViolationReport;
 
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
@@ -59,8 +59,8 @@ class AspectDocumentValidationServiceTest {
       } );
 
       try {
-         final DiagnosticReport report = service.validate( parsedDocument( TestAspect.ASPECT ) );
-         assertThat( report.diagnostics() ).singleElement()
+         final ViolationReport report = service.validate( parsedDocument( TestAspect.ASPECT ) );
+         assertThat( report.violations() ).singleElement()
                .satisfies( diagnostic -> {
                   assertThat( diagnostic.code().code() ).isEqualTo( ProcessingViolation.ERROR_CODE );
                   assertThat( diagnostic.message() ).isEqualTo( AspectViolationDiagnosticMapper.PROCESSING_ERROR_MESSAGE );
@@ -84,10 +84,10 @@ class AspectDocumentValidationServiceTest {
          }
       } );
 
-      final DiagnosticReport report = service.validate( parsedDocument( TestAspect.ASPECT ) );
-      assertThat( report.diagnostics() ).singleElement()
+      final ViolationReport report = service.validate( parsedDocument( TestAspect.ASPECT ) );
+      assertThat( report.violations() ).singleElement()
             .satisfies( diagnostic -> {
-               assertThat( diagnostic.code().code() ).isEqualTo( TurtleDiagnosticCode.ERR_SYNTAX.code() );
+               assertThat( diagnostic.code().code() ).isEqualTo( TurtleViolationCode.ERR_SYNTAX.code() );
                assertThat( diagnostic.message() ).isEqualTo( "Triples not terminated by DOT" );
             } );
    }
@@ -101,8 +101,8 @@ class AspectDocumentValidationServiceTest {
          }
       } );
 
-      final DiagnosticReport report = service.validate( parsedDocument( TestAspect.ASPECT ) );
-      assertThat( report.diagnostics() ).singleElement()
+      final ViolationReport report = service.validate( parsedDocument( TestAspect.ASPECT ) );
+      assertThat( report.violations() ).singleElement()
             .satisfies( diagnostic -> {
                assertThat( diagnostic.code().code() ).isEqualTo( "ERR_TEST" );
                assertThat( diagnostic.message() ).isEqualTo( "semantic problem" );
@@ -125,9 +125,9 @@ class AspectDocumentValidationServiceTest {
       logger.addAppender( appender );
 
       try {
-         final DiagnosticReport report = service.validate( parsedDocument( TestAspect.ASPECT ) );
+         final ViolationReport report = service.validate( parsedDocument( TestAspect.ASPECT ) );
 
-         assertThat( report.diagnostics() ).singleElement()
+         assertThat( report.violations() ).singleElement()
                .satisfies( diagnostic -> {
                   assertThat( diagnostic.code().code() ).isEqualTo( ProcessingViolation.ERROR_CODE );
                   assertThat( diagnostic.message() ).isEqualTo( "processing violation" );
@@ -147,15 +147,15 @@ class AspectDocumentValidationServiceTest {
    @Test
    void riotExceptionReturnsEmptyReport() {
       final AspectModelValidationService service = new AspectModelValidationService();
-      final DiagnosticReport report = service.validate( emptyParsedDocument() );
-      assertThat( report.diagnostics() ).isEmpty();
+      final ViolationReport report = service.validate( emptyParsedDocument() );
+      assertThat( report.violations() ).isEmpty();
    }
 
    @Test
    void valueParsingExceptionFromRealLoadingIsMappedToLexicalDiagnostic() {
       final AspectModelValidationService service = new AspectModelValidationService();
 
-      final DiagnosticReport report = service.validate( parsedDocument( "Aspect.ttl", """
+      final ViolationReport report = service.validate( parsedDocument( "Aspect.ttl", """
          @prefix : <urn:samm:org.eclipse.esmf.test:1.0.0#> .
          @prefix samm: <urn:samm:org.eclipse.esmf.samm:meta-model:2.2.0#> .
          @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
@@ -171,7 +171,7 @@ class AspectDocumentValidationServiceTest {
             samm:dataType xsd:byte .
          """ ) );
 
-      assertThat( report.diagnostics() ).singleElement().isInstanceOfSatisfying( AspectDocumentDiagnostic.class, diagnostic -> {
+      assertThat( report.violations() ).singleElement().isInstanceOfSatisfying( AspectDocumentViolation.class, diagnostic -> {
          assertThat( diagnostic.code().code() ).isEqualTo( InvalidLexicalValueViolation.ERROR_CODE );
          assertThat( diagnostic.message() ).isEqualTo( "Invalid value" );
       } );
@@ -181,7 +181,7 @@ class AspectDocumentValidationServiceTest {
    void missingReferencedPropertyFromRealLoadingIsMappedToProcessingDiagnosticWithActionableMessage() {
       final AspectModelValidationService service = new AspectModelValidationService();
 
-      final DiagnosticReport report = service.validate( parsedDocument( "Aspect.ttl", """
+      final ViolationReport report = service.validate( parsedDocument( "Aspect.ttl", """
          @prefix : <urn:samm:org.eclipse.esmf.test:1.0.0#> .
          @prefix samm: <urn:samm:org.eclipse.esmf.samm:meta-model:2.2.0#> .
 
@@ -189,7 +189,7 @@ class AspectDocumentValidationServiceTest {
             samm:properties ( :notExistingProperty ) .
          """ ) );
 
-      assertThat( report.diagnostics() ).singleElement()
+      assertThat( report.violations() ).singleElement()
             .satisfies( diagnostic -> {
                assertThat( diagnostic.code().code() ).isEqualTo( ProcessingViolation.ERROR_CODE );
                assertThat( diagnostic.message() )

@@ -18,6 +18,7 @@ import static org.eclipse.esmf.aspectmodel.RdfUtil.createModel;
 
 import java.math.BigInteger;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.apache.jena.graph.Node_URI;
 import org.apache.jena.rdf.model.Literal;
@@ -55,10 +56,11 @@ import org.eclipse.esmf.aspectmodel.shacl.violation.NodeKindViolation;
 import org.eclipse.esmf.aspectmodel.shacl.violation.NotViolation;
 import org.eclipse.esmf.aspectmodel.shacl.violation.OrViolation;
 import org.eclipse.esmf.aspectmodel.shacl.violation.PatternViolation;
+import org.eclipse.esmf.aspectmodel.shacl.violation.ShaclViolation;
 import org.eclipse.esmf.aspectmodel.shacl.violation.SparqlConstraintViolation;
 import org.eclipse.esmf.aspectmodel.shacl.violation.UniqueLanguageViolation;
 import org.eclipse.esmf.aspectmodel.shacl.violation.ValueFromListViolation;
-import org.eclipse.esmf.aspectmodel.shacl.violation.Violation;
+import org.eclipse.esmf.aspectmodel.Violation;
 import org.eclipse.esmf.aspectmodel.shacl.violation.XoneViolation;
 import org.eclipse.esmf.aspectmodel.validation.services.ViolationFormatter;
 
@@ -1870,7 +1872,8 @@ public class ShaclValidatorTest {
 
       final ShaclValidator validator = new ShaclValidator( shapesModel );
       final Resource element = dataModel.createResource( namespace + "Foo" );
-      final List<Violation> violations = validator.validateElement( element );
+      final List<ShaclViolation> violations = validator.validateElement( element ).stream()
+            .flatMap( v -> v instanceof final ShaclViolation s ? Stream.of( s ) : Stream.empty() ).toList();
 
       assertThat( violations )
             .singleElement()

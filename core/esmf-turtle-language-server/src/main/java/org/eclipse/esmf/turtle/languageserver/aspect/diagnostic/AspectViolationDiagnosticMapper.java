@@ -18,103 +18,77 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-import org.apache.jena.rdf.model.RDFNode;
-
-import org.eclipse.esmf.Diagnostic;
-import org.eclipse.esmf.DiagnosticReport;
-import org.eclipse.esmf.Location;
+import org.eclipse.esmf.aspectmodel.Location;
+import org.eclipse.esmf.aspectmodel.Violation;
+import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.aspectmodel.ValueParsingException;
 import org.eclipse.esmf.aspectmodel.resolver.exceptions.ParserException;
-import org.eclipse.esmf.aspectmodel.resolver.parser.SmartToken;
-import org.eclipse.esmf.aspectmodel.resolver.parser.TokenRegistry;
-import org.eclipse.esmf.aspectmodel.shacl.violation.Violation;
 import org.eclipse.esmf.aspectmodel.validation.InvalidLexicalValueViolation;
 import org.eclipse.esmf.aspectmodel.validation.InvalidSyntaxViolation;
 import org.eclipse.esmf.aspectmodel.validation.ProcessingViolation;
-import org.eclipse.esmf.treesitterturtle.TurtleDiagnosticCode;
-import org.eclipse.esmf.treesitterturtle.TurtleDocumentDiagnostic;
+import org.eclipse.esmf.treesitterturtle.TurtleDocumentViolation;
+import org.eclipse.esmf.treesitterturtle.TurtleViolationCode;
 
-public class AspectViolationDiagnosticMapper implements Function<List<Violation>, DiagnosticReport> {
+public class AspectViolationDiagnosticMapper implements Function<List<Violation>, ViolationReport> {
    public static final String PROCESSING_ERROR_MESSAGE = "Model validation failed. See language server logs for details.";
 
    @Override
-   public DiagnosticReport apply( final List<Violation> violations ) {
+   public ViolationReport apply( final List<Violation> violations ) {
       return mapValidationViolations( violations );
    }
 
-   public DiagnosticReport mapValidationViolations( final List<Violation> violations ) {
-      return new DiagnosticReport( violations.stream()
-            .<Diagnostic>flatMap( violation -> mapViolation( violation ).stream() )
+   public ViolationReport mapValidationViolations( final List<Violation> violations ) {
+      return new ViolationReport( violations.stream()
+            .flatMap( violation -> mapViolation( violation ).stream() )
             .toList() );
    }
 
-   public DiagnosticReport mapParserException( final ParserException exception, final URI sourceLocation ) {
-      return new DiagnosticReport( new TurtleDocumentDiagnostic( exception.getMessage(), TurtleDiagnosticCode.ERR_SYNTAX,
+   public ViolationReport mapParserException( final ParserException exception, final URI sourceLocation ) {
+      return new ViolationReport( new TurtleDocumentViolation( exception.getMessage(), TurtleViolationCode.ERR_SYNTAX,
             sourceLocation, new Location( line( exception ), column( exception ), line( exception ), column( exception ) + 1 ) ) );
    }
 
-   public DiagnosticReport mapValueParsingException( final ValueParsingException exception ) {
-      return new DiagnosticReport( mapLexicalViolation( lexicalViolation( exception ) ) );
+   public ViolationReport mapValueParsingException( final ValueParsingException exception ) {
+      return new ViolationReport( mapLexicalViolation( lexicalViolation( exception ) ) );
    }
 
-   public DiagnosticReport processingFailureReport() {
-      return new DiagnosticReport(
-            new AspectDiagnostic( PROCESSING_ERROR_MESSAGE, new AspectDiagnosticCode( ProcessingViolation.ERROR_CODE ) ) );
+   public ViolationReport processingFailureReport( final Exception cause ) {
+      return new ViolationReport( new ProcessingViolation( PROCESSING_ERROR_MESSAGE, cause ) );
    }
 
-   private Optional<Diagnostic> mapViolation( final Violation violation ) {
+   private Optional<Violation> mapViolation( final Violation violation ) {
       if ( violation instanceof InvalidSyntaxViolation ) {
          return Optional.empty();
       }
-      if ( violation instanceof final InvalidLexicalValueViolation lexicalViolation ) {
-         return Optional.of( mapLexicalViolation( lexicalViolation ) );
-      }
-      if ( violation instanceof final ProcessingViolation processingViolation ) {
-         return Optional.of( mapProcessingViolation( processingViolation ) );
-      }
-      return Optional.of( mapSemanticViolation( violation ) );
+      return Optional.of( violation );
+      // if ( violation instanceof final InvalidLexicalValueViolation lexicalViolation ) {
+      // return Optional.of( mapLexicalViolation( lexicalViolation ) );
+      // }
+      // if ( violation instanceof final ProcessingViolation processingViolation ) {
+      // return Optional.of( mapProcessingViolation( processingViolation ) );
+      // }
+      // return Optional.of( mapSemanticViolation( violation ) );
    }
 
-   private Diagnostic mapLexicalViolation( final InvalidLexicalValueViolation violation ) {
+   private Violation mapLexicalViolation( final InvalidLexicalValueViolation violation ) {
       final AspectDiagnosticCode code = new AspectDiagnosticCode( InvalidLexicalValueViolation.ERROR_CODE );
-      final Location diagnosticsLocation = new Location( Math.max( 0, violation.line() - 1 ),
-            Math.max( 0, violation.column() - 1 ),
-            Math.max( 0, violation.line() - 1 ),
-            Math.max( 0, violation.column() ) );
-      return Optional.ofNullable( violation.location() )
-            .<Diagnostic>map(
-                  location -> new AspectDocumentDiagnostic( violation.message(), code, location, diagnosticsLocation ) )
-            .orElseGet( () -> new AspectDiagnostic( violation.message(), code ) );
-   }
-
-   private Diagnostic mapProcessingViolation( final ProcessingViolation violation ) {
-      return mapViolationWithOptionalLocation( violation, new AspectDiagnosticCode( ProcessingViolation.ERROR_CODE ) );
-   }
-
-   private Diagnostic mapSemanticViolation( final Violation violation ) {
-      return mapViolationWithOptionalLocation( violation, new AspectDiagnosticCode( violation.errorCode() ) );
-   }
-
-   private Diagnostic mapViolationWithOptionalLocation( final Violation violation, final AspectDiagnosticCode code ) {
-      final Location location = Optional.ofNullable( violation.highlight() )
-            .map( RDFNode::asNode )
-            .flatMap( TokenRegistry::getToken )
-            .map( SmartToken::location )
-            .orElse( null );
-      if ( location == null ) {
-         return new AspectDiagnostic( violation.message(), code );
-      }
-      return violation.sourceLocation()
-            .<Diagnostic>map( sourceLocation -> new AspectDocumentDiagnostic( violation.message(), code, sourceLocation, location ) )
-            .orElseGet( () -> new AspectDiagnostic( violation.message(), code ) );
+      final Location diagnosticsLocation = new Location( Math.max( 0, violation.location().fromLine() ),
+            Math.max( 0, violation.location().fromColumn() ),
+            Math.max( 0, violation.location().fromLine() ),
+            Math.max( 0, violation.location().fromColumn() + 1 ) );
+      return new AspectDocumentViolation( violation.message(), code, violation.sourceDocument(), diagnosticsLocation );
+      // return Optional.of( violation.location() )
+      // .<Diagnostic>map(
+      // _ -> new AspectDocumentDiagnostic( violation.message(), code, violation.sourceDocument(),
+      // diagnosticsLocation ) )
+      // .orElseGet( () -> new AspectDiagnostic( violation.message(), code ) );
    }
 
    private InvalidLexicalValueViolation lexicalViolation( final ValueParsingException exception ) {
       return new InvalidLexicalValueViolation(
             exception.getType(),
             exception.getValue(),
-            (int) exception.getLine(),
-            (int) exception.getColumn(),
+            new Location( (int) exception.getLine(), (int) exception.getColumn() ),
             sourceLine( exception ),
             exception.getSourceLocation() );
    }

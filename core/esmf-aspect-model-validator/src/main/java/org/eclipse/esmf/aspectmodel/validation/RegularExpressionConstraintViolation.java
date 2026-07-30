@@ -15,35 +15,36 @@ package org.eclipse.esmf.aspectmodel.validation;
 
 import java.util.Optional;
 
+import org.apache.jena.rdf.model.RDFNode;
+
 import org.eclipse.esmf.aspectmodel.resolver.parser.TokenRegistry;
 import org.eclipse.esmf.aspectmodel.shacl.violation.EvaluationContext;
-import org.eclipse.esmf.aspectmodel.shacl.violation.Violation;
-
-import org.apache.jena.rdf.model.RDFNode;
 
 /**
  * Violation for regular expressions that are too complex to automatically generate example values.
  *
- * @param context the evaluation context
- * @param regexp the problematic regular expression
  */
-public record RegularExpressionConstraintViolation(
-      EvaluationContext context, String regexp
-) implements Violation {
+public final class RegularExpressionConstraintViolation extends DefaultLocatedViolation {
    public static final String ERROR_CODE = "ERR_INVALID_REGEX";
+   private final EvaluationContext context;
+   private final String regexp;
+
+   /**
+    * @param context the evaluation context
+    * @param regexp the problematic regular expression
+    */
+   public RegularExpressionConstraintViolation( final EvaluationContext context, final String regexp ) {
+      this.context = context;
+      this.regexp = regexp;
+   }
 
    @Override
-   public String errorCode() {
-      return ERROR_CODE;
+   public Code code() {
+      return () -> ERROR_CODE;
    }
 
    @Override
    public String message() {
-      return violationSpecificMessage();
-   }
-
-   @Override
-   public String violationSpecificMessage() {
       return "Regular expression on %s is invalid: '%s'.".formatted( context.value( context.element() ), regexp );
    }
 
@@ -55,8 +56,7 @@ public record RegularExpressionConstraintViolation(
             .orElse( context.element() );
    }
 
-   @Override
-   public <T> T accept( final Visitor<T> visitor ) {
-      return visitor.visitRegularExpressionConstraint( this );
+   public String regexp() {
+      return regexp;
    }
 }

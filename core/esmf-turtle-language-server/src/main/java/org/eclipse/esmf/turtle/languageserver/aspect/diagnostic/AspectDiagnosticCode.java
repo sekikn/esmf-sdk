@@ -13,13 +13,8 @@
 
 package org.eclipse.esmf.turtle.languageserver.aspect.diagnostic;
 
-import org.eclipse.esmf.Diagnostic;
+import org.eclipse.esmf.aspectmodel.Violation;
 
 public record AspectDiagnosticCode(
       String code
-) implements Diagnostic.Code {
-   @Override
-   public String description() {
-      return code;
-   }
-}
+) implements Violation.Code {}

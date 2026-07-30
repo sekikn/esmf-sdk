@@ -13,47 +13,29 @@
 
 package org.eclipse.esmf.aspectmodel.validation;
 
-import org.apache.jena.rdf.model.RDFNode;
-
-import org.eclipse.esmf.aspectmodel.AspectLoadingException;
-import org.eclipse.esmf.aspectmodel.shacl.violation.EvaluationContext;
-import org.eclipse.esmf.aspectmodel.shacl.violation.Violation;
-
-import org.jspecify.annotations.Nullable;
+import org.eclipse.esmf.aspectmodel.Violation;
 
 /**
- * Meta violation: The validation was unsuccessful, for example because the model could not be
+ * Generic violation: The validation was unsuccessful, for example because the model could not be
  * loaded or not be resolved
  *
+ * @param message the detailed message
  * @param cause the cause
  */
 public record ProcessingViolation(
-      String violationSpecificMessage, Throwable cause
+      String message, Throwable cause
 ) implements Violation {
    public static final String ERROR_CODE = "ERR_PROCESSING";
 
    @Override
-   public String errorCode() {
-      return ERROR_CODE;
+   public Code code() {
+      return () -> ERROR_CODE;
    }
 
-   @Override
-   public EvaluationContext context() {
-      return null;
-   }
-
-   @Override
-   public String message() {
-      return violationSpecificMessage();
-   }
-
-   @Override
-   public @Nullable RDFNode highlight() {
-      return cause instanceof final AspectLoadingException aspectLoadingException ? aspectLoadingException.highlightElement() : null;
-   }
-
-   @Override
-   public <T> T accept( final Visitor<T> visitor ) {
-      return visitor.visitProcessingViolation( this );
-   }
+   // TODO
+   // @Override
+   // public @Nullable RDFNode highlight() {
+   // return cause instanceof final AspectLoadingException aspectLoadingException ?
+   // aspectLoadingException.highlightElement() : null;
+   // }
 }

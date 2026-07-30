@@ -23,8 +23,8 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import org.eclipse.esmf.Diagnostic;
-import org.eclipse.esmf.Location;
+import org.eclipse.esmf.aspectmodel.Location;
+import org.eclipse.esmf.aspectmodel.Violation;
 
 import org.jspecify.annotations.Nullable;
 import org.treesitter.TSNode;
@@ -99,7 +99,7 @@ public class TurtleSyntaxTree {
 
    public record Error(
          String type,
-         Diagnostic.Code errorType,
+         Violation.Code errorType,
          Location location,
          List<Node> children
    ) implements Node {
@@ -205,9 +205,9 @@ public class TurtleSyntaxTree {
             .map( child -> nodeForTsNode( child, content ) )
             .toList();
       if ( inputNode.isError() ) {
-         return new Error( inputNode.getType(), TurtleDiagnosticCode.ERR_SYNTAX, location, children );
+         return new Error( inputNode.getType(), TurtleViolationCode.ERR_SYNTAX, location, children );
       } else if ( inputNode.isMissing() ) {
-         return new Error( inputNode.getType(), TurtleDiagnosticCode.ERR_MISSING_TOKEN, location, children );
+         return new Error( inputNode.getType(), TurtleViolationCode.ERR_MISSING_TOKEN, location, children );
       }
       final Supplier<String> token = () -> new String(
             // bytes

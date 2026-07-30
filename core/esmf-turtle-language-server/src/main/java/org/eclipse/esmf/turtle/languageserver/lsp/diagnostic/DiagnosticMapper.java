@@ -19,8 +19,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.esmf.Diagnostic.Severity;
-import org.eclipse.esmf.DocumentDiagnostic;
+import org.eclipse.esmf.aspectmodel.DocumentViolation;
+import org.eclipse.esmf.aspectmodel.Violation;
+import org.eclipse.esmf.aspectmodel.Violation.Severity;
+import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.turtle.languageserver.lsp.text.Document;
 
 import org.eclipse.lsp4j.Diagnostic;
@@ -31,27 +33,27 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 
 /**
- * Translates server internal diagnostics representations into LSP conformant objects
+ * Translates server internal violations into LSP conformant diagnostics
  */
 public final class DiagnosticMapper {
    private static final Range FALLBACK = new Range( new Position( 0, 0 ), new Position( 0, 0 ) );
 
-   public Map<URI, List<Diagnostic>> apply( final Document sourceDocument, final org.eclipse.esmf.DiagnosticReport report ) {
+   public Map<URI, List<Diagnostic>> apply( final Document sourceDocument, final ViolationReport report ) {
       final Map<URI, List<Diagnostic>> result = new HashMap<>();
-      for ( final org.eclipse.esmf.Diagnostic lspDiagnostic : report.diagnostics() ) {
+      for ( final Violation violation : report.violations() ) {
          final Diagnostic diagnostic = new Diagnostic();
-         diagnostic.setSeverity( toDiagnosticSeverity( lspDiagnostic.severity() ) );
-         diagnostic.setMessage( lspDiagnostic.message() );
-         diagnostic.setCode( lspDiagnostic.code().code() );
-         if ( lspDiagnostic instanceof final DocumentDiagnostic documentDiagnostic ) {
-            if ( documentDiagnostic.sourceDocument().equals( sourceDocument.uri() ) ) {
-               diagnostic.setRange( toRange( documentDiagnostic ) );
+         diagnostic.setSeverity( toDiagnosticSeverity( violation.severity() ) );
+         diagnostic.setMessage( violation.message() );
+         diagnostic.setCode( violation.code().code() );
+         if ( violation instanceof final DocumentViolation documentViolation ) {
+            if ( documentViolation.sourceDocument().equals( sourceDocument.uri() ) ) {
+               diagnostic.setRange( toRange( documentViolation ) );
             } else {
                final DiagnosticRelatedInformation relatedInformation = new DiagnosticRelatedInformation();
                relatedInformation.setMessage( "Root cause of the problem is here" );
                final Location relatedLocation = new Location();
-               relatedLocation.setUri( documentDiagnostic.sourceDocument().toString() );
-               relatedLocation.setRange( toRange( documentDiagnostic ) );
+               relatedLocation.setUri( documentViolation.sourceDocument().toString() );
+               relatedLocation.setRange( toRange( documentViolation ) );
                relatedInformation.setLocation( relatedLocation );
                diagnostic.setRelatedInformation( List.of( relatedInformation ) );
                diagnostic.setRange( FALLBACK );
@@ -73,7 +75,7 @@ public final class DiagnosticMapper {
       };
    }
 
-   private Range toRange( final DocumentDiagnostic diagnostic ) {
+   private Range toRange( final DocumentViolation diagnostic ) {
       return new Range( new Position( diagnostic.location().fromLine(), diagnostic.location().fromColumn() ),
             new Position( diagnostic.location().toLine(), diagnostic.location().toColumn() ) );
    }

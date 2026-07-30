@@ -31,7 +31,7 @@ import org.eclipse.esmf.aspectmodel.shacl.fix.Fix;
 import org.eclipse.esmf.aspectmodel.shacl.violation.DatatypeViolation;
 import org.eclipse.esmf.aspectmodel.shacl.violation.MinCountViolation;
 import org.eclipse.esmf.aspectmodel.shacl.violation.SparqlConstraintViolation;
-import org.eclipse.esmf.aspectmodel.shacl.violation.Violation;
+import org.eclipse.esmf.aspectmodel.Violation;
 import org.eclipse.esmf.aspectmodel.validation.CycleViolation;
 import org.eclipse.esmf.aspectmodel.validation.InvalidSyntaxViolation;
 import org.eclipse.esmf.aspectmodel.validation.ProcessingViolation;
@@ -118,7 +118,7 @@ class AspectModelValidatorTest {
             .hasSize( 1 )
             .first()
             .satisfies( violation -> assertThat( violation ).isInstanceOfSatisfying( CycleViolation.class,
-                  cycleViolation -> assertThat( cycleViolation.violationSpecificMessage() )
+                  cycleViolation -> assertThat( cycleViolation.message() )
                         .contains( ":testProperty -> :testProperty" ) ) );
    }
 
@@ -179,7 +179,7 @@ class AspectModelValidatorTest {
       final InvalidSyntaxViolation violation = (InvalidSyntaxViolation) violations.getFirst();
       assertThat( violation.location().fromLine() ).isEqualTo( 17 );
       assertThat( violation.location().fromColumn() ).isEqualTo( 4 );
-      assertThat( violation.violationSpecificMessage() ).contains( "Triples not terminated by DOT" );
+      assertThat( violation.message() ).contains( "Triples not terminated by DOT" );
    }
 
    @Test
@@ -198,7 +198,7 @@ class AspectModelValidatorTest {
       final InvalidSyntaxViolation violation = (InvalidSyntaxViolation) violations.getFirst();
       assertThat( violation.location().fromLine() ).isEqualTo( 12 );
       assertThat( violation.location().fromColumn() ).isEqualTo( 1 );
-      assertThat( violation.violationSpecificMessage() ).contains( "Not implemented (formulae, graph literals)" );
+      assertThat( violation.message() ).contains( "Not implemented (formulae, graph literals)" );
    }
 
    @Test
@@ -271,7 +271,7 @@ class AspectModelValidatorTest {
       assertThat( result.isLeft() ).isTrue();
       final List<Violation> violations = result.getLeft();
       assertThat( violations ).hasSize( 1 );
-      assertThat( violations.getFirst().violationSpecificMessage() ).contains( "is no valid value for type" );
+      assertThat( violations.getFirst().message() ).contains( "is no valid value for type" );
    }
 
    @Test
@@ -281,7 +281,7 @@ class AspectModelValidatorTest {
       assertThat( result.isLeft() ).isTrue();
       final List<Violation> violations = result.getLeft();
       assertThat( violations ).hasSize( 1 );
-      assertThat( violations.getFirst().violationSpecificMessage() ).contains(
+      assertThat( violations.getFirst().message() ).contains(
             "Regular expression on :TestRegularExpressionConstraint is invalid" );
    }
 
@@ -292,7 +292,7 @@ class AspectModelValidatorTest {
       assertThat( result.isLeft() ).isTrue();
       final List<Violation> violations = result.getLeft();
       assertThat( violations ).hasSize( 1 );
-      assertThat( violations.getFirst().violationSpecificMessage() ).contains(
+      assertThat( violations.getFirst().message() ).contains(
             "Regular expression on anonymous element is invalid" );
    }
 }

@@ -11,16 +11,16 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package org.eclipse.esmf.treesitterturtle;
+package org.eclipse.esmf.turtle.languageserver.aspect.diagnostic;
 
-import org.eclipse.esmf.Diagnostic;
+import org.eclipse.esmf.aspectmodel.Violation;
 
-public record TurtleDiagnostic(
+public record AspectViolation(
       String message,
-      TurtleDiagnosticCode code,
-      Diagnostic.Severity severity
-) implements Diagnostic {
-   public TurtleDiagnostic( final String message, final TurtleDiagnosticCode code ) {
+      Violation.Code code,
+      Violation.Severity severity
+) implements Violation {
+   public AspectViolation( final String message, final Violation.Code code ) {
       this( message, code, Severity.ERROR );
    }
 }

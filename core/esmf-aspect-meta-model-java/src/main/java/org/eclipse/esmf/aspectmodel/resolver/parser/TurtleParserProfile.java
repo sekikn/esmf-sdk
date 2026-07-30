@@ -13,6 +13,7 @@
 
 package org.eclipse.esmf.aspectmodel.resolver.parser;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,10 +50,12 @@ public class TurtleParserProfile implements ParserProfile {
    private static final Logger LOG = LoggerFactory.getLogger( TurtleParserProfile.class );
    private final ParserProfile parserProfile;
    private final List<TurtleSyntaxTree.Token> tokens;
+   private final URI documentUri;
 
-   public TurtleParserProfile( final ParserProfile parserProfile, final @Nullable TurtleSyntaxTree syntaxTree ) {
+   public TurtleParserProfile( final ParserProfile parserProfile, final @Nullable TurtleSyntaxTree syntaxTree, final URI documentUri ) {
       this.parserProfile = parserProfile;
       tokens = syntaxTree == null ? List.of() : syntaxTree.tokens().toList();
+      this.documentUri = documentUri;
    }
 
    @Override
@@ -153,7 +156,7 @@ public class TurtleParserProfile implements ParserProfile {
       final TurtleSyntaxTree.@Nullable Token treeSitterToken = findMatchingTreeSitterToken( token );
       final SmartToken smartToken = treeSitterToken == null
             ? new SmartToken( token )
-            : new SmartToken( treeSitterToken );
+            : new SmartToken( treeSitterToken, documentUri );
       TokenRegistry.put( node, smartToken );
       return node;
    }
@@ -193,7 +196,7 @@ public class TurtleParserProfile implements ParserProfile {
       final Triple triple = parserProfile.createTriple( subject, predicate, object, line, col );
       final TurtleSyntaxTree.@Nullable Token treeSitterToken = findMatchingTreeSitterToken( line, col );
       if ( treeSitterToken != null ) {
-         TokenRegistry.put( object, new SmartToken( treeSitterToken ) );
+         TokenRegistry.put( object, new SmartToken( treeSitterToken, documentUri ) );
       }
       return triple;
    }

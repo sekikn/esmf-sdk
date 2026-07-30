@@ -18,19 +18,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.net.URI;
 import java.util.List;
 
-import org.eclipse.esmf.Diagnostic;
-import org.eclipse.esmf.DiagnosticReport;
-import org.eclipse.esmf.Location;
+import org.eclipse.esmf.aspectmodel.Location;
+import org.eclipse.esmf.aspectmodel.Violation;
+import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.aspectmodel.resolver.exceptions.ParserException;
-import org.eclipse.esmf.aspectmodel.shacl.violation.Violation;
 import org.eclipse.esmf.aspectmodel.validation.InvalidLexicalValueViolation;
 import org.eclipse.esmf.aspectmodel.validation.InvalidSyntaxViolation;
 import org.eclipse.esmf.aspectmodel.validation.ProcessingViolation;
-import org.eclipse.esmf.treesitterturtle.TurtleDiagnostic;
-import org.eclipse.esmf.treesitterturtle.TurtleDiagnosticCode;
+import org.eclipse.esmf.treesitterturtle.TurtleViolation;
+import org.eclipse.esmf.treesitterturtle.TurtleViolationCode;
 import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.DiagnosticMapper;
 import org.eclipse.esmf.turtle.languageserver.lsp.text.Document;
 
+import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -43,9 +43,9 @@ class AspectViolationDiagnosticMapperTest {
       final InvalidSyntaxViolation violation = new InvalidSyntaxViolation(
             "broken syntax", "source", new Location( 3, 5 ), URI.create( "test.ttl" ) );
 
-      final DiagnosticReport report = mapper.mapValidationViolations( List.of( violation ) );
+      final ViolationReport report = mapper.mapValidationViolations( List.of( violation ) );
 
-      assertThat( report.diagnostics() ).isEmpty();
+      assertThat( report.violations() ).isEmpty();
    }
 
    @Test
@@ -54,13 +54,13 @@ class AspectViolationDiagnosticMapperTest {
       final InvalidLexicalValueViolation violation = new InvalidLexicalValueViolation(
             null, "999", 3, 5, "", URI.create( "test.ttl" ) );
 
-      final DiagnosticReport report = mapper.mapValidationViolations( List.of( violation ) );
+      final ViolationReport report = mapper.mapValidationViolations( List.of( violation ) );
 
-      assertThat( report.diagnostics() ).singleElement()
+      assertThat( report.violations() ).singleElement()
             .satisfies( diagnostic -> {
                assertThat( diagnostic.code().code() ).isEqualTo( InvalidLexicalValueViolation.ERROR_CODE );
                assertThat( diagnostic.message() ).isEqualTo( "Invalid value" );
-               assertThat( diagnostic ).isInstanceOf( AspectDocumentDiagnostic.class );
+               assertThat( diagnostic ).isInstanceOf( AspectDocumentViolation.class );
             } );
    }
 
@@ -70,13 +70,13 @@ class AspectViolationDiagnosticMapperTest {
       final InvalidLexicalValueViolation violation = new InvalidLexicalValueViolation(
             null, "999", 3, 5, "", null );
 
-      final DiagnosticReport report = mapper.mapValidationViolations( List.of( violation ) );
+      final ViolationReport report = mapper.mapValidationViolations( List.of( violation ) );
 
-      assertThat( report.diagnostics() ).singleElement()
+      assertThat( report.violations() ).singleElement()
             .satisfies( diagnostic -> {
                assertThat( diagnostic.code().code() ).isEqualTo( InvalidLexicalValueViolation.ERROR_CODE );
                assertThat( diagnostic.message() ).isEqualTo( "Invalid value" );
-               assertThat( diagnostic ).isExactlyInstanceOf( AspectDiagnostic.class );
+               assertThat( diagnostic ).isExactlyInstanceOf( AspectViolation.class );
             } );
    }
 
@@ -87,9 +87,9 @@ class AspectViolationDiagnosticMapperTest {
             "Resource urn:samm:org.eclipse.esmf.test:1.0.0#notExistingProperty has no type",
             new RuntimeException( "secret" ) );
 
-      final DiagnosticReport report = mapper.mapValidationViolations( List.of( violation ) );
+      final ViolationReport report = mapper.mapValidationViolations( List.of( violation ) );
 
-      assertThat( report.diagnostics() ).singleElement()
+      assertThat( report.violations() ).singleElement()
             .satisfies( diagnostic -> {
                assertThat( diagnostic.code().code() ).isEqualTo( ProcessingViolation.ERROR_CODE );
                assertThat( diagnostic.message() )
@@ -103,9 +103,9 @@ class AspectViolationDiagnosticMapperTest {
       final ProcessingViolation violation = new ProcessingViolation( "user facing validation message",
             new RuntimeException( "secret internal details" ) );
 
-      final DiagnosticReport report = mapper.mapValidationViolations( List.of( violation ) );
+      final ViolationReport report = mapper.mapValidationViolations( List.of( violation ) );
 
-      assertThat( report.diagnostics() ).singleElement()
+      assertThat( report.violations() ).singleElement()
             .satisfies( diagnostic -> {
                assertThat( diagnostic.message() ).isEqualTo( "user facing validation message" );
                assertThat( diagnostic.message() )
@@ -122,7 +122,7 @@ class AspectViolationDiagnosticMapperTest {
       final Document document = new Document( "test.ttl", "" );
       final ProcessingViolation violation = new ProcessingViolation( "processing violation", new RuntimeException() );
 
-      final List<org.eclipse.lsp4j.Diagnostic> diagnostics = diagnosticMapper.apply( document,
+      final List<Diagnostic> diagnostics = diagnosticMapper.apply( document,
             violationMapper.mapValidationViolations( List.of( violation ) ) ).entrySet().iterator().next().getValue();
 
       assertThat( diagnostics ).singleElement()
@@ -136,10 +136,9 @@ class AspectViolationDiagnosticMapperTest {
    @Test
    void mapsUnexpectedProcessingFailureToSafeDiagnostic() {
       final AspectViolationDiagnosticMapper mapper = new AspectViolationDiagnosticMapper();
+      final ViolationReport report = mapper.processingFailureReport( new RuntimeException() );
 
-      final DiagnosticReport report = mapper.processingFailureReport();
-
-      assertThat( report.diagnostics() ).singleElement()
+      assertThat( report.violations() ).singleElement()
             .satisfies( diagnostic -> {
                assertThat( diagnostic.code().code() ).isEqualTo( ProcessingViolation.ERROR_CODE );
                assertThat( diagnostic.message() ).isEqualTo( AspectViolationDiagnosticMapper.PROCESSING_ERROR_MESSAGE );
@@ -152,11 +151,11 @@ class AspectViolationDiagnosticMapperTest {
       final ParserException exception = new ParserException( 3, 5, "Triples not terminated by DOT", "source",
             URI.create( "test.ttl" ) );
 
-      final DiagnosticReport report = mapper.mapParserException( exception, URI.create( "test.ttl" ) );
+      final ViolationReport report = mapper.mapParserException( exception, URI.create( "test.ttl" ) );
 
-      assertThat( report.diagnostics() ).singleElement()
+      assertThat( report.violations() ).singleElement()
             .satisfies( diagnostic -> {
-               assertThat( diagnostic.code().code() ).isEqualTo( TurtleDiagnosticCode.ERR_SYNTAX.code() );
+               assertThat( diagnostic.code().code() ).isEqualTo( TurtleViolationCode.ERR_SYNTAX.code() );
                assertThat( diagnostic.message() ).isEqualTo( "Triples not terminated by DOT" );
             } );
    }
@@ -166,9 +165,9 @@ class AspectViolationDiagnosticMapperTest {
       final AspectViolationDiagnosticMapper mapper = new AspectViolationDiagnosticMapper();
       final Violation violation = new TestViolation( "ERR_TEST_SHACL", "semantic problem" );
 
-      final DiagnosticReport report = mapper.mapValidationViolations( List.of( violation ) );
+      final ViolationReport report = mapper.mapValidationViolations( List.of( violation ) );
 
-      assertThat( report.diagnostics() ).singleElement()
+      assertThat( report.violations() ).singleElement()
             .satisfies( diagnostic -> {
                assertThat( diagnostic.code().code() ).isEqualTo( "ERR_TEST_SHACL" );
                assertThat( diagnostic.message() ).isEqualTo( "semantic problem" );
@@ -183,7 +182,7 @@ class AspectViolationDiagnosticMapperTest {
       final InvalidLexicalValueViolation violation = new InvalidLexicalValueViolation(
             null, "999", 3, 5, "", URI.create( "other.ttl" ) );
 
-      final List<org.eclipse.lsp4j.Diagnostic> diagnostics = diagnosticMapper.apply( document,
+      final List<Diagnostic> diagnostics = diagnosticMapper.apply( document,
             violationMapper.mapValidationViolations( List.of( violation ) ) ).entrySet().iterator().next().getValue();
 
       assertThat( diagnostics ).singleElement()
@@ -203,13 +202,13 @@ class AspectViolationDiagnosticMapperTest {
    void mapsDiagnosticSeverityToLspSeverity() {
       final DiagnosticMapper mapper = new DiagnosticMapper();
       final Document document = new Document( "test.ttl", "" );
-      final DiagnosticReport report = new DiagnosticReport( new TurtleDiagnostic(
-            "warning", TurtleDiagnosticCode.ERR_UNCATEGORIZED, Diagnostic.Severity.WARNING ) );
+      final ViolationReport report = new ViolationReport( new TurtleViolation(
+            "warning", TurtleViolationCode.ERR_UNCATEGORIZED, Violation.Severity.WARNING ) );
 
-      final List<org.eclipse.lsp4j.Diagnostic> diagnostics = mapper.apply( document, report ).entrySet().iterator().next().getValue();
+      final List<Diagnostic> diagnostics = mapper.apply( document, report ).entrySet().iterator().next().getValue();
 
       assertThat( diagnostics ).singleElement()
-            .extracting( org.eclipse.lsp4j.Diagnostic::getSeverity )
+            .extracting( Diagnostic::getSeverity )
             .isEqualTo( DiagnosticSeverity.Warning );
    }
 
@@ -217,13 +216,13 @@ class AspectViolationDiagnosticMapperTest {
    void mapsDiagnosticWithoutLocationToFallbackRange() {
       final DiagnosticMapper mapper = new DiagnosticMapper();
       final Document document = new Document( "test.ttl", "" );
-      final DiagnosticReport report = new DiagnosticReport( new TurtleDiagnostic(
-            "warning", TurtleDiagnosticCode.ERR_UNCATEGORIZED, Diagnostic.Severity.WARNING ) );
+      final ViolationReport report = new ViolationReport( new TurtleViolation(
+            "warning", TurtleViolationCode.ERR_UNCATEGORIZED, Violation.Severity.WARNING ) );
 
-      final List<org.eclipse.lsp4j.Diagnostic> diagnostics = mapper.apply( document, report ).entrySet().iterator().next().getValue();
+      final List<Diagnostic> diagnostics = mapper.apply( document, report ).entrySet().iterator().next().getValue();
 
       assertThat( diagnostics ).singleElement()
-            .extracting( org.eclipse.lsp4j.Diagnostic::getRange )
+            .extracting( Diagnostic::getRange )
             .isEqualTo( new Range( new Position( 0, 0 ), new Position( 0, 0 ) ) );
    }
 }

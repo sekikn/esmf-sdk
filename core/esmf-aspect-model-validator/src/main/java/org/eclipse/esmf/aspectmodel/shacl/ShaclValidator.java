@@ -41,7 +41,7 @@ import org.eclipse.esmf.aspectmodel.shacl.constraint.SparqlConstraint;
 import org.eclipse.esmf.aspectmodel.shacl.path.PathNodeRetriever;
 import org.eclipse.esmf.aspectmodel.shacl.path.PredicatePath;
 import org.eclipse.esmf.aspectmodel.shacl.violation.EvaluationContext;
-import org.eclipse.esmf.aspectmodel.shacl.violation.Violation;
+import org.eclipse.esmf.aspectmodel.Violation;
 import org.eclipse.esmf.aspectmodel.validation.RdfBasedValidator;
 
 import com.google.common.collect.Streams;

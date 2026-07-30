@@ -39,7 +39,7 @@ import org.apache.jena.vocabulary.XSD;
  */
 public record DatatypeViolation(
       EvaluationContext context, String allowedTypeUri, String actualTypeUri
-) implements Violation {
+) implements ShaclViolation {
    public static final String ERROR_CODE = "ERR_TYPE";
 
    @Override

@@ -11,32 +11,32 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package org.eclipse.esmf;
+package org.eclipse.esmf.aspectmodel;
 
 import java.util.List;
 
 import com.google.common.collect.Streams;
 
-public record DiagnosticReport(
-      List<Diagnostic> diagnostics
+public record ViolationReport(
+      List<Violation> violations
 ) {
-   public static final DiagnosticReport EMPTY = new DiagnosticReport( List.of() );
+   public static final ViolationReport EMPTY = new ViolationReport( List.of() );
 
-   public DiagnosticReport( final Diagnostic diagnostic ) {
+   public ViolationReport( final Violation diagnostic ) {
       this( List.of( diagnostic ) );
    }
 
    /**
     * Create a new DiagnosticsReport from this and another
     *
-    * @param diagnosticReport the other report
+    * @param violationReport the other report
     * @return the new merged report
     */
-   public DiagnosticReport merge( final DiagnosticReport diagnosticReport ) {
-      return new DiagnosticReport( Streams.concat( diagnostics.stream(), diagnosticReport.diagnostics().stream() ).toList() );
+   public ViolationReport merge( final ViolationReport violationReport ) {
+      return new ViolationReport( Streams.concat( violations.stream(), violationReport.violations().stream() ).toList() );
    }
 
    public boolean isEmpty() {
-      return diagnostics.isEmpty();
+      return violations.isEmpty();
    }
 }

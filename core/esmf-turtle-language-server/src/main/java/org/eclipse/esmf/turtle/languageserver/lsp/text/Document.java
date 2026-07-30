@@ -16,7 +16,7 @@ package org.eclipse.esmf.turtle.languageserver.lsp.text;
 import java.io.InputStream;
 import java.net.URI;
 
-import org.eclipse.esmf.Location;
+import org.eclipse.esmf.aspectmodel.Location;
 import org.eclipse.esmf.treesitterturtle.TurtleSyntaxTree;
 
 import org.eclipse.lsp4j.Position;

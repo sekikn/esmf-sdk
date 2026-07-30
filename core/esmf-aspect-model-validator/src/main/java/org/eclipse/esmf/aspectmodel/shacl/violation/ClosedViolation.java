@@ -33,7 +33,7 @@ import org.apache.jena.rdf.model.RDFNode;
 public record ClosedViolation(
       EvaluationContext context, Set<Property> allowedProperties, Set<Property> ignoredProperties,
       Property actual
-) implements Violation {
+) implements ShaclViolation {
    /**
     * The error code for this violation
     */

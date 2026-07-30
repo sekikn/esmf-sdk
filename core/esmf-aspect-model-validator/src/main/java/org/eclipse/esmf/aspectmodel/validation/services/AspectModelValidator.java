@@ -27,7 +27,7 @@ import org.apache.jena.query.ARQ;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 
-import org.eclipse.esmf.Location;
+import org.eclipse.esmf.aspectmodel.Location;
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
 import org.eclipse.esmf.aspectmodel.RdfUtil;
 import org.eclipse.esmf.aspectmodel.ValueParsingException;
@@ -35,7 +35,7 @@ import org.eclipse.esmf.aspectmodel.loader.AspectModelLoader;
 import org.eclipse.esmf.aspectmodel.resolver.exceptions.ParserException;
 import org.eclipse.esmf.aspectmodel.resolver.modelfile.MetaModelFile;
 import org.eclipse.esmf.aspectmodel.shacl.ShaclValidator;
-import org.eclipse.esmf.aspectmodel.shacl.violation.Violation;
+import org.eclipse.esmf.aspectmodel.Violation;
 import org.eclipse.esmf.aspectmodel.validation.InvalidLexicalValueViolation;
 import org.eclipse.esmf.aspectmodel.validation.InvalidSyntaxViolation;
 import org.eclipse.esmf.aspectmodel.validation.ProcessingViolation;
@@ -112,10 +112,12 @@ public class AspectModelValidator implements Validator<Violation, List<Violation
          // Failure to parse value literals
          final String sourceLine = exception.getSourceDocument().lines().toList().get( (int) exception.getLine() - 1 );
          return Either.left( List.of( new InvalidLexicalValueViolation( exception.getType(), exception.getValue(),
-               (int) exception.getLine(), (int) exception.getColumn(), sourceLine, exception.getSourceLocation() ) ) );
+               new Location( (int) exception.getLine(), (int) exception.getColumn() ), sourceLine, exception.getSourceLocation() ) ) );
       } catch ( final CancelValidation cancelValidation ) {
          // The validation was short-circuited by the aspectModelLoader function
          return Either.left( cancelValidation.violations );
+         // } catch ( AspectLoadingException e ) {
+         // // TODO handle e.hightlight
       } catch ( final Exception exception ) {
          // Any other exception, e.g., resolution exception
          return Either.left( List.of( new ProcessingViolation( exception.getMessage(), exception ) ) );

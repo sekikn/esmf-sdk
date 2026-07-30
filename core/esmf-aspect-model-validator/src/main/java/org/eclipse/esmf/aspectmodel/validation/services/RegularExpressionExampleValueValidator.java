@@ -19,7 +19,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.eclipse.esmf.aspectmodel.shacl.violation.EvaluationContext;
-import org.eclipse.esmf.aspectmodel.shacl.violation.Violation;
+import org.eclipse.esmf.aspectmodel.Violation;
 import org.eclipse.esmf.aspectmodel.validation.RdfBasedValidator;
 import org.eclipse.esmf.aspectmodel.validation.RegularExpressionConstraintViolation;
 import org.eclipse.esmf.metamodel.vocabulary.SammNs;

@@ -11,23 +11,13 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package org.eclipse.esmf;
+package org.eclipse.esmf.aspectmodel;
+
+import org.apache.jena.rdf.model.RDFNode;
 
 /**
- * Zero-based section of a document
- *
- * @param fromLine starting line
- * @param fromColumn starting column
- * @param toLine ending line
- * @param toColumn ending column
+ * A violation that refers to (is logically attached to) an RDF element
  */
-public record Location(
-      int fromLine,
-      int fromColumn,
-      int toLine,
-      int toColumn
-) {
-   public Location( final int fromLine, final int fromColumn ) {
-      this( fromLine, fromColumn, fromLine, fromColumn );
-   }
+public interface RdfElementViolation extends DocumentViolation {
+   RDFNode highlight();
 }

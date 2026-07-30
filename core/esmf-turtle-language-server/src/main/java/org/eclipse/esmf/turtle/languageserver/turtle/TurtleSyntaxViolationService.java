@@ -17,30 +17,30 @@ import java.net.URI;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import org.eclipse.esmf.Diagnostic;
-import org.eclipse.esmf.DiagnosticReport;
-import org.eclipse.esmf.Location;
-import org.eclipse.esmf.treesitterturtle.TurtleDiagnosticCode;
-import org.eclipse.esmf.treesitterturtle.TurtleDocumentDiagnostic;
-import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.DiagnosticsProvider;
+import org.eclipse.esmf.aspectmodel.Violation;
+import org.eclipse.esmf.aspectmodel.ViolationReport;
+import org.eclipse.esmf.aspectmodel.Location;
+import org.eclipse.esmf.treesitterturtle.TurtleViolationCode;
+import org.eclipse.esmf.treesitterturtle.TurtleDocumentViolation;
+import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.ViolationProvider;
 import org.eclipse.esmf.turtle.languageserver.lsp.text.ParsedDocument;
 
 import org.treesitter.TSNode;
 
-public class TurtleSyntaxDiagnosticsService implements DiagnosticsProvider {
+public class TurtleSyntaxViolationService implements ViolationProvider {
    @Override
-   public DiagnosticReport validate( final ParsedDocument parsedDocument ) {
-      return new DiagnosticReport( checkNode( parsedDocument.concreteSyntaxTree().getRootNode(),
+   public ViolationReport validate( final ParsedDocument parsedDocument ) {
+      return new ViolationReport( checkNode( parsedDocument.concreteSyntaxTree().getRootNode(),
             parsedDocument.sourceDocument().uri() ).toList() );
    }
 
-   private Stream<Diagnostic> checkNode( final TSNode node, final URI sourceLocation ) {
-      return Stream.concat( node.isError() || node.isMissing() ? Stream.of( diagnosticForNode( node, sourceLocation ) ) : Stream.empty(),
+   private Stream<Violation> checkNode( final TSNode node, final URI sourceLocation ) {
+      return Stream.concat( node.isError() || node.isMissing() ? Stream.of( violationForNode( node, sourceLocation ) ) : Stream.empty(),
             IntStream.range( 0, node.getChildCount() ).boxed().map( node::getChild )
                   .flatMap( child -> checkNode( child, sourceLocation ) ) );
    }
 
-   private TurtleDocumentDiagnostic diagnosticForNode( final TSNode node, final URI sourceLocation ) {
+   private TurtleDocumentViolation violationForNode( final TSNode node, final URI sourceLocation ) {
       final String message;
       if ( node.isMissing() ) {
          message = "Syntax error: Missing '" + node.getGrammarType() + "'";
@@ -49,6 +49,6 @@ public class TurtleSyntaxDiagnosticsService implements DiagnosticsProvider {
       }
       final Location location = new Location( node.getStartPoint().getRow(), node.getStartPoint().getColumn(), node.getEndPoint().getRow(),
             node.getEndPoint().getColumn() );
-      return new TurtleDocumentDiagnostic( message, TurtleDiagnosticCode.ERR_SYNTAX, sourceLocation, location );
+      return new TurtleDocumentViolation( message, TurtleViolationCode.ERR_SYNTAX, sourceLocation, location );
    }
 }

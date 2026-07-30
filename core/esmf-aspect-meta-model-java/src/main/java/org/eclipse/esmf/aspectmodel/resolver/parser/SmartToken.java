@@ -13,13 +13,14 @@
 
 package org.eclipse.esmf.aspectmodel.resolver.parser;
 
+import java.net.URI;
 import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.jena.riot.tokens.Token;
 import org.apache.jena.riot.tokens.TokenType;
 
-import org.eclipse.esmf.Location;
+import org.eclipse.esmf.aspectmodel.Location;
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
 import org.eclipse.esmf.treesitterturtle.TurtleSyntaxTree;
 
@@ -32,6 +33,7 @@ import org.jspecify.annotations.Nullable;
 public final class SmartToken {
    private final Token jenaToken;
    private final TurtleSyntaxTree.Token treesitterToken;
+   private final @Nullable URI sourceDocument;
    private AspectModelFile originatingFile;
 
    /**
@@ -40,11 +42,13 @@ public final class SmartToken {
    public SmartToken( final Token jenaToken ) {
       this.jenaToken = jenaToken;
       treesitterToken = null;
+      sourceDocument = null;
    }
 
-   public SmartToken( final TurtleSyntaxTree.Token treesitterToken ) {
+   public SmartToken( final TurtleSyntaxTree.Token treesitterToken, final URI sourceDocument ) {
       jenaToken = null;
       this.treesitterToken = treesitterToken;
+      this.sourceDocument = sourceDocument;
    }
 
    public @Nullable TokenType type() {
@@ -211,5 +215,9 @@ public final class SmartToken {
 
    public void setOriginatingFile( final AspectModelFile originatingFile ) {
       this.originatingFile = originatingFile;
+   }
+
+   public @Nullable URI getSourceDocument() {
+      return sourceDocument;
    }
 }

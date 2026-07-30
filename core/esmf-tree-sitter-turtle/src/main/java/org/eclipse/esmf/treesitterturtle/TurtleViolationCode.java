@@ -13,26 +13,15 @@
 
 package org.eclipse.esmf.treesitterturtle;
 
-import org.eclipse.esmf.Diagnostic;
+import org.eclipse.esmf.aspectmodel.Violation;
 
-public enum TurtleDiagnosticCode implements Diagnostic.Code {
-   ERR_UNCATEGORIZED( "No more info available" ),
-   ERR_SYNTAX( "Syntax error" ),
-   ERR_MISSING_TOKEN( "Missing token" );
-
-   private final String description;
-
-   TurtleDiagnosticCode( final String description ) {
-      this.description = description;
-   }
+public enum TurtleViolationCode implements Violation.Code {
+   ERR_UNCATEGORIZED,
+   ERR_SYNTAX,
+   ERR_MISSING_TOKEN;
 
    @Override
    public String code() {
       return name();
-   }
-
-   @Override
-   public String description() {
-      return description;
    }
 }

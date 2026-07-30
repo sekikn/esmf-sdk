@@ -16,7 +16,6 @@ package org.eclipse.esmf.aspectmodel;
 import java.util.List;
 import java.util.Set;
 
-import org.eclipse.esmf.aspectmodel.shacl.violation.Violation;
 import org.eclipse.esmf.aspectmodel.validation.services.AspectModelValidator;
 import org.eclipse.esmf.aspectmodel.validation.services.ViolationFormatter;
 import org.eclipse.esmf.metamodel.AspectModel;
