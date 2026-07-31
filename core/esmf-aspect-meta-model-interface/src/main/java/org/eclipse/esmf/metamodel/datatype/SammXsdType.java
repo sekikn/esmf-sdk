@@ -19,7 +19,6 @@ import java.util.AbstractList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 
@@ -30,8 +29,6 @@ import org.apache.jena.datatypes.TypeMapper;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.graph.impl.LiteralLabel;
 import org.apache.jena.rdf.model.Resource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The custom RDF type implementations that have deterministic and typed parsers and unparsers
@@ -41,8 +38,7 @@ import org.slf4j.LoggerFactory;
  */
 // the order of the variables is required because of the way they reference each other
 public abstract non-sealed class SammXsdType<T> extends XSDDatatype implements SammType<T> {
-   private static final Logger LOG = LoggerFactory.getLogger( SammXsdType.class );
-   protected static DatatypeFactory datatypeFactory;
+   private static volatile DatatypeFactory datatypeFactory;
    private final String uri;
 
    private static boolean checking = true;
@@ -62,6 +58,24 @@ public abstract non-sealed class SammXsdType<T> extends XSDDatatype implements S
    public abstract boolean isValid( final String lexicalForm );
 
    protected abstract T parseTypedValue( final String lexicalForm );
+
+   protected static DatatypeFactory datatypeFactory() {
+      DatatypeFactory local = datatypeFactory;
+      if ( local == null ) {
+         synchronized ( SammXsdType.class ) {
+            local = datatypeFactory;
+            if ( local == null ) {
+               try {
+                  local = DatatypeFactory.newInstance();
+               } catch ( final DatatypeConfigurationException exception ) {
+                  throw new IllegalStateException( "Could not instantiate DatatypeFactory", exception );
+               }
+               datatypeFactory = local;
+            }
+         }
+      }
+      return local;
+   }
 
    @Override
    public String getURI() {
@@ -198,12 +212,7 @@ public abstract non-sealed class SammXsdType<T> extends XSDDatatype implements S
     */
    public static synchronized void setupTypeMapping() {
       if ( !setupPerformed ) {
-         try {
-            datatypeFactory = DatatypeFactory.newInstance();
-         } catch ( final DatatypeConfigurationException exception ) {
-            LOG.error( "Could not instantiate DatatypeFactory", exception );
-         }
-
+         datatypeFactory();
          final TypeMapper typeMapper = TypeMapper.getInstance();
          ALL_TYPES.forEach( typeMapper::registerDatatype );
          setupPerformed = true;

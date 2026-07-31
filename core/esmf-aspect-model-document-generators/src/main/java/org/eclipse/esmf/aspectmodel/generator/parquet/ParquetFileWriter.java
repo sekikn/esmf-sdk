@@ -44,11 +44,11 @@ import org.eclipse.esmf.metamodel.characteristic.Enumeration;
 import org.eclipse.esmf.metamodel.characteristic.Trait;
 import org.eclipse.esmf.metamodel.constraint.LengthConstraint;
 import org.eclipse.esmf.metamodel.datatype.LangString;
+import org.eclipse.esmf.metamodel.datatype.RdfDatatypeUris;
 
 import io.vavr.Tuple2;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.XSD;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.example.data.simple.SimpleGroupFactory;
@@ -337,7 +337,7 @@ class ParquetFileWriter {
       } else if ( dataType instanceof final Scalar scalar ) {
          Object exampleValue = extractExampleValueFromProperty( property, collection );
          String language = null;
-         if ( RDF.langString.getURI().equals( scalar.getUrn() ) ) {
+         if ( RdfDatatypeUris.LANG_STRING.equals( scalar.getUrn() ) ) {
             switch ( exampleValue ) {
                case final LangString langString -> {
                   language = Optional.ofNullable( langString.getLanguageTag() ).map( Locale::getLanguage ).orElse( null );
@@ -412,7 +412,7 @@ class ParquetFileWriter {
 
          Object exampleValue = extractExampleValueFromProperty( property, characteristic );
          String language = null;
-         if ( RDF.langString.getURI().equals( scalar.getUrn() ) ) {
+         if ( RdfDatatypeUris.LANG_STRING.equals( scalar.getUrn() ) ) {
             switch ( exampleValue ) {
                case final LangString langString -> {
                   language = Optional.ofNullable( langString.getLanguageTag() ).map( Locale::getLanguage ).orElse( null );

@@ -26,6 +26,34 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import org.eclipse.esmf.aspectmodel.loader.MetaModelBaseAttributes;
+import org.eclipse.esmf.aspectmodel.visitor.AspectVisitor;
+import org.eclipse.esmf.metamodel.Aspect;
+import org.eclipse.esmf.metamodel.Characteristic;
+import org.eclipse.esmf.metamodel.CollectionValue;
+import org.eclipse.esmf.metamodel.Entity;
+import org.eclipse.esmf.metamodel.EntityInstance;
+import org.eclipse.esmf.metamodel.ModelElement;
+import org.eclipse.esmf.metamodel.Property;
+import org.eclipse.esmf.metamodel.Scalar;
+import org.eclipse.esmf.metamodel.ScalarValue;
+import org.eclipse.esmf.metamodel.Type;
+import org.eclipse.esmf.metamodel.characteristic.Code;
+import org.eclipse.esmf.metamodel.characteristic.Collection;
+import org.eclipse.esmf.metamodel.characteristic.Duration;
+import org.eclipse.esmf.metamodel.characteristic.Either;
+import org.eclipse.esmf.metamodel.characteristic.Enumeration;
+import org.eclipse.esmf.metamodel.characteristic.Measurement;
+import org.eclipse.esmf.metamodel.characteristic.Quantifiable;
+import org.eclipse.esmf.metamodel.characteristic.SingleEntity;
+import org.eclipse.esmf.metamodel.characteristic.SortedSet;
+import org.eclipse.esmf.metamodel.characteristic.State;
+import org.eclipse.esmf.metamodel.characteristic.StructuredValue;
+import org.eclipse.esmf.metamodel.characteristic.Trait;
+import org.eclipse.esmf.metamodel.datatype.LangString;
+import org.eclipse.esmf.metamodel.datatype.RdfDatatypeUris;
+
+import com.google.common.collect.ImmutableMap;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
@@ -75,38 +103,8 @@ import org.eclipse.digitaltwin.aas4j.v3.model.impl.DefaultSubmodelElementCollect
 import org.eclipse.digitaltwin.aas4j.v3.model.impl.DefaultSubmodelElementList;
 import org.eclipse.digitaltwin.aas4j.v3.model.impl.DefaultValueList;
 import org.eclipse.digitaltwin.aas4j.v3.model.impl.DefaultValueReferencePair;
-
-import org.eclipse.esmf.aspectmodel.loader.MetaModelBaseAttributes;
-import org.eclipse.esmf.aspectmodel.visitor.AspectVisitor;
-import org.eclipse.esmf.metamodel.Aspect;
-import org.eclipse.esmf.metamodel.Characteristic;
-import org.eclipse.esmf.metamodel.CollectionValue;
-import org.eclipse.esmf.metamodel.Entity;
-import org.eclipse.esmf.metamodel.EntityInstance;
-import org.eclipse.esmf.metamodel.ModelElement;
-import org.eclipse.esmf.metamodel.Property;
-import org.eclipse.esmf.metamodel.Scalar;
-import org.eclipse.esmf.metamodel.ScalarValue;
-import org.eclipse.esmf.metamodel.Type;
-import org.eclipse.esmf.metamodel.characteristic.Code;
-import org.eclipse.esmf.metamodel.characteristic.Collection;
-import org.eclipse.esmf.metamodel.characteristic.Duration;
-import org.eclipse.esmf.metamodel.characteristic.Either;
-import org.eclipse.esmf.metamodel.characteristic.Enumeration;
-import org.eclipse.esmf.metamodel.characteristic.Measurement;
-import org.eclipse.esmf.metamodel.characteristic.Quantifiable;
-import org.eclipse.esmf.metamodel.characteristic.SingleEntity;
-import org.eclipse.esmf.metamodel.characteristic.SortedSet;
-import org.eclipse.esmf.metamodel.characteristic.State;
-import org.eclipse.esmf.metamodel.characteristic.StructuredValue;
-import org.eclipse.esmf.metamodel.characteristic.Trait;
-import org.eclipse.esmf.metamodel.datatype.LangString;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ImmutableMap;
-
 import tools.jackson.databind.node.ArrayNode;
 
 public class AspectModelAasVisitor implements AspectVisitor<Environment, Context> {
@@ -642,7 +640,7 @@ public class AspectModelAasVisitor implements AspectVisitor<Environment, Context
 
    private DataTypeIec61360 mapIec61360DataType( final Optional<Characteristic> characteristic ) {
       return mapIec61360DataType(
-            characteristic.flatMap( Characteristic::getDataType ).map( Type::getUrn ).orElse( RDF.langString.getURI() ) );
+            characteristic.flatMap( Characteristic::getDataType ).map( Type::getUrn ).orElse( RdfDatatypeUris.LANG_STRING ) );
    }
 
    private DataTypeIec61360 mapIec61360DataType( final Characteristic characteristic ) {
