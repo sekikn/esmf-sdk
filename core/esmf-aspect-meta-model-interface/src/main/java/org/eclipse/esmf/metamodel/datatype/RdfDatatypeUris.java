@@ -11,13 +11,12 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package org.eclipse.esmf.turtle.languageserver.aspect.diagnostic;
+package org.eclipse.esmf.metamodel.datatype;
 
-import org.eclipse.esmf.aspectmodel.Violation;
-import java.util.Optional;
+public final class RdfDatatypeUris {
+   // Do not use RDF.langString.getURI() for string-only URI access: touching
+   // Jena's RDF vocabulary can trigger order-sensitive Jena runtime initialization.
+   public static final String LANG_STRING = "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString";
 
-public record AspectDiagnosticCode(
-   String code,
-   Optional<String> href
-) implements Violation.Code {}
-
+   private RdfDatatypeUris() {}
+}

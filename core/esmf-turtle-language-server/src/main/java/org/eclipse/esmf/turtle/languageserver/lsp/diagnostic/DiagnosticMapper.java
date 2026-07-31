@@ -26,6 +26,7 @@ import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.turtle.languageserver.lsp.text.Document;
 
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticCodeDescription;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Location;
@@ -40,11 +41,15 @@ public final class DiagnosticMapper {
 
    public Map<URI, List<Diagnostic>> apply( final Document sourceDocument, final ViolationReport report ) {
       final Map<URI, List<Diagnostic>> result = new HashMap<>();
+      // Always include empty diagnostics for sourceDocument, otherwise LSP client does not clear old but
+      // fixed findings
+      result.put( URI.create( sourceDocument.uri() ), new ArrayList<>() );
       for ( final Violation violation : report.violations() ) {
          final Diagnostic diagnostic = new Diagnostic();
          diagnostic.setSeverity( toDiagnosticSeverity( violation.severity() ) );
          diagnostic.setMessage( violation.message() );
          diagnostic.setCode( violation.code().code() );
+         violation.code().href().ifPresent( href -> diagnostic.setCodeDescription( new DiagnosticCodeDescription( href ) ) );
          if ( violation instanceof final DocumentViolation documentViolation ) {
             if ( documentViolation.sourceDocument().equals( sourceDocument.uri() ) ) {
                diagnostic.setRange( toRange( documentViolation ) );
@@ -61,7 +66,7 @@ public final class DiagnosticMapper {
          } else {
             diagnostic.setRange( FALLBACK );
          }
-         result.computeIfAbsent( sourceDocument.uri(), _ -> new ArrayList<>() ).add( diagnostic );
+         result.get( URI.create( sourceDocument.uri() ) ).add( diagnostic );
       }
       return result;
    }

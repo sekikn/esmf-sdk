@@ -60,6 +60,7 @@ class AspectViolationDiagnosticMapperTest {
             .satisfies( diagnostic -> {
                assertThat( diagnostic.code().code() ).isEqualTo( InvalidLexicalValueViolation.ERROR_CODE );
                assertThat( diagnostic.message() ).isEqualTo( "Invalid value" );
+               assertThat( diagnostic.code().href() ).isEmpty();
                assertThat( diagnostic ).isInstanceOf( AspectDocumentViolation.class );
             } );
    }
@@ -76,6 +77,7 @@ class AspectViolationDiagnosticMapperTest {
             .satisfies( diagnostic -> {
                assertThat( diagnostic.code().code() ).isEqualTo( InvalidLexicalValueViolation.ERROR_CODE );
                assertThat( diagnostic.message() ).isEqualTo( "Invalid value" );
+               assertThat( diagnostic.code().href() ).isEmpty();
                assertThat( diagnostic ).isExactlyInstanceOf( AspectViolation.class );
             } );
    }
@@ -92,6 +94,8 @@ class AspectViolationDiagnosticMapperTest {
       assertThat( report.violations() ).singleElement()
             .satisfies( diagnostic -> {
                assertThat( diagnostic.code().code() ).isEqualTo( ProcessingViolation.ERROR_CODE );
+               assertThat( diagnostic.code().href() ).contains(
+                     "https://eclipse-esmf.github.io/esmf-developer-guide/tooling-guide/error-codes.html#ERR-PROCESSING" );
                assertThat( diagnostic.message() )
                      .isEqualTo( "Resource urn:samm:org.eclipse.esmf.test:1.0.0#notExistingProperty has no type" );
             } );
@@ -108,6 +112,8 @@ class AspectViolationDiagnosticMapperTest {
       assertThat( report.violations() ).singleElement()
             .satisfies( diagnostic -> {
                assertThat( diagnostic.message() ).isEqualTo( "user facing validation message" );
+               assertThat( diagnostic.code().href() ).contains(
+                     "https://eclipse-esmf.github.io/esmf-developer-guide/tooling-guide/error-codes.html#ERR-PROCESSING" );
                assertThat( diagnostic.message() )
                      .doesNotContain( "RuntimeException" )
                      .doesNotContain( "secret internal details" )
@@ -141,6 +147,8 @@ class AspectViolationDiagnosticMapperTest {
       assertThat( report.violations() ).singleElement()
             .satisfies( diagnostic -> {
                assertThat( diagnostic.code().code() ).isEqualTo( ProcessingViolation.ERROR_CODE );
+               assertThat( diagnostic.code().href() )
+                     .contains( "https://eclipse-esmf.github.io/esmf-developer-guide/tooling-guide/error-codes.html#ERR-PROCESSING" );
                assertThat( diagnostic.message() ).isEqualTo( AspectViolationDiagnosticMapper.PROCESSING_ERROR_MESSAGE );
             } );
    }
@@ -156,6 +164,7 @@ class AspectViolationDiagnosticMapperTest {
       assertThat( report.violations() ).singleElement()
             .satisfies( diagnostic -> {
                assertThat( diagnostic.code().code() ).isEqualTo( TurtleViolationCode.ERR_SYNTAX.code() );
+               assertThat( diagnostic.code().href() ).isEmpty();
                assertThat( diagnostic.message() ).isEqualTo( "Triples not terminated by DOT" );
             } );
    }
@@ -170,6 +179,7 @@ class AspectViolationDiagnosticMapperTest {
       assertThat( report.violations() ).singleElement()
             .satisfies( diagnostic -> {
                assertThat( diagnostic.code().code() ).isEqualTo( "ERR_TEST_SHACL" );
+               assertThat( diagnostic.code().href() ).isEmpty();
                assertThat( diagnostic.message() ).isEqualTo( "semantic problem" );
             } );
    }

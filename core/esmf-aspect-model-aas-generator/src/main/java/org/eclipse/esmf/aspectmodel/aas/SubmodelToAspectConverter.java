@@ -26,32 +26,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.jena.rfc3986.IRI;
-import org.apache.jena.rfc3986.RFC3986;
-import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.XSD;
-import org.eclipse.digitaltwin.aas4j.v3.model.AasSubmodelElements;
-import org.eclipse.digitaltwin.aas4j.v3.model.Blob;
-import org.eclipse.digitaltwin.aas4j.v3.model.Capability;
-import org.eclipse.digitaltwin.aas4j.v3.model.EventElement;
-import org.eclipse.digitaltwin.aas4j.v3.model.File;
-import org.eclipse.digitaltwin.aas4j.v3.model.HasSemantics;
-import org.eclipse.digitaltwin.aas4j.v3.model.Identifiable;
-import org.eclipse.digitaltwin.aas4j.v3.model.Key;
-import org.eclipse.digitaltwin.aas4j.v3.model.KeyTypes;
-import org.eclipse.digitaltwin.aas4j.v3.model.MultiLanguageProperty;
-import org.eclipse.digitaltwin.aas4j.v3.model.OperationVariable;
-import org.eclipse.digitaltwin.aas4j.v3.model.Range;
-import org.eclipse.digitaltwin.aas4j.v3.model.Reference;
-import org.eclipse.digitaltwin.aas4j.v3.model.ReferenceElement;
-import org.eclipse.digitaltwin.aas4j.v3.model.RelationshipElement;
-import org.eclipse.digitaltwin.aas4j.v3.model.Submodel;
-import org.eclipse.digitaltwin.aas4j.v3.model.SubmodelElement;
-import org.eclipse.digitaltwin.aas4j.v3.model.SubmodelElementCollection;
-import org.eclipse.digitaltwin.aas4j.v3.model.SubmodelElementList;
-
 import org.eclipse.esmf.aspectmodel.VersionNumber;
 import org.eclipse.esmf.aspectmodel.loader.MetaModelBaseAttributes;
 import org.eclipse.esmf.aspectmodel.loader.ValueInstantiator;
@@ -73,6 +47,7 @@ import org.eclipse.esmf.metamodel.characteristic.impl.DefaultTrait;
 import org.eclipse.esmf.metamodel.constraint.RangeConstraint;
 import org.eclipse.esmf.metamodel.constraint.impl.DefaultRangeConstraint;
 import org.eclipse.esmf.metamodel.datatype.LangString;
+import org.eclipse.esmf.metamodel.datatype.RdfDatatypeUris;
 import org.eclipse.esmf.metamodel.impl.DefaultAspect;
 import org.eclipse.esmf.metamodel.impl.DefaultCharacteristic;
 import org.eclipse.esmf.metamodel.impl.DefaultEntity;
@@ -82,10 +57,33 @@ import org.eclipse.esmf.metamodel.impl.DefaultProperty;
 import org.eclipse.esmf.metamodel.impl.DefaultScalar;
 import org.eclipse.esmf.metamodel.vocabulary.SammNs;
 
+import io.vavr.control.Try;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.jena.rfc3986.IRI;
+import org.apache.jena.rfc3986.RFC3986;
+import org.apache.jena.vocabulary.XSD;
+import org.eclipse.digitaltwin.aas4j.v3.model.AasSubmodelElements;
+import org.eclipse.digitaltwin.aas4j.v3.model.Blob;
+import org.eclipse.digitaltwin.aas4j.v3.model.Capability;
+import org.eclipse.digitaltwin.aas4j.v3.model.EventElement;
+import org.eclipse.digitaltwin.aas4j.v3.model.File;
+import org.eclipse.digitaltwin.aas4j.v3.model.HasSemantics;
+import org.eclipse.digitaltwin.aas4j.v3.model.Identifiable;
+import org.eclipse.digitaltwin.aas4j.v3.model.Key;
+import org.eclipse.digitaltwin.aas4j.v3.model.KeyTypes;
+import org.eclipse.digitaltwin.aas4j.v3.model.MultiLanguageProperty;
+import org.eclipse.digitaltwin.aas4j.v3.model.OperationVariable;
+import org.eclipse.digitaltwin.aas4j.v3.model.Range;
+import org.eclipse.digitaltwin.aas4j.v3.model.Reference;
+import org.eclipse.digitaltwin.aas4j.v3.model.ReferenceElement;
+import org.eclipse.digitaltwin.aas4j.v3.model.RelationshipElement;
+import org.eclipse.digitaltwin.aas4j.v3.model.Submodel;
+import org.eclipse.digitaltwin.aas4j.v3.model.SubmodelElement;
+import org.eclipse.digitaltwin.aas4j.v3.model.SubmodelElementCollection;
+import org.eclipse.digitaltwin.aas4j.v3.model.SubmodelElementList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import io.vavr.control.Try;
 
 class SubmodelToAspectConverter {
    private static final String EXAMPLE_NAMESPACE = "com.example";
@@ -466,6 +464,18 @@ class SubmodelToAspectConverter {
             .build();
    }
 
+   private MetaModelBaseAttributes collectionPropertyBaseAttributes( final SubmodelElementCollection collection ) {
+      final ElementName elementName = determineSubmodelElementName( collection, "", false, true );
+      final String uniqueName = nextUniqueName( elementName.name() + "Property" );
+      return MetaModelBaseAttributes.builder()
+            .withUrn( aspectUrn.withName( uniqueName ) )
+            .withPreferredNames( preferredNamesForEntity( collection ) )
+            .withDescriptions( descriptionsForEntity( collection ) )
+            .withSee( seeReferences( collection ) )
+            .isAnonymous( elementName.isSynthetic() )
+            .build();
+   }
+
    private Set<LangString> preferredNamesForEntity( final SubmodelElement element ) {
       final Set<LangString> elementDisplayNames = SubmodelToAspectUtils.langStringSet( element.getDisplayName() );
       if ( !elementDisplayNames.isEmpty() ) {
@@ -511,9 +521,10 @@ class SubmodelToAspectConverter {
          return existingProperty;
       }
 
-      final boolean useSemanticIdUrnForProperty = !( submodelElement instanceof SubmodelElementCollection );
       final MetaModelBaseAttributes metaModelBaseAttributes =
-            baseAttributes( submodelElement, new DetermineAutomatically(), false, true, useSemanticIdUrnForProperty );
+            submodelElement instanceof final SubmodelElementCollection collection
+                  ? collectionPropertyBaseAttributes( collection )
+                  : baseAttributes( submodelElement, new DetermineAutomatically(), false, true );
       final Characteristic characteristic = createCharacteristic( submodelElement, metaModelBaseAttributes.urn() );
       final Optional<ScalarValue> exampleValue =
             submodelElement instanceof final org.eclipse.digitaltwin.aas4j.v3.model.Property property
@@ -615,7 +626,7 @@ class SubmodelToAspectConverter {
    }
 
    private Characteristic createCharacteristicFromMultiLanguageProperty( final MultiLanguageProperty multiLanguageProperty ) {
-      return createDefaultScalarCharacteristic( multiLanguageProperty, RDF.langString.getURI(),
+      return createDefaultScalarCharacteristic( multiLanguageProperty, RdfDatatypeUris.LANG_STRING,
             new UseGivenUrn( AspectModelUrn.fromUrn( SammNs.SAMMC.MultiLanguageText().getURI() ) ) );
    }
 

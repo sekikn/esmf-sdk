@@ -31,6 +31,7 @@ import org.eclipse.esmf.treesitterturtle.TurtleViolationCode;
 
 public class AspectViolationDiagnosticMapper implements Function<List<Violation>, ViolationReport> {
    public static final String PROCESSING_ERROR_MESSAGE = "Model validation failed. See language server logs for details.";
+   private static final String ERROR_CODES_DOC_LINK = "https://eclipse-esmf.github.io/esmf-developer-guide/tooling-guide/error-codes.html#";
 
    @Override
    public ViolationReport apply( final List<Violation> violations ) {
@@ -54,6 +55,11 @@ public class AspectViolationDiagnosticMapper implements Function<List<Violation>
 
    public ViolationReport processingFailureReport( final Exception cause ) {
       return new ViolationReport( new ProcessingViolation( PROCESSING_ERROR_MESSAGE, cause ) );
+//   public DiagnosticReport processingFailureReport() {
+//      return new DiagnosticReport(
+//            new AspectDiagnostic( PROCESSING_ERROR_MESSAGE,
+//                  new AspectDiagnosticCode( ProcessingViolation.ERROR_CODE,
+//                        Optional.of( ERROR_CODES_DOC_LINK + ProcessingViolation.ERROR_CODE.toUpperCase().replace( "_", "-" ) ) ) ) );
    }
 
    private Optional<Violation> mapViolation( final Violation violation ) {
@@ -70,6 +76,51 @@ public class AspectViolationDiagnosticMapper implements Function<List<Violation>
             Math.max( 0, violation.location().fromLine() ),
             Math.max( 0, violation.location().fromColumn() + 1 ) );
       return new AspectDocumentViolation( violation.message(), code, violation.sourceDocument(), diagnosticsLocation );
+   // private Diagnostic<AspectDiagnosticCode> mapLexicalViolation( final InvalidLexicalValueViolation violation ) {
+   //    final AspectDiagnosticCode code = new AspectDiagnosticCode( InvalidLexicalValueViolation.ERROR_CODE, Optional.empty() );
+   //    final Location diagnosticsLocation = new Location( Math.max( 0, violation.line() - 1 ),
+   //          Math.max( 0, violation.column() - 1 ),
+   //          Math.max( 0, violation.line() - 1 ),
+   //          Math.max( 0, violation.column() ) );
+   //    return Optional.ofNullable( violation.location() )
+   //          .<Diagnostic<AspectDiagnosticCode>>map( location -> new AspectDocumentDiagnostic(
+   //                violation.message(),
+   //                code,
+   //                location.toString(),
+   //                diagnosticsLocation
+   //          ) )
+   //          .orElseGet( () -> new AspectDiagnostic( violation.message(), code ) );
+   }
+
+   private Diagnostic<AspectDiagnosticCode> mapProcessingViolation( final ProcessingViolation violation ) {
+      return mapViolationWithOptionalLocation( violation,
+            new AspectDiagnosticCode( ProcessingViolation.ERROR_CODE,
+                  Optional.of( ERROR_CODES_DOC_LINK + violation.errorCode().toUpperCase().replace( "_", "-" ) ) ) );
+   }
+
+   private Diagnostic<AspectDiagnosticCode> mapSemanticViolation( final Violation violation ) {
+      return mapViolationWithOptionalLocation( violation, new AspectDiagnosticCode( violation.errorCode(), Optional.empty() ) );
+   }
+
+   private Diagnostic<AspectDiagnosticCode> mapViolationWithOptionalLocation( final Violation violation, final AspectDiagnosticCode code ) {
+      final Location location = Optional.ofNullable( violation.highlight() )
+            .map( RDFNode::asNode )
+            .flatMap( TokenRegistry::getToken )
+            .map( SmartToken::location )
+            .orElse( null );
+      if ( location == null ) {
+         return new AspectDiagnostic( violation.message(), code );
+      }
+      return violation.sourceLocation()
+            .map( URI::toString )
+            .<Diagnostic<AspectDiagnosticCode>>map( sourceLocation -> new AspectDocumentDiagnostic(
+                  violation.message(),
+                  code,
+                  sourceLocation,
+                  location
+            ) )
+            .orElseGet( () -> new AspectDiagnostic( violation.message(), code ) );
+>>>>>>> main
    }
 
    private InvalidLexicalValueViolation lexicalViolation( final ValueParsingException exception ) {
