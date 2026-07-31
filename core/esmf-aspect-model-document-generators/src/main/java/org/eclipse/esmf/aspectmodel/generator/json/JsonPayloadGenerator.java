@@ -27,12 +27,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
-
 import javax.xml.datatype.DatatypeConstants;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
-
-import org.apache.jena.vocabulary.RDF;
 
 import org.eclipse.esmf.aspectmodel.generator.JsonGenerator;
 import org.eclipse.esmf.aspectmodel.generator.Range;
@@ -62,17 +59,16 @@ import org.eclipse.esmf.metamodel.constraint.RegularExpressionConstraint;
 import org.eclipse.esmf.metamodel.datatype.Curie;
 import org.eclipse.esmf.metamodel.datatype.CurieType;
 import org.eclipse.esmf.metamodel.datatype.LangString;
+import org.eclipse.esmf.metamodel.datatype.RdfDatatypeUris;
 import org.eclipse.esmf.metamodel.datatype.SammType;
 import org.eclipse.esmf.metamodel.datatype.SammXsdType;
 import org.eclipse.esmf.metamodel.vocabulary.SammNs;
 
+import com.github.curiousoddman.rgxgen.RgxGen;
+import com.github.curiousoddman.rgxgen.parsing.dflt.RgxGenParseException;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.github.curiousoddman.rgxgen.RgxGen;
-import com.github.curiousoddman.rgxgen.parsing.dflt.RgxGenParseException;
-
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.JsonNodeFactory;
@@ -314,7 +310,7 @@ public class JsonPayloadGenerator<S extends StructureElement>
 
    @Override
    public JsonNode visitScalarValue( final ScalarValue scalarValue, final Context context ) {
-      if ( scalarValue.getType().getUrn().equals( RDF.langString.getURI() ) ) {
+      if ( scalarValue.getType().getUrn().equals( RdfDatatypeUris.LANG_STRING ) ) {
          final LangString langString = (LangString) scalarValue.getValue();
          return JsonNodeFactory.instance.objectNode()
                .put( langString.getLanguageTag().toLanguageTag(), langString.getValue() );

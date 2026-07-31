@@ -25,12 +25,6 @@ import java.util.Optional;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.XSD;
-
 import org.eclipse.esmf.aspectmodel.generator.DocumentGenerationException;
 import org.eclipse.esmf.aspectmodel.generator.XsdToJsonTypeMapping;
 import org.eclipse.esmf.aspectmodel.visitor.AspectVisitor;
@@ -62,14 +56,19 @@ import org.eclipse.esmf.metamodel.constraint.RangeConstraint;
 import org.eclipse.esmf.metamodel.constraint.RegularExpressionConstraint;
 import org.eclipse.esmf.metamodel.datatype.CurieType;
 import org.eclipse.esmf.metamodel.datatype.LangString;
+import org.eclipse.esmf.metamodel.datatype.RdfDatatypeUris;
 import org.eclipse.esmf.metamodel.vocabulary.SammNs;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableMap;
-
 import io.vavr.control.Try;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.XSD;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.JsonNodeFactory;
@@ -542,7 +541,7 @@ public class AspectModelJsonSchemaVisitor implements AspectVisitor<JsonNode, Obj
 
    private JsonNode createEnumNodeWithScalarValues( final Enumeration enumeration, final Type type, final ObjectNode context ) {
       final ArrayNode valuesNode = FACTORY.arrayNode();
-      final ObjectNode enumNode = type.getUrn().equals( RDF.langString.getURI() )
+      final ObjectNode enumNode = type.getUrn().equals( RdfDatatypeUris.LANG_STRING )
             ? FACTORY.objectNode().put( "type", "object" )
             : (ObjectNode) type.accept( this, context );
       addSammExtensionAttribute( enumNode, enumeration );

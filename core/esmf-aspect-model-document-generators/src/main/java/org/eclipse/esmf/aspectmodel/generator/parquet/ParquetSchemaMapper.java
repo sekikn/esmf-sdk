@@ -15,9 +15,10 @@ package org.eclipse.esmf.aspectmodel.generator.parquet;
 
 import java.math.BigInteger;
 
+import org.eclipse.esmf.metamodel.datatype.RdfDatatypeUris;
+
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.XSD;
 import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.PrimitiveType;
@@ -70,11 +71,11 @@ final class ParquetSchemaMapper {
             || XSD.hexBinary.equals( xsdResource )
             || XSD.base64Binary.equals( xsdResource )
             || XSD.anyURI.equals( xsdResource )
-            || RDF.langString.getURI().equals( xsdTypeUri ) ) && ( maxLength != null && maxLength.intValue() > 0 ) ) {
+            || RdfDatatypeUris.LANG_STRING.equals( xsdTypeUri ) ) && ( maxLength != null && maxLength.intValue() > 0 ) ) {
          return Types.primitive( PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY, org.apache.parquet.schema.Type.Repetition.OPTIONAL )
                .length( maxLength.intValue() )
                .named( fieldName );
-      } else if ( RDF.langString.getURI().equals( xsdTypeUri ) ) {
+      } else if ( RdfDatatypeUris.LANG_STRING.equals( xsdTypeUri ) ) {
          return Types.primitive( PrimitiveType.PrimitiveTypeName.BINARY, org.apache.parquet.schema.Type.Repetition.OPTIONAL )
                .as( LogicalTypeAnnotation.stringType() ).named( fieldName + "-" + language );
       } else if ( XSD.xfloat.equals( xsdResource ) ) { // Float type
