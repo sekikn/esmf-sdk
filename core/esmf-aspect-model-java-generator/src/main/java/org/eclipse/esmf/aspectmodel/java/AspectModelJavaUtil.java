@@ -52,6 +52,7 @@ import org.eclipse.esmf.metamodel.characteristic.Quantifiable;
 import org.eclipse.esmf.metamodel.characteristic.State;
 import org.eclipse.esmf.metamodel.characteristic.Trait;
 import org.eclipse.esmf.metamodel.datatype.LangString;
+import org.eclipse.esmf.metamodel.datatype.RdfDatatypeUris;
 import org.eclipse.esmf.metamodel.datatype.SammXsdType;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -64,7 +65,6 @@ import org.apache.commons.text.StringEscapeUtils;
 import org.apache.commons.text.translate.UnicodeUnescaper;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.XSD;
 
 public class AspectModelJavaUtil {
@@ -348,7 +348,7 @@ public class AspectModelJavaUtil {
 
          if ( actualDataType instanceof Scalar ) {
             final Resource typeResource = ResourceFactory.createResource( actualDataType.getUrn() );
-            if ( typeResource.getURI().equals( RDF.langString.getURI() ) ) {
+            if ( typeResource.getURI().equals( RdfDatatypeUris.LANG_STRING ) ) {
                importTracker.importExplicit( LangString.class );
                return "LangString";
             }
@@ -368,7 +368,7 @@ public class AspectModelJavaUtil {
       }
 
       final Resource typeResource = ResourceFactory.createResource( dataType.getUrn() );
-      if ( typeResource.getURI().equals( RDF.langString.getURI() ) ) {
+      if ( typeResource.getURI().equals( RdfDatatypeUris.LANG_STRING ) ) {
          return Map.class;
       }
       final Class<?> result = SammXsdType.getJavaTypeForMetaModelType( typeResource );

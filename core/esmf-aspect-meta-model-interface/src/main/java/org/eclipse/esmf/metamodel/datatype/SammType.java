@@ -26,7 +26,6 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import org.apache.jena.datatypes.BaseDatatype;
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
-import org.apache.jena.vocabulary.RDF;
 
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
 import org.eclipse.esmf.aspectmodel.ValueParsingException;
@@ -159,7 +158,7 @@ public sealed interface SammType<T> extends RDFDatatype, Scalar
 
    final class RdfLangString extends BaseDatatype implements SammType<LangString> {
       public RdfLangString() {
-         super( RDF.langString.getURI() );
+         super( RdfDatatypeUris.LANG_STRING );
       }
 
       @Override
@@ -386,7 +385,7 @@ public sealed interface SammType<T> extends RDFDatatype, Scalar
 
       @Override
       public XMLGregorianCalendar parseTypedValue( final String lexicalForm ) {
-         return Try.of( () -> datatypeFactory.newXMLGregorianCalendar( lexicalForm ) )
+         return Try.of( () -> datatypeFactory().newXMLGregorianCalendar( lexicalForm ) )
                .getOrElseThrow( cause -> new ValueParsingException( org.apache.jena.vocabulary.XSD.date, lexicalForm, cause ) );
       }
 
@@ -413,7 +412,7 @@ public sealed interface SammType<T> extends RDFDatatype, Scalar
 
       @Override
       public XMLGregorianCalendar parseTypedValue( final String lexicalForm ) {
-         return Try.of( () -> datatypeFactory.newXMLGregorianCalendar( lexicalForm ) )
+         return Try.of( () -> datatypeFactory().newXMLGregorianCalendar( lexicalForm ) )
                .getOrElseThrow( cause -> new ValueParsingException( org.apache.jena.vocabulary.XSD.time, lexicalForm, cause ) );
       }
 
@@ -440,7 +439,7 @@ public sealed interface SammType<T> extends RDFDatatype, Scalar
 
       @Override
       public XMLGregorianCalendar parseTypedValue( final String lexicalForm ) {
-         return Try.of( () -> datatypeFactory.newXMLGregorianCalendar( lexicalForm ) )
+         return Try.of( () -> datatypeFactory().newXMLGregorianCalendar( lexicalForm ) )
                .getOrElseThrow( cause -> new ValueParsingException( org.apache.jena.vocabulary.XSD.dateTime, lexicalForm, cause ) );
       }
 
@@ -467,7 +466,7 @@ public sealed interface SammType<T> extends RDFDatatype, Scalar
 
       @Override
       public XMLGregorianCalendar parseTypedValue( final String lexicalForm ) {
-         return Try.of( () -> SammXsdType.datatypeFactory.newXMLGregorianCalendar( lexicalForm ) )
+         return Try.of( () -> SammXsdType.datatypeFactory().newXMLGregorianCalendar( lexicalForm ) )
                .getOrElseThrow( cause -> new ValueParsingException( org.apache.jena.vocabulary.XSD.dateTimeStamp, lexicalForm, cause ) );
       }
 
@@ -495,7 +494,7 @@ public sealed interface SammType<T> extends RDFDatatype, Scalar
 
       @Override
       public XMLGregorianCalendar parseTypedValue( final String lexicalForm ) {
-         return Try.of( () -> datatypeFactory.newXMLGregorianCalendar( lexicalForm ) )
+         return Try.of( () -> datatypeFactory().newXMLGregorianCalendar( lexicalForm ) )
                .getOrElseThrow( cause -> new ValueParsingException( org.apache.jena.vocabulary.XSD.gYear, lexicalForm, cause ) );
       }
 
@@ -523,7 +522,7 @@ public sealed interface SammType<T> extends RDFDatatype, Scalar
 
       @Override
       public XMLGregorianCalendar parseTypedValue( final String lexicalForm ) {
-         return Try.of( () -> datatypeFactory.newXMLGregorianCalendar( lexicalForm ) )
+         return Try.of( () -> datatypeFactory().newXMLGregorianCalendar( lexicalForm ) )
                .getOrElseThrow( cause -> new ValueParsingException( org.apache.jena.vocabulary.XSD.gMonth, lexicalForm, cause ) );
       }
 
@@ -551,7 +550,7 @@ public sealed interface SammType<T> extends RDFDatatype, Scalar
 
       @Override
       public XMLGregorianCalendar parseTypedValue( final String lexicalForm ) {
-         return Try.of( () -> datatypeFactory.newXMLGregorianCalendar( lexicalForm ) )
+         return Try.of( () -> datatypeFactory().newXMLGregorianCalendar( lexicalForm ) )
                .getOrElseThrow( cause -> new ValueParsingException( org.apache.jena.vocabulary.XSD.gDay, lexicalForm, cause ) );
       }
 
@@ -579,7 +578,7 @@ public sealed interface SammType<T> extends RDFDatatype, Scalar
 
       @Override
       public XMLGregorianCalendar parseTypedValue( final String lexicalForm ) {
-         return Try.of( () -> datatypeFactory.newXMLGregorianCalendar( lexicalForm ) )
+         return Try.of( () -> datatypeFactory().newXMLGregorianCalendar( lexicalForm ) )
                .getOrElseThrow( cause -> new ValueParsingException( org.apache.jena.vocabulary.XSD.gYearMonth, lexicalForm, cause ) );
       }
 
@@ -606,7 +605,7 @@ public sealed interface SammType<T> extends RDFDatatype, Scalar
 
       @Override
       public XMLGregorianCalendar parseTypedValue( final String lexicalForm ) {
-         return Try.of( () -> datatypeFactory.newXMLGregorianCalendar( lexicalForm ) )
+         return Try.of( () -> datatypeFactory().newXMLGregorianCalendar( lexicalForm ) )
                .getOrElseThrow( cause -> new ValueParsingException( org.apache.jena.vocabulary.XSD.gMonthDay, lexicalForm, cause ) );
       }
 
@@ -628,7 +627,7 @@ public sealed interface SammType<T> extends RDFDatatype, Scalar
 
       @Override
       public javax.xml.datatype.Duration parseTypedValue( final String lexicalForm ) {
-         return Try.of( () -> datatypeFactory.newDuration( lexicalForm ) )
+         return Try.of( () -> datatypeFactory().newDuration( lexicalForm ) )
                .getOrElseThrow( cause -> new ValueParsingException( org.apache.jena.vocabulary.XSD.duration, lexicalForm, cause ) );
       }
 
@@ -651,7 +650,7 @@ public sealed interface SammType<T> extends RDFDatatype, Scalar
 
       @Override
       public javax.xml.datatype.Duration parseTypedValue( final String lexicalForm ) {
-         return Try.of( () -> SammXsdType.datatypeFactory.newDurationYearMonth( lexicalForm ) )
+         return Try.of( () -> SammXsdType.datatypeFactory().newDurationYearMonth( lexicalForm ) )
                .getOrElseThrow(
                      cause -> new ValueParsingException( org.apache.jena.vocabulary.XSD.yearMonthDuration, lexicalForm, cause ) );
       }
@@ -675,7 +674,7 @@ public sealed interface SammType<T> extends RDFDatatype, Scalar
 
       @Override
       public javax.xml.datatype.Duration parseTypedValue( final String lexicalForm ) {
-         return Try.of( () -> SammXsdType.datatypeFactory.newDurationDayTime( lexicalForm ) )
+         return Try.of( () -> SammXsdType.datatypeFactory().newDurationDayTime( lexicalForm ) )
                .getOrElseThrow( cause -> new ValueParsingException( org.apache.jena.vocabulary.XSD.dayTimeDuration, lexicalForm, cause ) );
       }
 
