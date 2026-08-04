@@ -18,6 +18,6 @@ import org.apache.jena.rdf.model.RDFNode;
 /**
  * A violation that refers to (is logically attached to) an RDF element
  */
-public interface RdfElementViolation extends DocumentViolation {
+public interface ElementFocussedViolation extends DocumentLocationViolation {
    RDFNode highlight();
 }

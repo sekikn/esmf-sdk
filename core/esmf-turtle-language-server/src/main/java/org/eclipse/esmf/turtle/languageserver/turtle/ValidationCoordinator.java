@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 
 import org.eclipse.esmf.aspectmodel.ViolationReport;
+import org.eclipse.esmf.aspectmodel.validation.ProcessingViolationBuilder;
 import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.ViolationProvider;
 import org.eclipse.esmf.turtle.languageserver.lsp.text.Document;
 import org.eclipse.esmf.turtle.languageserver.lsp.text.ParsedDocument;
@@ -62,7 +63,7 @@ public class ValidationCoordinator implements AutoCloseable {
    private ViolationReport validateFast( final ParsedDocument parsedDocument ) {
       final ViolationReport result = violationProviders.stream()
             .filter( provider -> provider.type().equals( ViolationProvider.Type.FAST ) )
-            .map( provider -> provider.validate( parsedDocument ) )
+            .map( provider -> executeViolationProvider( provider, parsedDocument ) )
             .reduce( ViolationReport::merge )
             .orElse( ViolationReport.EMPTY );
       fastValidationResults.put( parsedDocument.sourceDocument(), result );
@@ -141,7 +142,7 @@ public class ValidationCoordinator implements AutoCloseable {
       cancelRunningValidation( document );
       final long generation = generations.computeIfAbsent( document, ignored -> new AtomicLong() ).incrementAndGet();
       final CompletableFuture<ViolationReport> future = CompletableFuture.supplyAsync(
-            () -> validate( parsedDocument ),
+            () -> validateDelayed( parsedDocument ),
             executorService
       );
       runningValidations.put( document, future );
@@ -167,10 +168,23 @@ public class ValidationCoordinator implements AutoCloseable {
       return future;
    }
 
-   private ViolationReport validate( final ParsedDocument parsedDocument ) {
+   private ViolationReport executeViolationProvider( final ViolationProvider provider, final ParsedDocument parsedDocument ) {
+      try {
+         return provider.validate( parsedDocument );
+      } catch ( final Throwable throwable ) {
+         LOG.error( "[error] unexpected runtime failure during validation for URI={}",
+               parsedDocument.sourceDocument().uri(), throwable );
+         return new ViolationReport( ProcessingViolationBuilder.builder()
+               .message( throwable.getMessage() )
+               .cause( throwable )
+               .build() );
+      }
+   }
+
+   private ViolationReport validateDelayed( final ParsedDocument parsedDocument ) {
       return violationProviders.stream()
             .filter( provider -> provider.type().equals( ViolationProvider.Type.DELAYED ) )
-            .map( provider -> provider.validate( parsedDocument ) )
+            .map( provider -> executeViolationProvider( provider, parsedDocument ) )
             .reduce( ViolationReport::merge )
             .orElse( ViolationReport.EMPTY )
             .merge( fastValidationResults.getOrDefault( parsedDocument.sourceDocument(), ViolationReport.EMPTY ) );

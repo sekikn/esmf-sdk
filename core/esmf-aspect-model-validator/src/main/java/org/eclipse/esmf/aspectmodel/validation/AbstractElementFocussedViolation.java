@@ -14,22 +14,25 @@
 package org.eclipse.esmf.aspectmodel.validation;
 
 import java.net.URI;
-import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
-import org.eclipse.esmf.aspectmodel.DocumentViolation;
+import org.eclipse.esmf.aspectmodel.DocumentLocationViolation;
+import org.eclipse.esmf.aspectmodel.ElementFocussedViolation;
 import org.eclipse.esmf.aspectmodel.Location;
-import org.eclipse.esmf.aspectmodel.RdfElementViolation;
 import org.eclipse.esmf.aspectmodel.resolver.parser.SmartToken;
 import org.eclipse.esmf.aspectmodel.resolver.parser.TokenRegistry;
 import org.eclipse.esmf.aspectmodel.shacl.ShaclValidationException;
-import org.eclipse.esmf.aspectmodel.shacl.fix.Fix;
 
-public abstract class DefaultLocatedViolation implements RdfElementViolation {
+/**
+ * Base implementation for and RdfElementViolation that is based on information stored in the
+ * {@link TokenRegistry}.
+ */
+public abstract class AbstractElementFocussedViolation implements ElementFocussedViolation {
    @Override
    public Location location() {
       return TokenRegistry.getToken( highlight().asNode() )
-            .map( SmartToken::location ).orElse( DocumentViolation.WHOLE_DOCUMENT );
+            .map( SmartToken::location ).orElse( DocumentLocationViolation.WHOLE_DOCUMENT );
    }
 
    @Override
@@ -39,7 +42,10 @@ public abstract class DefaultLocatedViolation implements RdfElementViolation {
             .orElseThrow( () -> new ShaclValidationException( "Could not determine source document for element " + highlight() ) );
    }
 
-   public List<Fix> fixes() {
-      return List.of();
+   @Override
+   public Supplier<String> documentContent() {
+      return () -> TokenRegistry.getToken( highlight().asNode() )
+            .map( token -> token.getOriginatingFile().sourceRepresentation() )
+            .orElseThrow( () -> new ShaclValidationException( "Can not determine source document for element " + highlight() ) );
    }
 }

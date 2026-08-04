@@ -40,8 +40,8 @@ public class ExternalResolverStrategy implements ResolutionStrategy {
          final String result = CommandExecutor.executeCommand( commandWithParameters );
          return AspectModelFileLoader.load( result, URI.create( "input:stdin" ) );
       } catch ( final ModelResolutionException exception ) {
-         final ModelResolutionException.LoadingFailure failure = new ModelResolutionException.LoadingFailure(
-               aspectModelUrn, "The output of '" + command + "'", "Command evaluation failed", exception );
+         final ModelResolutionViolation failure = new ModelResolutionViolation(
+               aspectModelUrn, URI.create( "inmemory:fromcommand" ), "Command evaluation failed", exception );
          throw new ModelResolutionException( failure );
       }
    }

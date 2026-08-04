@@ -65,13 +65,11 @@ public class AspectModelFileLoader {
          return new RawAspectModelFile( stringContent, fromString.sourceModel(), fromString.headerComment(), Optional.of( file.toURI() ) );
       } catch ( final ModelResolutionException exception ) {
          if ( exception.getMessage().startsWith( "Encountered invalid encoding" ) ) {
-            throw new ModelResolutionException( new ModelResolutionException.LoadingFailure(
-                  file.toString(), exception.getMessage(), exception ) );
+            throw new ModelResolutionException( new ModelResolutionViolation( file.toURI(), exception.getMessage(), exception ) );
          }
          throw exception;
       } catch ( final FileNotFoundException exception ) {
-         throw new ModelResolutionException( new ModelResolutionException.LoadingFailure(
-               file.toString(), "File not found: " + file, exception ) );
+         throw new ModelResolutionException( new ModelResolutionViolation( file.toURI(), "File not found: " + file, exception ) );
       }
    }
 
@@ -191,11 +189,11 @@ public class AspectModelFileLoader {
          charsetDecoder.decode( ByteBuffer.wrap( bytes ) );
          return new String( bytes, StandardCharsets.UTF_8 );
       } catch ( final MalformedInputException | UnmappableCharacterException exception ) {
-         throw new ModelResolutionException( new ModelResolutionException.LoadingFailure(
-               sourceLocation.toString(), "Encountered invalid encoding in input", exception ) );
+         throw new ModelResolutionException( new ModelResolutionViolation(
+               sourceLocation, "Encountered invalid encoding in input", exception ) );
       } catch ( final IOException exception ) {
-         throw new ModelResolutionException( new ModelResolutionException.LoadingFailure(
-               sourceLocation.toString(), "Could not load content from input stream", exception ) );
+         throw new ModelResolutionException( new ModelResolutionViolation(
+               sourceLocation, "Could not load content from input stream", exception ) );
       }
    }
 

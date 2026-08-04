@@ -13,11 +13,13 @@
 
 package org.eclipse.esmf.aspectmodel.resolver.github;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
 import org.eclipse.esmf.aspectmodel.resolver.GithubRepository;
+import org.eclipse.esmf.aspectmodel.resolver.ModelResolutionViolation;
 import org.eclipse.esmf.aspectmodel.resolver.ResolutionStrategy;
 import org.eclipse.esmf.aspectmodel.resolver.ResolutionStrategySupport;
 import org.eclipse.esmf.aspectmodel.resolver.exceptions.ModelResolutionException;
@@ -56,7 +58,8 @@ public class GitHubStrategy extends GitHubModelSource implements ResolutionStrat
          throws ModelResolutionException {
 
       final String directory = config.directory().isEmpty() ? "/" : config.directory();
-      final String repositoryLocation = "GitHub repository %s/%s (%s %s, directory %s)".formatted(
+      final URI repositoryLocation = URI.create( sourceUrl( "" ) );
+      final String humanReadableRepositoryLocation = "GitHub repository %s/%s (%s %s, directory %s)".formatted(
             config.repository().owner(),
             config.repository().repository(),
             config.repository().branchOrTag().refTypeName(),
@@ -66,23 +69,23 @@ public class GitHubStrategy extends GitHubModelSource implements ResolutionStrat
       try {
          files = loadContentsForNamespace( aspectModelUrn ).toList();
       } catch ( final Exception exception ) {
-         final ModelResolutionException.LoadingFailure failure = new ModelResolutionException.LoadingFailure( aspectModelUrn,
-               repositoryLocation, exception.getMessage(), exception );
+         final ModelResolutionViolation failure = new ModelResolutionViolation( aspectModelUrn,
+               repositoryLocation, "In " + humanReadableRepositoryLocation + ": " + exception.getMessage(), exception );
          throw new ModelResolutionException( failure );
       }
 
-      final List<ModelResolutionException.LoadingFailure> checkedLocations = new ArrayList<>();
+      final List<ModelResolutionViolation> checkedLocations = new ArrayList<>();
       for ( final AspectModelFile file : files ) {
          if ( resolutionStrategySupport.containsDefinition( file, aspectModelUrn ) ) {
             return file;
          }
-         file.sourceLocation().map( sourceLocation -> new ModelResolutionException.LoadingFailure( aspectModelUrn,
-               sourceLocation.toString(), "File does not contain the element definition" ) )
+         file.sourceLocation().map( sourceLocation -> new ModelResolutionViolation( aspectModelUrn,
+               sourceLocation, "File does not contain the element definition" ) )
                .ifPresent( checkedLocations::add );
       }
 
       if ( checkedLocations.isEmpty() ) {
-         final ModelResolutionException.LoadingFailure failure = new ModelResolutionException.LoadingFailure( aspectModelUrn,
+         final ModelResolutionViolation failure = new ModelResolutionViolation( aspectModelUrn,
                repositoryLocation, "Repository does not contain any file that contains the element definition" );
          checkedLocations.add( failure );
       }

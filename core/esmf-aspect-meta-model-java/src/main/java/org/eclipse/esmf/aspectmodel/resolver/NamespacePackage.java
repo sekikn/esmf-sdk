@@ -253,7 +253,7 @@ public class NamespacePackage implements ResolutionStrategy, Artifact<URI, byte[
             .filter( file -> resolutionStrategySupport.containsDefinition( file, aspectModelUrn ) )
             .findFirst()
             .orElseThrow( () -> new ModelResolutionException(
-                  new ModelResolutionException.LoadingFailure( aspectModelUrn, location.toString(),
+                  new ModelResolutionViolation( aspectModelUrn, location,
                         "Namespace package " + location + " does not contain definition for " + aspectModelUrn ) ) );
    }
 

@@ -16,14 +16,16 @@ package org.eclipse.esmf.aspectmodel.shacl.violation;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import org.apache.jena.rdf.model.RDFNode;
 
-import org.eclipse.esmf.aspectmodel.DocumentViolation;
-import org.eclipse.esmf.aspectmodel.Location;
-import org.eclipse.esmf.aspectmodel.RdfElementViolation;
-import org.eclipse.esmf.aspectmodel.Violation;
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
+import org.eclipse.esmf.aspectmodel.DocumentLocationViolation;
+import org.eclipse.esmf.aspectmodel.ElementFocussedViolation;
+import org.eclipse.esmf.aspectmodel.Location;
+import org.eclipse.esmf.aspectmodel.ProjectInfo;
+import org.eclipse.esmf.aspectmodel.Violation;
 import org.eclipse.esmf.aspectmodel.resolver.parser.SmartToken;
 import org.eclipse.esmf.aspectmodel.resolver.parser.TokenRegistry;
 import org.eclipse.esmf.aspectmodel.shacl.ShaclValidationException;
@@ -37,7 +39,7 @@ import org.eclipse.esmf.aspectmodel.shacl.fix.Fix;
  * To handle information specific to each type of violation, implement {@link Visitor} and call
  * {@link #accept(Visitor)} on the violation(s).
  */
-public interface ShaclViolation extends RdfElementViolation {
+public interface ShaclViolation extends ElementFocussedViolation {
    enum AppliesTo {
       WHOLE_ELEMENT, ONLY_PROPERTY
    }
@@ -49,7 +51,7 @@ public interface ShaclViolation extends RdfElementViolation {
    @Override
    default Location location() {
       return TokenRegistry.getToken( highlight().asNode() )
-            .map( SmartToken::location ).orElse( DocumentViolation.WHOLE_DOCUMENT );
+            .map( SmartToken::location ).orElse( DocumentLocationViolation.WHOLE_DOCUMENT );
    }
 
    @Override
@@ -57,6 +59,13 @@ public interface ShaclViolation extends RdfElementViolation {
       return TokenRegistry.getToken( highlight().asNode() )
             .flatMap( token -> Optional.ofNullable( token.getSourceDocument() ) )
             .orElseThrow( () -> new ShaclValidationException( "Could not determine source document for element " + highlight() ) );
+   }
+
+   @Override
+   default Supplier<String> documentContent() {
+      return () -> TokenRegistry.getToken( highlight().asNode() )
+            .map( token -> token.getOriginatingFile().sourceRepresentation() )
+            .orElseThrow( () -> new ShaclValidationException( "Can not determine source document for element " + highlight() ) );
    }
 
    /**
@@ -83,7 +92,17 @@ public interface ShaclViolation extends RdfElementViolation {
 
    @Override
    default Violation.Code code() {
-      return this::errorCode;
+      return new Code() {
+         @Override
+         public String code() {
+            return errorCode();
+         }
+
+         @Override
+         public Optional<String> href() {
+            return Optional.of( ProjectInfo.esmfErrorCodeUrl( errorCode() ) );
+         }
+      };
    }
 
    String errorCode();

@@ -26,20 +26,20 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.eclipse.esmf.Diagnostic;
 import org.eclipse.esmf.aspectmodel.RdfUtil;
 import org.eclipse.esmf.aspectmodel.VersionInfo;
+import org.eclipse.esmf.aspectmodel.Violation;
+import org.eclipse.esmf.aspectmodel.ViolationReport;
+import org.eclipse.esmf.aspectmodel.validation.DefaultDocumentLocationViolationBuilder;
 import org.eclipse.esmf.metamodel.vocabulary.SammNs;
 import org.eclipse.esmf.treesitterturtle.ParserTokenType;
 import org.eclipse.esmf.treesitterturtle.TurtleSyntaxTree;
 import org.eclipse.esmf.turtle.languageserver.aspect.diagnostic.AspectDiagnosticCode;
-import org.eclipse.esmf.turtle.languageserver.aspect.diagnostic.AspectDocumentDiagnostic;
-import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.DiagnosticReport;
-import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.DiagnosticsProvider;
+import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.ViolationProvider;
 import org.eclipse.esmf.turtle.languageserver.lsp.text.ParsedDocument;
 import org.eclipse.esmf.turtle.languageserver.turtle.TurtleService;
 
-public class AspectModelNamingConventionValidationService extends TurtleService implements DiagnosticsProvider {
+public class AspectModelNamingConventionValidationService extends TurtleService implements ViolationProvider {
    private static final String NAMING_CONVENTION_DOCS_HREF =
          "https://eclipse-esmf.github.io/samm-specification/%s/modeling-guidelines.html#naming-rules"
                .formatted( VersionInfo.ASPECT_META_MODEL_VERSION );
@@ -68,20 +68,20 @@ public class AspectModelNamingConventionValidationService extends TurtleService 
    }
 
    @Override
-   public DiagnosticReport validate( final ParsedDocument parsedDocument ) {
+   public ViolationReport validate( final ParsedDocument parsedDocument ) {
       if ( !documentIsAspectModel( parsedDocument ) ) {
-         return DiagnosticReport.EMPTY;
+         return ViolationReport.EMPTY;
       }
-      return new DiagnosticReport(
+      return new ViolationReport(
             parsedDocument.turtleSyntaxTree().tokens()
                   .filter( token -> ParserTokenType.TRIPLE.equals( token.type() ) )
                   .flatMap( triple -> checkNamingConvention( triple, parsedDocument ) )
                   .toList() );
    }
 
-   private Stream<Diagnostic<?>> checkNamingConvention( final TurtleSyntaxTree.Token triple, final ParsedDocument parsedDocument ) {
+   private Stream<Violation> checkNamingConvention( final TurtleSyntaxTree.Token triple, final ParsedDocument parsedDocument ) {
       final Map<TurtleSyntaxTree.Node, TurtleSyntaxTree.Node> predicateObjectMap = predicateObjectMapForTriple( triple );
-      final Stream.Builder<Diagnostic<?>> diagnostics = Stream.builder();
+      final Stream.Builder<Violation> violations = Stream.builder();
 
       subjectLocalName( triple ).ifPresent( node -> {
          final boolean isUppercaseType = objectsForPredicates( predicateObjectMap, TYPE_DEFINITION_PREDICATES )
@@ -89,27 +89,27 @@ public class AspectModelNamingConventionValidationService extends TurtleService 
                .anyMatch( UPPERCASE_TYPES::contains );
          if ( isUppercaseType ) {
             uppercaseFirstLetterDiagnostic( node, parsedDocument )
-                  .ifPresent( diagnostics::add );
+                  .ifPresent( violations::add );
          }
          final boolean isLowercaseType = objectsForPredicates( predicateObjectMap, TYPE_DEFINITION_PREDICATES )
                .map( TurtleSyntaxTree.Node::content )
                .anyMatch( LOWERCASE_TYPES::contains );
          if ( isLowercaseType ) {
             lowercaseFirstLetterDiagnostic( node, parsedDocument )
-                  .ifPresent( diagnostics::add );
+                  .ifPresent( violations::add );
          }
-         acronymCasingDiagnostic( node, parsedDocument ).ifPresent( diagnostics::add );
-         redundantTypeNameDiagnostic( node, predicateObjectMap, parsedDocument ).ifPresent( diagnostics::add );
+         acronymCasingDiagnostic( node, parsedDocument ).ifPresent( violations::add );
+         redundantTypeNameDiagnostic( node, predicateObjectMap, parsedDocument ).ifPresent( violations::add );
       } );
 
       descriptionValues( predicateObjectMap )
-            .forEach( description -> descriptionDiagnostic( description, parsedDocument ).forEach( diagnostics::add )
+            .forEach( description -> descriptionDiagnostic( description, parsedDocument ).forEach( violations::add )
             );
 
-      return diagnostics.build();
+      return violations.build();
    }
 
-   private static Optional<Diagnostic<?>> uppercaseFirstLetterDiagnostic( final TurtleSyntaxTree.Node node,
+   private static Optional<Violation> uppercaseFirstLetterDiagnostic( final TurtleSyntaxTree.Node node,
          final ParsedDocument parsedDocument ) {
       final String content = stripQuotes( node.content() );
       if ( content.isEmpty() || Character.isUpperCase( content.charAt( 0 ) ) ) {
@@ -117,12 +117,17 @@ public class AspectModelNamingConventionValidationService extends TurtleService 
       }
       final String suggestion = Character.toUpperCase( content.charAt( 0 ) ) + content.substring( 1 );
       final String message = ( "'%s' should start with an uppercase letter, e.g. '%s'" ).formatted( content, suggestion );
-      return Optional.of(
-            new AspectDocumentDiagnostic( message, NAMING_CONVENTION_CODE, parsedDocument.getUri(), node.location(),
-                  Diagnostic.Severity.WARNING ) );
+      return Optional.of( DefaultDocumentLocationViolationBuilder.builder()
+            .message( message )
+            .code( NAMING_CONVENTION_CODE )
+            .sourceDocument( parsedDocument.getUri() )
+            .documentContent( () -> parsedDocument.sourceDocument().content() )
+            .location( node.location() )
+            .severity( Violation.Severity.WARNING )
+            .build() );
    }
 
-   private static Optional<Diagnostic<?>> lowercaseFirstLetterDiagnostic( final TurtleSyntaxTree.Node node,
+   private static Optional<Violation> lowercaseFirstLetterDiagnostic( final TurtleSyntaxTree.Node node,
          final ParsedDocument parsedDocument ) {
       final String content = stripQuotes( node.content() );
       if ( content.isEmpty() || Character.isLowerCase( content.charAt( 0 ) ) ) {
@@ -130,38 +135,61 @@ public class AspectModelNamingConventionValidationService extends TurtleService 
       }
       final String suggestion = Character.toLowerCase( content.charAt( 0 ) ) + content.substring( 1 );
       final String message = "'%s' should start with a lowercase letter, e.g. '%s'".formatted( content, suggestion );
-      return Optional.of(
-            new AspectDocumentDiagnostic( message, NAMING_CONVENTION_CODE, parsedDocument.getUri(), node.location(),
-                  Diagnostic.Severity.WARNING ) );
+      return Optional.of( DefaultDocumentLocationViolationBuilder.builder()
+            .message( message )
+            .code( NAMING_CONVENTION_CODE )
+            .sourceDocument( parsedDocument.getUri() )
+            .documentContent( () -> parsedDocument.sourceDocument().content() )
+            .location( node.location() )
+            .severity( Violation.Severity.WARNING )
+            .build() );
    }
 
-   private static List<Diagnostic<?>> descriptionDiagnostic( final TurtleSyntaxTree.Node node,
+   private static List<Violation> descriptionDiagnostic( final TurtleSyntaxTree.Node node,
          final ParsedDocument parsedDocument ) {
-      final List<Diagnostic<?>> diagnostics = new ArrayList<>();
+      final List<Violation> diagnostics = new ArrayList<>();
       final String content = stripQuotes( node.content() );
       if ( !content.isEmpty() && content.charAt( content.length() - 1 ) != '.' ) {
          final String message = "Description should end with a period";
-         diagnostics.add( new AspectDocumentDiagnostic( message, NAMING_BEST_PRACTICES_CODE, parsedDocument.getUri(), node.location(),
-               Diagnostic.Severity.WARNING ) );
+         diagnostics.add( DefaultDocumentLocationViolationBuilder.builder()
+               .message( message )
+               .code( NAMING_BEST_PRACTICES_CODE )
+               .sourceDocument( parsedDocument.getUri() )
+               .documentContent( () -> parsedDocument.sourceDocument().content() )
+               .location( node.location() )
+               .severity( Violation.Severity.WARNING )
+               .build() );
       }
       if ( !content.isEmpty() && Character.isLowerCase( content.charAt( 0 ) ) ) {
          final String message = "Description should start with an uppercase letter";
-         diagnostics.add( new AspectDocumentDiagnostic( message, NAMING_BEST_PRACTICES_CODE, parsedDocument.getUri(), node.location(),
-               Diagnostic.Severity.WARNING ) );
+         diagnostics.add( DefaultDocumentLocationViolationBuilder.builder()
+               .message( message )
+               .code( NAMING_BEST_PRACTICES_CODE )
+               .sourceDocument( parsedDocument.getUri() )
+               .documentContent( () -> parsedDocument.sourceDocument().content() )
+               .location( node.location() )
+               .severity( Violation.Severity.WARNING )
+               .build() );
       }
       return diagnostics;
    }
 
-   private static Optional<Diagnostic<?>> acronymCasingDiagnostic( final TurtleSyntaxTree.Node node, final ParsedDocument parsedDocument ) {
+   private static Optional<Violation> acronymCasingDiagnostic( final TurtleSyntaxTree.Node node, final ParsedDocument parsedDocument ) {
       return acronymCasingSuggestion( node.content() ).map( suggestion -> {
          final String message = "Name '%s' should use camel case for acronyms instead of all-uppercase, e.g. '%s'"
                .formatted( node.content(), suggestion );
-         return new AspectDocumentDiagnostic( message, NAMING_BEST_PRACTICES_CODE, parsedDocument.getUri(), node.location(),
-               Diagnostic.Severity.WARNING );
+         return DefaultDocumentLocationViolationBuilder.builder()
+               .message( message )
+               .code( NAMING_BEST_PRACTICES_CODE )
+               .sourceDocument( parsedDocument.getUri() )
+               .documentContent( () -> parsedDocument.sourceDocument().content() )
+               .location( node.location() )
+               .severity( Violation.Severity.WARNING )
+               .build();
       } );
    }
 
-   private static Optional<Diagnostic<?>> redundantTypeNameDiagnostic( final TurtleSyntaxTree.Node localName,
+   private static Optional<Violation> redundantTypeNameDiagnostic( final TurtleSyntaxTree.Node localName,
          final Map<TurtleSyntaxTree.Node, TurtleSyntaxTree.Node> predicateObjectMap, final ParsedDocument parsedDocument ) {
       final String name = localName.content();
       return objectsForPredicates( predicateObjectMap, TYPE_DEFINITION_PREDICATES )
@@ -177,8 +205,14 @@ public class AspectModelNamingConventionValidationService extends TurtleService 
                            .formatted( name, typeName )
                      : "Name '%s' should not contain the meta model element type '%s', e.g. '%s'"
                            .formatted( name, typeName, remainder );
-               return new AspectDocumentDiagnostic( message, NAMING_BEST_PRACTICES_CODE, parsedDocument.getUri(), localName.location(),
-                     Diagnostic.Severity.WARNING );
+               return DefaultDocumentLocationViolationBuilder.builder()
+                     .message( message )
+                     .code( NAMING_BEST_PRACTICES_CODE )
+                     .sourceDocument( parsedDocument.getUri() )
+                     .documentContent( () -> parsedDocument.sourceDocument().content() )
+                     .location( localName.location() )
+                     .severity( Violation.Severity.WARNING )
+                     .build();
             } );
    }
 

@@ -11,23 +11,29 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package org.eclipse.esmf.treesitterturtle;
+package org.eclipse.esmf.aspectmodel.validation;
 
 import java.net.URI;
+import java.util.function.Supplier;
 
-import org.eclipse.esmf.aspectmodel.DocumentViolation;
+import org.eclipse.esmf.aspectmodel.DocumentLocationViolation;
 import org.eclipse.esmf.aspectmodel.Location;
 import org.eclipse.esmf.aspectmodel.Violation;
 
-public record TurtleDocumentViolation(
+import io.soabase.recordbuilder.core.RecordBuilder;
+
+@RecordBuilder
+public record DefaultDocumentLocationViolation(
       String message,
-      TurtleViolationCode code,
+      Violation.Code code,
       URI sourceDocument,
+      Supplier<String> documentContent,
       Location location,
       Violation.Severity severity
-) implements DocumentViolation {
-   public TurtleDocumentViolation( final String message, final TurtleViolationCode code,
-         final URI sourceDocument, final Location location ) {
-      this( message, code, sourceDocument, location, Violation.Severity.ERROR );
+) implements DocumentLocationViolation {
+   public DefaultDocumentLocationViolation {
+      if ( severity == null ) {
+         severity = Severity.ERROR;
+      }
    }
 }

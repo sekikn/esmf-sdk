@@ -25,16 +25,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
-import java.util.function.Supplier;
 
-import org.eclipse.esmf.aspectmodel.Violation;
 import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.aspectmodel.validation.ProcessingViolation;
-import org.eclipse.esmf.aspectmodel.validation.services.AspectModelValidator;
-import org.eclipse.esmf.metamodel.AspectModel;
 import org.eclipse.esmf.test.TestAspect;
-import org.eclipse.esmf.turtle.languageserver.aspect.diagnostic.AspectViolationDiagnosticMapper;
-import org.eclipse.esmf.turtle.languageserver.aspect.service.AspectModelValidationService;
 import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.ViolationProvider;
 import org.eclipse.esmf.turtle.languageserver.lsp.text.Document;
 import org.eclipse.esmf.turtle.languageserver.lsp.text.ParsedDocument;
@@ -63,11 +57,17 @@ class ValidationCoordinatorTest {
                callbackCalled.countDown();
             };
       final List<ViolationProvider> violationProviders = List.of(
-            _ -> {
-               final Violation violation = new ProcessingViolation( "processing violation", new RuntimeException() );
-               return new AspectViolationDiagnosticMapper().mapValidationViolations( List.of( violation ) );
-            }
-      );
+            new ViolationProvider() {
+               @Override
+               public ViolationReport validate( final ParsedDocument document1 ) {
+                  return new ViolationReport( new ProcessingViolation( "processing violation", new RuntimeException() ) );
+               }
+
+               @Override
+               public Type type() {
+                  return Type.DELAYED;
+               }
+            } );
       final ValidationCoordinator coordinator = new ValidationCoordinator( violationProviders, onValidationComplete );
 
       try ( coordinator ) {
@@ -88,7 +88,7 @@ class ValidationCoordinatorTest {
       final CountDownLatch callbackCalled = new CountDownLatch( 1 );
       final AtomicReference<ViolationReport> callbackReport = new AtomicReference<>();
       final RuntimeException failure = new RuntimeException( "secret internal details" );
-      final Logger logger = (Logger) LoggerFactory.getLogger( AspectModelValidationService.class );
+      final Logger logger = (Logger) LoggerFactory.getLogger( ValidationCoordinator.class );
       final ListAppender<ILoggingEvent> appender = new ListAppender<>();
       appender.start();
       logger.addAppender( appender );
@@ -100,14 +100,17 @@ class ValidationCoordinatorTest {
                callbackCalled.countDown();
             };
       final List<ViolationProvider> violationProviders = List.of(
-            new AspectModelValidationService(
-                  new AspectModelValidator() {
-                     @Override
-                     public ViolationReport validateModel( final Supplier<AspectModel> aspectModelSupplier ) {
-                        throw failure;
-                     }
-                  }
-            )
+            new ViolationProvider() {
+               @Override
+               public ViolationReport validate( final ParsedDocument document ) {
+                  throw failure;
+               }
+
+               @Override
+               public Type type() {
+                  return Type.DELAYED;
+               }
+            }
       );
       final ValidationCoordinator coordinator = new ValidationCoordinator( violationProviders, onValidationComplete );
 
@@ -118,8 +121,6 @@ class ValidationCoordinatorTest {
          assertThat( callbackReport.get().violations() ).singleElement()
                .satisfies( diagnostic -> {
                   assertThat( diagnostic.code().code() ).isEqualTo( ProcessingViolation.ERROR_CODE );
-                  assertThat( diagnostic.message() ).isEqualTo(
-                        AspectViolationDiagnosticMapper.PROCESSING_ERROR_MESSAGE );
                } );
          assertThat( appender.list ).anySatisfy( event -> {
             assertThat( event.getLevel() ).isEqualTo( Level.ERROR );
@@ -148,15 +149,13 @@ class ValidationCoordinatorTest {
             new ViolationProvider() {
                @Override
                public ViolationReport validate( final ParsedDocument document ) {
-                  final Violation violation = new ProcessingViolation( "fast validation", new RuntimeException() );
-                  return new AspectViolationDiagnosticMapper().mapValidationViolations( List.of( violation ) );
+                  return new ViolationReport( new ProcessingViolation( "fast validation", new RuntimeException() ) );
                }
             },
             new ViolationProvider() {
                @Override
                public ViolationReport validate( final ParsedDocument document ) {
-                  final Violation violation = new ProcessingViolation( "delayed validation", new RuntimeException() );
-                  return new AspectViolationDiagnosticMapper().mapValidationViolations( List.of( violation ) );
+                  return new ViolationReport( new ProcessingViolation( "delayed validation", new RuntimeException() ) );
                }
 
                @Override
@@ -198,15 +197,13 @@ class ValidationCoordinatorTest {
             new ViolationProvider() {
                @Override
                public ViolationReport validate( final ParsedDocument document ) {
-                  final Violation violation = new ProcessingViolation( "fast", new RuntimeException() );
-                  return new AspectViolationDiagnosticMapper().mapValidationViolations( List.of( violation ) );
+                  return new ViolationReport( new ProcessingViolation( "fast", new RuntimeException() ) );
                }
             },
             new ViolationProvider() {
                @Override
                public ViolationReport validate( final ParsedDocument document ) {
-                  final Violation violation = new ProcessingViolation( "delayed", new RuntimeException() );
-                  return new AspectViolationDiagnosticMapper().mapValidationViolations( List.of( violation ) );
+                  return new ViolationReport( new ProcessingViolation( "delayed", new RuntimeException() ) );
                }
 
                @Override
@@ -244,8 +241,7 @@ class ValidationCoordinatorTest {
                   } catch ( final InterruptedException e ) {
                      Thread.currentThread().interrupt();
                   }
-                  final Violation violation = new ProcessingViolation( "validation", new RuntimeException() );
-                  return new AspectViolationDiagnosticMapper().mapValidationViolations( List.of( violation ) );
+                  return new ViolationReport( new ProcessingViolation( "validation", new RuntimeException() ) );
                }
 
                @Override
@@ -298,8 +294,7 @@ class ValidationCoordinatorTest {
             new ViolationProvider() {
                @Override
                public ViolationReport validate( final ParsedDocument doc ) {
-                  final Violation violation = new ProcessingViolation( "delayed", new RuntimeException() );
-                  return new AspectViolationDiagnosticMapper().mapValidationViolations( List.of( violation ) );
+                  return new ViolationReport( new ProcessingViolation( "delayed", new RuntimeException() ) );
                }
 
                @Override
@@ -343,15 +338,13 @@ class ValidationCoordinatorTest {
             new ViolationProvider() {
                @Override
                public ViolationReport validate( final ParsedDocument document ) {
-                  final Violation violation = new ProcessingViolation( "fast validation error", new RuntimeException() );
-                  return new AspectViolationDiagnosticMapper().mapValidationViolations( List.of( violation ) );
+                  return new ViolationReport( new ProcessingViolation( "fast validation error", new RuntimeException() ) );
                }
             },
             new ViolationProvider() {
                @Override
                public ViolationReport validate( final ParsedDocument document ) {
-                  final Violation violation = new ProcessingViolation( "delayed validation error", new RuntimeException() );
-                  return new AspectViolationDiagnosticMapper().mapValidationViolations( List.of( violation ) );
+                  return new ViolationReport( new ProcessingViolation( "delayed validation error", new RuntimeException() ) );
                }
 
                @Override
@@ -390,15 +383,13 @@ class ValidationCoordinatorTest {
             new ViolationProvider() {
                @Override
                public ViolationReport validate( final ParsedDocument doc ) {
-                  final Violation violation = new ProcessingViolation( "fast provider 1", new RuntimeException() );
-                  return new AspectViolationDiagnosticMapper().mapValidationViolations( List.of( violation ) );
+                  return new ViolationReport( new ProcessingViolation( "fast provider 1", new RuntimeException() ) );
                }
             },
             new ViolationProvider() {
                @Override
                public ViolationReport validate( final ParsedDocument doc ) {
-                  final Violation violation = new ProcessingViolation( "fast provider 2", new RuntimeException() );
-                  return new AspectViolationDiagnosticMapper().mapValidationViolations( List.of( violation ) );
+                  return new ViolationReport( new ProcessingViolation( "fast provider 2", new RuntimeException() ) );
                }
             }
       );
@@ -454,8 +445,7 @@ class ValidationCoordinatorTest {
                   } catch ( final InterruptedException e ) {
                      Thread.currentThread().interrupt();
                   }
-                  final Violation violation = new ProcessingViolation( "validation", new RuntimeException() );
-                  return new AspectViolationDiagnosticMapper().mapValidationViolations( List.of( violation ) );
+                  return new ViolationReport( new ProcessingViolation( "validation", new RuntimeException() ) );
                }
 
                @Override

@@ -14,15 +14,13 @@
 package org.eclipse.esmf.aspectmodel;
 
 import java.net.URI;
+import java.util.function.Supplier;
 
 /**
- * A violation that refers to a specific location within a document. This interface extends the
- * base Violation interface and adds methods to retrieve the source location of the document and
- * the specific location within that document that the diagnostic refers to.
+ * A violation that refers to a specific document via its location. This interface extends the
+ * base Violation interface and adds a method to retrieve the source location of the document.
  */
 public interface DocumentViolation extends Violation {
-   Location WHOLE_DOCUMENT = new Location( 0, 0, 0, 0 );
-
    /**
     * Identifier for the location of the document which this violation refers to
     *
@@ -31,18 +29,9 @@ public interface DocumentViolation extends Violation {
    URI sourceDocument();
 
    /**
-    * The location within the document this violation refers to
+    * Supplier for the content of the document which this violation refers to.
     *
-    * @return the location within the document
+    * @return the content of the source document
     */
-   Location location();
-
-   /**
-    * Indicated whether the diagnostic applies to the whole document rather than a specific location
-    *
-    * @return true if the diagnostic is about the document as a whole
-    */
-   default boolean appliesToWholeDocument() {
-      return location() == WHOLE_DOCUMENT;
-   }
+   Supplier<String> documentContent();
 }

@@ -36,9 +36,9 @@ public class FromLoadedFileStrategy implements ResolutionStrategy {
       if ( resolutionStrategySupport.containsDefinition( aspectModelFile, aspectModelUrn ) ) {
          return aspectModelFile;
       }
-      final ModelResolutionException.LoadingFailure failure = new ModelResolutionException.LoadingFailure(
+      final ModelResolutionViolation failure = new ModelResolutionViolation(
             aspectModelUrn,
-            aspectModelFile.sourceLocation().map( uri -> "In-memory file " + uri ).orElse( "Anonymous in-memory file" ),
+            aspectModelFile.sourceLocation().orElseGet( () -> URI.create( "inmemory:anonymous" + aspectModelFile.hashCode() ) ),
             "File does not contain element definition" );
       throw new ModelResolutionException( failure );
    }

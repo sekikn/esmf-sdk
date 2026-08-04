@@ -39,7 +39,7 @@ import org.eclipse.esmf.aspectmodel.resolver.parser.ReaderRiotTurtle;
 import org.eclipse.esmf.metamodel.datatype.SammXsdType;
 import org.eclipse.esmf.treesitterturtle.TurtleSyntaxTree;
 
-import org.jspecify.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,10 +61,7 @@ public final class TurtleLoader {
     * @param inputStream The input stream
     * @return The model on success, a corresponding exception otherwise
     */
-   public static Try<Model> loadTurtle( @Nullable final InputStream inputStream ) {
-      if ( inputStream == null ) {
-         return Try.failure( new IllegalArgumentException() );
-      }
+   public static Try<Model> loadTurtle( @NonNull final InputStream inputStream ) {
       final String modelContent = new BufferedReader(
             new InputStreamReader( inputStream, StandardCharsets.UTF_8 ) )
                   .lines()

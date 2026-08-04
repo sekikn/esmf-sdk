@@ -47,7 +47,8 @@ public class ReaderRiotTurtle implements ReaderRIOT {
             : null;
       final URI documentUri = Optional.ofNullable( context )
             .<URI>map( ctx -> ctx.get( TurtleLoader.DOCUMENT_URI ) )
-            .orElseThrow( () -> new AspectLoadingException( "Document URI is not set in the context" ) );
+            .or( () -> Optional.ofNullable( baseUri ).map( URI::create ) )
+            .orElse( URI.create( "inmemory:stream" + in.hashCode() ) );
       final ParserProfile wrappedParserProfile = new TurtleParserProfile( parserProfile, syntaxTree, documentUri );
       final TurtleTokenizer tokenizer = new TurtleTokenizer( in, wrappedParserProfile.getErrorHandler() );
       final TurtleParser parser = TurtleParser.create( tokenizer, wrappedParserProfile, output );

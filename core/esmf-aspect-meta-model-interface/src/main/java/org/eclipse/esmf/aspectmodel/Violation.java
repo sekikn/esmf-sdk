@@ -13,6 +13,8 @@
 
 package org.eclipse.esmf.aspectmodel;
 
+import java.util.Optional;
+
 public interface Violation {
    /**
     * The code identifying this violation
@@ -47,10 +49,14 @@ public interface Violation {
       String code();
 
       /**
-       * A short description of the violation codd
+       * A short description of the violation code
        */
       default String description() {
          return code();
+      }
+
+      default Optional<String> href() {
+         return Optional.empty();
       }
    }
 

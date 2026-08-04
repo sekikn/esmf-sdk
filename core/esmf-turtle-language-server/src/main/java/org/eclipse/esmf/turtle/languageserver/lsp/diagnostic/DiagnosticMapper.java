@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.esmf.aspectmodel.DocumentViolation;
+import org.eclipse.esmf.aspectmodel.DocumentLocationViolation;
 import org.eclipse.esmf.aspectmodel.Violation;
 import org.eclipse.esmf.aspectmodel.Violation.Severity;
 import org.eclipse.esmf.aspectmodel.ViolationReport;
@@ -43,22 +43,22 @@ public final class DiagnosticMapper {
       final Map<URI, List<Diagnostic>> result = new HashMap<>();
       // Always include empty diagnostics for sourceDocument, otherwise LSP client does not clear old but
       // fixed findings
-      result.put( URI.create( sourceDocument.uri() ), new ArrayList<>() );
+      result.put( sourceDocument.uri(), new ArrayList<>() );
       for ( final Violation violation : report.violations() ) {
          final Diagnostic diagnostic = new Diagnostic();
          diagnostic.setSeverity( toDiagnosticSeverity( violation.severity() ) );
          diagnostic.setMessage( violation.message() );
          diagnostic.setCode( violation.code().code() );
          violation.code().href().ifPresent( href -> diagnostic.setCodeDescription( new DiagnosticCodeDescription( href ) ) );
-         if ( violation instanceof final DocumentViolation documentViolation ) {
-            if ( documentViolation.sourceDocument().equals( sourceDocument.uri() ) ) {
-               diagnostic.setRange( toRange( documentViolation ) );
+         if ( violation instanceof final DocumentLocationViolation documentLocationViolation ) {
+            if ( documentLocationViolation.sourceDocument().equals( sourceDocument.uri() ) ) {
+               diagnostic.setRange( toRange( documentLocationViolation ) );
             } else {
                final DiagnosticRelatedInformation relatedInformation = new DiagnosticRelatedInformation();
                relatedInformation.setMessage( "Root cause of the problem is here" );
                final Location relatedLocation = new Location();
-               relatedLocation.setUri( documentViolation.sourceDocument().toString() );
-               relatedLocation.setRange( toRange( documentViolation ) );
+               relatedLocation.setUri( documentLocationViolation.sourceDocument().toString() );
+               relatedLocation.setRange( toRange( documentLocationViolation ) );
                relatedInformation.setLocation( relatedLocation );
                diagnostic.setRelatedInformation( List.of( relatedInformation ) );
                diagnostic.setRange( FALLBACK );
@@ -66,7 +66,7 @@ public final class DiagnosticMapper {
          } else {
             diagnostic.setRange( FALLBACK );
          }
-         result.get( URI.create( sourceDocument.uri() ) ).add( diagnostic );
+         result.get( sourceDocument.uri() ).add( diagnostic );
       }
       return result;
    }
@@ -80,7 +80,7 @@ public final class DiagnosticMapper {
       };
    }
 
-   private Range toRange( final DocumentViolation diagnostic ) {
+   private Range toRange( final DocumentLocationViolation diagnostic ) {
       return new Range( new Position( diagnostic.location().fromLine(), diagnostic.location().fromColumn() ),
             new Position( diagnostic.location().toLine(), diagnostic.location().toColumn() ) );
    }

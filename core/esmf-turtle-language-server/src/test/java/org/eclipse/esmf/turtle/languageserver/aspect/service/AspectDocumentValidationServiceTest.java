@@ -22,14 +22,13 @@ import java.util.function.Supplier;
 
 import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.aspectmodel.resolver.exceptions.ParserException;
+import org.eclipse.esmf.aspectmodel.validation.DefaultDocumentLocationViolation;
 import org.eclipse.esmf.aspectmodel.validation.InvalidLexicalValueViolation;
 import org.eclipse.esmf.aspectmodel.validation.ProcessingViolation;
 import org.eclipse.esmf.aspectmodel.validation.services.AspectModelValidator;
 import org.eclipse.esmf.metamodel.AspectModel;
 import org.eclipse.esmf.test.TestAspect;
 import org.eclipse.esmf.treesitterturtle.TurtleViolationCode;
-import org.eclipse.esmf.turtle.languageserver.aspect.diagnostic.AspectDocumentViolation;
-import org.eclipse.esmf.turtle.languageserver.aspect.diagnostic.AspectViolationDiagnosticMapper;
 import org.eclipse.esmf.turtle.languageserver.aspect.diagnostic.TestViolation;
 
 import org.junit.jupiter.api.Test;
@@ -61,7 +60,6 @@ class AspectDocumentValidationServiceTest {
          assertThat( report.violations() ).singleElement()
                .satisfies( diagnostic -> {
                   assertThat( diagnostic.code().code() ).isEqualTo( ProcessingViolation.ERROR_CODE );
-                  assertThat( diagnostic.message() ).isEqualTo( AspectViolationDiagnosticMapper.PROCESSING_ERROR_MESSAGE );
                } );
          assertThat( appender.list ).anySatisfy( event -> {
             assertThat( event.getLevel() ).isEqualTo( Level.ERROR );
@@ -169,7 +167,7 @@ class AspectDocumentValidationServiceTest {
             samm:dataType xsd:byte .
          """ ) );
 
-      assertThat( report.violations() ).singleElement().isInstanceOfSatisfying( AspectDocumentViolation.class, diagnostic -> {
+      assertThat( report.violations() ).singleElement().isInstanceOfSatisfying( DefaultDocumentLocationViolation.class, diagnostic -> {
          assertThat( diagnostic.code().code() ).isEqualTo( InvalidLexicalValueViolation.ERROR_CODE );
          assertThat( diagnostic.message() ).isEqualTo( "Invalid value" );
       } );

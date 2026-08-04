@@ -25,6 +25,7 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.XSD;
 
+import org.eclipse.esmf.aspectmodel.ProjectInfo;
 import org.eclipse.esmf.aspectmodel.Violation;
 import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.aspectmodel.loader.AspectModelLoader;
@@ -191,7 +192,7 @@ class AspectModelValidatorTest {
       final Supplier<AspectModel> invalidTurtleSyntax = () -> TestResources.load( InvalidTestAspect.INVALID_SYNTAX );
       final List<Violation> violations = validator.validateModel( invalidTurtleSyntax ).violations();
       final String report = new DetailedViolationFormatter().apply( violations );
-      assertThat( report.contains( "documentation: " + ViolationFormatter.ERROR_CODES_DOC_LINK + "ERR-SYNTAX" ) ).isTrue();
+      assertThat( report.contains( "documentation: " + ProjectInfo.esmfErrorCodeUrl( "ERR-SYNTAX" ) ) ).isTrue();
    }
 
    @Test

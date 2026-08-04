@@ -54,6 +54,7 @@ import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.aspectmodel.resolver.AspectModelFileLoader;
 import org.eclipse.esmf.aspectmodel.resolver.EitherStrategy;
 import org.eclipse.esmf.aspectmodel.resolver.FileSystemStrategy;
+import org.eclipse.esmf.aspectmodel.resolver.ModelResolutionViolation;
 import org.eclipse.esmf.aspectmodel.resolver.ModelSource;
 import org.eclipse.esmf.aspectmodel.resolver.NamespacePackage;
 import org.eclipse.esmf.aspectmodel.resolver.ResolutionStrategy;
@@ -301,22 +302,22 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
    }
 
    /**
-    * Load an Aspect Model from a given RawAspectModelFile
+    * Load an Aspect Model from a given AspectModelFile
     *
     * @param file the file
     * @return the Aspect Model
     */
-   public AspectModel loadRawAspectModelFile( final RawAspectModelFile file ) {
-      return loadRawAspectModelFile( List.of( file ) );
+   public AspectModel load( final AspectModelFile file ) {
+      return loadAndResolveAspectModelFiles( List.of( file ) );
    }
 
    /**
-    * Load a set of RawAspectModelFiles into a single Aspect Model
+    * Load a set of AspectModelFiles into a single Aspect Model
     *
     * @param files the files
     * @return the Aspect Model
     */
-   public AspectModel loadRawAspectModelFile( final Collection<RawAspectModelFile> files ) {
+   public AspectModel loadAndResolveAspectModelFiles( final Collection<AspectModelFile> files ) {
       final List<AspectModelFile> migratedFiles = files.stream()
             .map( this::migrate )
             .toList();
@@ -557,7 +558,7 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
          context.unresolvedFiles().push( aspectModelFile );
       }
 
-      final List<ModelResolutionException.LoadingFailure> loadingFailures = new ArrayList<>();
+      final List<ModelResolutionViolation> loadingFailures = new ArrayList<>();
       while ( !context.unresolvedFiles().isEmpty() || !context.unresolvedUrns().isEmpty() ) {
          if ( !context.unresolvedFiles().isEmpty() ) {
             final AspectModelFile modelFile = context.unresolvedFiles().pop();
@@ -651,7 +652,9 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
    /**
     * Creates a new Aspect Model from a collection of {@link AspectModelFile}s. The AspectModelFiles
     * can be {@link RawAspectModelFile} (i.e., not contain {@link ModelElement} instances yet); this
-    * method takes care of instantiating the model elements.
+    * method takes care of instantiating the model elements. Note that this method does not resolve
+    * elements from the input files. In order to load a collection of AspectModelFiles including
+    * model resolution, use {@link #loadAndResolveAspectModelFiles(Collection)}.
     *
     * @param inputFiles the list of input files
     * @return the Aspect Model

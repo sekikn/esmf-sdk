@@ -37,13 +37,17 @@ import org.eclipse.esmf.aspectmodel.loader.AspectModelLoader;
 import org.eclipse.esmf.aspectmodel.resolver.exceptions.ParserException;
 import org.eclipse.esmf.aspectmodel.resolver.modelfile.MetaModelFile;
 import org.eclipse.esmf.aspectmodel.shacl.ShaclValidator;
-import org.eclipse.esmf.aspectmodel.validation.InvalidLexicalValueViolation;
+import org.eclipse.esmf.aspectmodel.validation.InvalidLexicalValueViolationBuilder;
 import org.eclipse.esmf.aspectmodel.validation.InvalidSyntaxViolation;
+import org.eclipse.esmf.aspectmodel.validation.InvalidSyntaxViolationBuilder;
 import org.eclipse.esmf.aspectmodel.validation.ProcessingViolation;
+import org.eclipse.esmf.aspectmodel.validation.ProcessingViolationBuilder;
 import org.eclipse.esmf.aspectmodel.validation.RdfBasedValidator;
 import org.eclipse.esmf.aspectmodel.validation.Validator;
 import org.eclipse.esmf.metamodel.AspectModel;
 import org.eclipse.esmf.metamodel.vocabulary.SammNs;
+
+import org.jspecify.annotations.NonNull;
 
 import io.vavr.control.Either;
 
@@ -96,7 +100,7 @@ public class AspectModelValidator implements Validator {
     *
     * @param aspectModelLoader the Aspect Model supplier
     * @return An {@link Either.Right} with the model if there are no violations, or an
-    *         {@link Either.Left} with a list of {@link Violation}s.
+    *         {@link Either.Left} with the violation report.
     */
    @Override
    public Either<ViolationReport, AspectModel> loadModel( final Supplier<AspectModel> aspectModelLoader ) {
@@ -106,23 +110,44 @@ public class AspectModelValidator implements Validator {
          return Either.right( model );
       } catch ( final ParserException exception ) {
          // Regular syntax errors
-         final Location location = new Location( (int) exception.getLine() - 1, (int) exception.getColumn() - 1 );
-         return Either.left( new ViolationReport( new InvalidSyntaxViolation(
-               exception.getMessage(), exception.getSourceDocument(), location, exception.getSourceLocation() ) ) );
+         return Either.left( reportForParserException( exception ) );
       } catch ( final ValueParsingException exception ) {
          // Failure to parse value literals
-         final String sourceLine = exception.getSourceDocument().lines().toList().get( (int) exception.getLine() - 1 );
-         return Either.left( new ViolationReport( new InvalidLexicalValueViolation( exception.getType(), exception.getValue(),
-               new Location( (int) exception.getLine(), (int) exception.getColumn() ), sourceLine, exception.getSourceLocation() ) ) );
+         return Either.left( reportForValueParsingException( exception ) );
       } catch ( final CancelValidation cancelValidation ) {
          // The validation was short-circuited by the aspectModelLoader function
          return Either.left( cancelValidation.violations );
-         // } catch ( AspectLoadingException e ) {
-         // // TODO handle e.hightlight
       } catch ( final Exception exception ) {
          // Any other exception, e.g., resolution exception
-         return Either.left( new ViolationReport( new ProcessingViolation( exception.getMessage(), exception ) ) );
+         return Either.left( reportForDefaultException( exception ) );
       }
+   }
+
+   private static @NonNull ViolationReport reportForDefaultException( final Exception exception ) {
+      return new ViolationReport( ProcessingViolationBuilder.builder()
+            .message( exception.getMessage() )
+            .cause( exception )
+            .build() );
+   }
+
+   private static @NonNull ViolationReport reportForValueParsingException( final ValueParsingException exception ) {
+      return new ViolationReport( InvalidLexicalValueViolationBuilder.builder()
+            .type( exception.getType() )
+            .value( exception.getValue() )
+            .location( new Location( (int) exception.getLine(), (int) exception.getColumn() ) )
+            .sourceLine( exception.getSourceDocument().lines().toList().get( (int) exception.getLine() - 1 ) )
+            .sourceDocument( exception.getSourceLocation() )
+            .documentContent( exception::getSourceDocument )
+            .build() );
+   }
+
+   private static @NonNull ViolationReport reportForParserException( final ParserException exception ) {
+      return new ViolationReport( InvalidSyntaxViolationBuilder.builder()
+            .message( exception.getMessage() )
+            .sourceDocument( exception.getSourceLocation() )
+            .documentContent( exception::getSourceDocument )
+            .location( new Location( (int) exception.getLine() - 1, (int) exception.getColumn() - 1 ) )
+            .build() );
    }
 
    private static class CancelValidation extends RuntimeException {

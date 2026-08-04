@@ -11,22 +11,21 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package org.eclipse.esmf.turtle.languageserver.aspect.diagnostic;
+package org.eclipse.esmf.aspectmodel.validation;
 
-import java.net.URI;
-
-import org.eclipse.esmf.aspectmodel.DocumentViolation;
-import org.eclipse.esmf.aspectmodel.Location;
 import org.eclipse.esmf.aspectmodel.Violation;
 
-public record AspectDocumentViolation(
+import io.soabase.recordbuilder.core.RecordBuilder;
+
+@RecordBuilder
+public record DefaultViolation(
       String message,
       Violation.Code code,
-      URI sourceDocument,
-      Location location,
       Violation.Severity severity
-) implements DocumentViolation {
-   public AspectDocumentViolation( final String message, final Violation.Code code, final URI sourceDocument, final Location location ) {
-      this( message, code, sourceDocument, location, Violation.Severity.ERROR );
+) implements Violation {
+   public DefaultViolation {
+      if ( severity == null ) {
+         severity = Severity.ERROR;
+      }
    }
 }

@@ -14,19 +14,21 @@
 package org.eclipse.esmf.aspectmodel.validation;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 
+import org.eclipse.esmf.aspectmodel.ElementFocussedViolation;
+import org.eclipse.esmf.aspectmodel.ProjectInfo;
 import org.eclipse.esmf.aspectmodel.resolver.parser.TokenRegistry;
 
 /**
  * Represents the violation of cycle rules: A cycle in a model (graph) is only allowed, when one of
  * the Properties on the cycle path is marked as optional
- *
  */
-public class CycleViolation extends DefaultLocatedViolation {
+public class CycleViolation extends AbstractElementFocussedViolation {
    public static final String ERROR_CODE = "ERR_CYCLE";
    private final List<Resource> path;
 
@@ -39,7 +41,17 @@ public class CycleViolation extends DefaultLocatedViolation {
 
    @Override
    public Code code() {
-      return () -> ERROR_CODE;
+      return new Code() {
+         @Override
+         public String code() {
+            return ERROR_CODE;
+         }
+
+         @Override
+         public Optional<String> href() {
+            return Optional.of( ProjectInfo.esmfErrorCodeUrl( ERROR_CODE ) );
+         }
+      };
    }
 
    @Override

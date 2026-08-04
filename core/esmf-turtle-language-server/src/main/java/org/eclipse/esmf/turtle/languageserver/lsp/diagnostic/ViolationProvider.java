@@ -17,8 +17,8 @@ import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.turtle.languageserver.lsp.text.ParsedDocument;
 
 /**
- * A diagnostics provider takes a (parsed) RDF/Turtle source document as input and creates a
- * diagnostics report for it.
+ * A violation provider takes a (parsed) RDF/Turtle source document as input and creates a
+ * violation report for it.
  */
 public interface ViolationProvider {
    /**

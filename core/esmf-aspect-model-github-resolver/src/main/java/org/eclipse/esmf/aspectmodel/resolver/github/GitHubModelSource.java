@@ -67,7 +67,7 @@ public class GitHubModelSource implements ModelSource {
             .build() );
    }
 
-   private String sourceUrl( final String filename ) {
+   protected String sourceUrl( final String filename ) {
       return "https://%s/%s/%s/blob/%s/%s".formatted(
             config.repository().host().equals( "api.github.com" ) ? "github.com" : config.repository().host(),
             config.repository().owner(),

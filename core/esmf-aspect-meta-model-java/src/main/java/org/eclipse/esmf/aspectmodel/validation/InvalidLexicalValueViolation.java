@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Robert Bosch Manufacturing Solutions GmbH
+ * Copyright (c) 2026 Robert Bosch Manufacturing Solutions GmbH
  *
  * See the AUTHORS file(s) distributed with this work for additional
  * information regarding authorship.
@@ -14,30 +14,40 @@
 package org.eclipse.esmf.aspectmodel.validation;
 
 import java.net.URI;
+import java.util.function.Supplier;
 
 import org.apache.jena.rdf.model.Resource;
 
-import org.eclipse.esmf.aspectmodel.DocumentViolation;
+import org.eclipse.esmf.aspectmodel.DocumentLocationViolation;
 import org.eclipse.esmf.aspectmodel.Location;
 import org.eclipse.esmf.aspectmodel.RdfUtil;
+
+import io.soabase.recordbuilder.core.RecordBuilder;
 
 /**
  * A value (literal) value was given with an invalid value, e.g., "9999"^^xsd:byte
  *
  * @param type the URI of the type
  * @param value the invalid value
- * @param location the source location of the violation
  * @param sourceLine the line in the source document containing the problem
  * @param sourceDocument the source location of the violation
+ * @param location the source location of the violation
+ * @param documentContent a supplier for the content of the source document
  */
+@RecordBuilder
 public record InvalidLexicalValueViolation(
-      Resource type, Object value, Location location, String sourceLine, URI sourceDocument
-) implements DocumentViolation {
+      Resource type,
+      Object value,
+      String sourceLine,
+      URI sourceDocument,
+      Location location,
+      Supplier<String> documentContent
+) implements DocumentLocationViolation {
    public static final String ERROR_CODE = "ERR_INVALID_LEXICAL_VALUE";
 
    public InvalidLexicalValueViolation( final Resource type, final Object value, final int fromLine, final int toLine,
-         final String sourceLine, final URI sourceDocument ) {
-      this( type, value, new Location( fromLine, toLine ), sourceLine, sourceDocument );
+         final String sourceLine, final URI sourceDocument, final String documentContent ) {
+      this( type, value, sourceLine, sourceDocument, new Location( fromLine, toLine ), () -> documentContent );
    }
 
    @Override
