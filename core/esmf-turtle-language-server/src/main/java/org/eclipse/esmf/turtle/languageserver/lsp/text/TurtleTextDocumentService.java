@@ -176,11 +176,11 @@ public class TurtleTextDocumentService implements TextDocumentService {
    public CompletableFuture<SemanticTokens> semanticTokensFull( final SemanticTokensParams params ) {
       final String uri = params.getTextDocument().getUri();
       final Document document = documents.get( uri );
-      final ParsedDocument parsedDocument = turtleParserService.apply( document );
       LOG.info( "[semanticTokensFull] URI={}", uri );
       if ( document == null ) {
          return CompletableFuture.completedFuture( new SemanticTokens( List.of() ) );
       }
+      final ParsedDocument parsedDocument = turtleParserService.apply( document );
       return CompletableFuture.supplyAsync( () -> tokenService.buildSemanticTokens( parsedDocument ), asyncExecutor );
    }
 
