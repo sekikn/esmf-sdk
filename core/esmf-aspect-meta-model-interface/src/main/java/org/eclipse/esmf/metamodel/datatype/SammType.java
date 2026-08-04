@@ -19,8 +19,13 @@ import java.net.URI;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.Optional;
+
 import javax.xml.datatype.Duration;
 import javax.xml.datatype.XMLGregorianCalendar;
+
+import org.apache.jena.datatypes.BaseDatatype;
+import org.apache.jena.datatypes.RDFDatatype;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
 
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
 import org.eclipse.esmf.aspectmodel.ValueParsingException;
@@ -29,9 +34,6 @@ import org.eclipse.esmf.metamodel.Scalar;
 
 import io.vavr.control.Try;
 import jakarta.xml.bind.DatatypeConverter;
-import org.apache.jena.datatypes.BaseDatatype;
-import org.apache.jena.datatypes.RDFDatatype;
-import org.apache.jena.datatypes.xsd.XSDDatatype;
 
 /**
  * Represents a scalar datatype, such as xsd:integer, and provides parser and serializer
@@ -39,13 +41,14 @@ import org.apache.jena.datatypes.xsd.XSDDatatype;
  * @param <T> the Java type corresponding to values of this type
  */
 public sealed interface SammType<T> extends RDFDatatype, Scalar
-      permits CurieType, SammType.IntegerType, SammType.RdfLangString, SammType.XsdAnyUri, SammType.XsdBase64Binary, SammType.XsdBoolean,
-      SammType.XsdByte, SammType.XsdDate, SammType.XsdDateTime, SammType.XsdDateTimeStamp, SammType.XsdDayTimeDuration, SammType.XsdDecimal,
-      SammType.XsdDouble, SammType.XsdDuration, SammType.XsdFloat, SammType.XsdGDay, SammType.XsdGMonth, SammType.XsdGYear,
-      SammType.XsdGYearMonth, SammType.XsdHexBinary, SammType.XsdInt, SammType.XsdInteger, SammType.XsdLong, SammType.XsdMonthDay,
-      SammType.XsdNegativeInteger, SammType.XsdNonNegativeInteger, SammType.XsdNonPositiveInteger, SammType.XsdPositiveInteger,
-      SammType.XsdShort, SammType.XsdString, SammType.XsdTime, SammType.XsdUnsignedByte, SammType.XsdUnsignedInt, SammType.XsdUnsignedLong,
-      SammType.XsdUnsignedShort, SammType.XsdYearMonthDuration, SammXsdType, SammXsdType.SammExtendedXsdType {
+      permits CurieType, SammType.NumericType, SammType.IntegerType, SammType.RdfLangString, SammType.XsdAnyUri, SammType.XsdBase64Binary,
+      SammType.XsdBoolean, SammType.XsdByte, SammType.XsdDate, SammType.XsdDateTime, SammType.XsdDateTimeStamp, SammType.XsdDayTimeDuration,
+      SammType.XsdDecimal, SammType.XsdDouble, SammType.XsdDuration, SammType.XsdFloat, SammType.XsdGDay, SammType.XsdGMonth,
+      SammType.XsdGYear, SammType.XsdGYearMonth, SammType.XsdHexBinary, SammType.XsdInt, SammType.XsdInteger, SammType.XsdLong,
+      SammType.XsdMonthDay, SammType.XsdNegativeInteger, SammType.XsdNonNegativeInteger, SammType.XsdNonPositiveInteger,
+      SammType.XsdPositiveInteger, SammType.XsdShort, SammType.XsdString, SammType.XsdTime, SammType.XsdUnsignedByte,
+      SammType.XsdUnsignedInt, SammType.XsdUnsignedLong, SammType.XsdUnsignedShort, SammType.XsdYearMonthDuration, SammXsdType,
+      SammXsdType.SammExtendedXsdType {
    /**
     * Parses a lexical representation of a value of the type
     *
@@ -117,13 +120,27 @@ public sealed interface SammType<T> extends RDFDatatype, Scalar
    SammType<Curie> CURIE = CurieType.INSTANCE;
 
    /**
+    * Returns the SAMM type object that corresponds to the given URI
+    *
+    * @param typeUri the type URI
+    * @return the SAMM type object
+    */
+   static Optional<SammType<?>> forUri( final String typeUri ) {
+      return SammXsdType.ALL_TYPES.stream().filter( xsdType -> xsdType.getURI().equals( typeUri ) ).findAny();
+   }
+
+   sealed interface NumericType<T> extends SammType<T> permits IntegerType, XsdDouble, XsdFloat, XsdDecimal {
+
+   }
+
+   /**
     * Numeric types with integer numbers
     *
     * @param <T> the Java type corresponding to values of this type
     */
-   sealed interface IntegerType<T> extends SammType<T> permits XsdInteger, XsdByte, XsdShort, XsdInt, XsdLong,
+   sealed interface IntegerType<T> extends SammType<T>, NumericType<T> permits XsdInteger, XsdByte, XsdShort, XsdInt, XsdLong,
          XsdUnsignedByte, XsdUnsignedShort, XsdUnsignedInt, XsdUnsignedLong, XsdPositiveInteger, XsdNonNegativeInteger,
-         XsdNonPositiveInteger, XsdNegativeInteger {
+         XsdNonPositiveInteger, XsdNegativeInteger, XsdDecimal {
       /**
        * The minimum value for this type
        *
@@ -218,7 +235,8 @@ public sealed interface SammType<T> extends RDFDatatype, Scalar
       }
    }
 
-   final class XsdDecimal extends SammXsdType<BigDecimal> implements SammType<BigDecimal> {
+   final class XsdDecimal extends SammXsdType<BigDecimal>
+         implements SammType<BigDecimal>, IntegerType<BigDecimal>, NumericType<BigDecimal> {
       private XsdDecimal() {
          super( org.apache.jena.vocabulary.XSD.decimal, BigDecimal.class );
       }
@@ -237,6 +255,16 @@ public sealed interface SammType<T> extends RDFDatatype, Scalar
       @Override
       public <T, C> T accept( final AspectVisitor<T, C> visitor, final C context ) {
          return visitor.visitXsdDecimal( this, context );
+      }
+
+      @Override
+      public Optional<BigInteger> lowerBound() {
+         return Optional.empty();
+      }
+
+      @Override
+      public Optional<BigInteger> upperBound() {
+         return Optional.empty();
       }
    }
 
@@ -272,7 +300,7 @@ public sealed interface SammType<T> extends RDFDatatype, Scalar
       }
    }
 
-   final class XsdDouble extends SammXsdType<Double> implements SammType<Double> {
+   final class XsdDouble extends SammXsdType<Double> implements SammType<Double>, NumericType<Double> {
       private XsdDouble() {
          super( org.apache.jena.vocabulary.XSD.xdouble, Double.class );
       }
@@ -306,7 +334,7 @@ public sealed interface SammType<T> extends RDFDatatype, Scalar
       }
    }
 
-   final class XsdFloat extends SammXsdType<Float> implements SammType<Float> {
+   final class XsdFloat extends SammXsdType<Float> implements SammType<Float>, NumericType<Float> {
       private XsdFloat() {
          super( org.apache.jena.vocabulary.XSD.xfloat, Float.class );
       }

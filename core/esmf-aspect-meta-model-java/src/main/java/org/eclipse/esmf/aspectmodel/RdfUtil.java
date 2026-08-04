@@ -329,4 +329,21 @@ public class RdfUtil {
             .findFirst()
             .orElse( uri );
    }
+
+   /**
+    * Expand a CURIE for a "well-known" namespace to the corresponding full URI.
+    * For example, the result for "xsd:float" is "http://w3.org/2001/XMLSchema#float".
+    * For URIs from other/unknown namespaces, the CURIE is returned as-is.
+    *
+    * @param curie the CURIE
+    * @return the corresponding URI
+    */
+   @SuppressWarnings( "JavadocLinkAsPlainText" )
+   public static String fullUri( final String curie ) {
+      return SammNs.wellKnownNamespaces()
+            .filter( ns -> curie.startsWith( ns.getShortForm() + ":" ) )
+            .map( ns -> curie.replace( ns.getShortForm() + ":", ns.getNamespace() ) )
+            .findFirst()
+            .orElse( curie );
+   }
 }
