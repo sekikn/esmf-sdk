@@ -84,7 +84,7 @@ public class TurtleTextDocumentService implements TextDocumentService {
       turtleDefinitionService = new TurtleDefinitionService();
       turtleCompletionService = new TurtleCompletionService();
       turtleParserService = new TreeSitterTurtleParserService();
-      tokenService = new TurtleTokenService( turtleParserService );
+      tokenService = new TurtleTokenService();
       aspectCrossFileDefinitionService = new AspectCrossFileDefinitionService( turtleParserService, documents, resolutionStrategyService );
       documentSymbolService = new DocumentSymbolService( turtleParserService );
       final List<ViolationProvider> violationProviders =
@@ -181,7 +181,8 @@ public class TurtleTextDocumentService implements TextDocumentService {
       if ( document == null ) {
          return CompletableFuture.completedFuture( new SemanticTokens( List.of() ) );
       }
-      return CompletableFuture.supplyAsync( () -> tokenService.buildSemanticTokens( document ), asyncExecutor );
+      final ParsedDocument parsedDocument = turtleParserService.apply( document );
+      return CompletableFuture.supplyAsync( () -> tokenService.buildSemanticTokens( parsedDocument ), asyncExecutor );
    }
 
    @Override
