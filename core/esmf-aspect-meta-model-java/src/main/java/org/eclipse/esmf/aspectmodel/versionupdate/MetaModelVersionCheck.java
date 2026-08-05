@@ -132,8 +132,8 @@ final class MetaModelVersionCheck {
 
    /**
     * Only a URI in the SAMM URN space can address a meta model term. Filtering on the prefix first
-    * keeps the bulk of a model's URIs, in particular all XSD datatypes and all RDF and SHACL terms, out
-    * of the URN parsing below.
+    * keeps most of a model's URIs out of the URN parsing below, in particular all XSD datatypes and
+    * all RDF and SHACL terms.
     */
    private static void addIfInSammUrnSpace( final String uri, final Set<String> uris ) {
       if ( uri != null && uri.startsWith( AspectModelUrn.PROTOCOL_AND_NAMESPACE_PREFIX ) ) {
