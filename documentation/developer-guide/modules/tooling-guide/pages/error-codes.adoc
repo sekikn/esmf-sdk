@@ -55,6 +55,13 @@ The model contains circular references that cannot be resolved.
 
 **Resolution:** Break the circular dependency by restructuring the model relationships. Review element dependencies to identify and eliminate circular references.
 
+[[ERR-METAMODEL-VERSION]]
+=== ERR_METAMODEL_VERSION - Meta Model Version Inconsistency
+
+The file uses a SAMM meta model term that does not exist in the meta model version the file declares, or it mixes SAMM namespaces of different versions. The check runs while the file is loaded, before it is migrated to the latest meta model version, and applies to every kind of load, not only to validation.
+
+**Resolution:** When a term is not defined in the declared version, either raise the meta model version declared in the file to the version that introduced the term, or replace the term with one the declared version provides. When a file mixes versions, align the `samm`, `samm-c` and `samm-e` prefix declarations on the same meta model version.
+
 [[shacl-violations]]
 == SHACL Constraint Violations
 
