@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.eclipse.esmf.aspectmodel.MetaModelVersionException;
 import org.eclipse.esmf.aspectmodel.loader.AspectModelLoader;
 import org.eclipse.esmf.aspectmodel.resolver.modelfile.MetaModelFile;
 import org.eclipse.esmf.aspectmodel.shacl.fix.Fix;
@@ -27,7 +28,6 @@ import org.eclipse.esmf.aspectmodel.shacl.violation.DatatypeViolation;
 import org.eclipse.esmf.aspectmodel.shacl.violation.MinCountViolation;
 import org.eclipse.esmf.aspectmodel.shacl.violation.SparqlConstraintViolation;
 import org.eclipse.esmf.aspectmodel.shacl.violation.Violation;
-import org.eclipse.esmf.aspectmodel.MetaModelVersionException;
 import org.eclipse.esmf.aspectmodel.validation.CycleViolation;
 import org.eclipse.esmf.aspectmodel.validation.InvalidSyntaxViolation;
 import org.eclipse.esmf.aspectmodel.validation.MetaModelVersionViolation;
@@ -123,6 +123,23 @@ class AspectModelValidatorTest {
                            .contains( "introduced in 2.2.0" )
                            .contains( "at least 2.2.0" );
                   } ) );
+   }
+
+   @Test
+   void testValidateEntityTermNotDefinedInDeclaredMetaModelVersion() {
+      // The samm-e: namespace is checked just like samm: and samm-c:, and Quantity.ttl only exists from
+      // SAMM 2.2.0 on, so the term is resolved against a version whose resource file is absent
+      final Either<List<Violation>, AspectModel> result = TestResources.loadWithValidation(
+            InvalidTestAspect.TERM_NOT_IN_DECLARED_VERSION_ENTITY, validator );
+      assertThat( result.isLeft() ).isTrue();
+      assertThat( result.getLeft() )
+            .hasSize( 1 )
+            .first()
+            .satisfies( violation -> assertThat( violation ).isInstanceOfSatisfying( MetaModelVersionViolation.class,
+                  metaModelVersionViolation -> assertThat( metaModelVersionViolation.message() )
+                        .contains( "entity:2.1.0#Quantity" )
+                        .contains( "is not defined in SAMM 2.1.0" )
+                        .contains( "introduced in 2.2.0" ) ) );
    }
 
    @Test

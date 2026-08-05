@@ -14,12 +14,12 @@
 package org.eclipse.esmf.aspectmodel.versionupdate;
 
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.EnumMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.eclipse.esmf.aspectmodel.resolver.modelfile.MetaModelFile;
@@ -55,17 +55,18 @@ import org.apache.jena.rdf.model.Resource;
  */
 final class MetaModelTerms {
    private static final String SAMM_NAMESPACE_MAIN_PART = "org.eclipse.esmf.samm";
-   private static final Map<KnownVersion, List<AspectModelUrn>> DEFINED_TERMS = new EnumMap<>( KnownVersion.class );
+   private static final Map<KnownVersion, Set<AspectModelUrn>> DEFINED_TERMS = new EnumMap<>( KnownVersion.class );
 
    private MetaModelTerms() {}
 
    /**
-    * Returns all meta model terms the given version defines.
+    * Returns all meta model terms the given version defines. The terms are held in a set because the
+    * check looks each term up by identity and does so once per distinct URI of a loaded file.
     *
     * @param metaModelVersion the meta model version
     * @return the terms
     */
-   static synchronized List<AspectModelUrn> definedTerms( final KnownVersion metaModelVersion ) {
+   static synchronized Set<AspectModelUrn> definedTerms( final KnownVersion metaModelVersion ) {
       return DEFINED_TERMS.computeIfAbsent( metaModelVersion, MetaModelTerms::readDefinedTerms );
    }
 
@@ -110,8 +111,8 @@ final class MetaModelTerms {
                   || urn.getElementType() == ElementType.UNIT );
    }
 
-   private static List<AspectModelUrn> readDefinedTerms( final KnownVersion metaModelVersion ) {
-      final List<AspectModelUrn> terms = new ArrayList<>();
+   private static Set<AspectModelUrn> readDefinedTerms( final KnownVersion metaModelVersion ) {
+      final Set<AspectModelUrn> terms = new LinkedHashSet<>();
       for ( final MetaModelFile definitionFile : definitionFiles() ) {
          // Not every definition file exists in every version: samm-e:Quantity for example was only
          // introduced in SAMM 2.2.0, so a missing resource is not an error
@@ -120,7 +121,7 @@ final class MetaModelTerms {
                .flatMap( MetaModelTerms::loadModel )
                .ifPresent( model -> collectTerms( model, terms ) );
       }
-      return terms.stream().distinct().sorted( Comparator.comparing( AspectModelUrn::toString ) ).toList();
+      return Set.copyOf( terms );
    }
 
    /**
@@ -139,7 +140,7 @@ final class MetaModelTerms {
       return TurtleLoader.loadTurtle( url ).toJavaOptional();
    }
 
-   private static void collectTerms( final Model model, final List<AspectModelUrn> terms ) {
+   private static void collectTerms( final Model model, final Set<AspectModelUrn> terms ) {
       for ( final Resource subject : model.listSubjects().toList() ) {
          if ( subject.isAnon() || subject.getURI() == null ) {
             continue;

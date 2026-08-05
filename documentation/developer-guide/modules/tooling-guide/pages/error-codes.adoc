@@ -60,6 +60,8 @@ The model contains circular references that cannot be resolved.
 
 The file uses a SAMM meta model term that does not exist in the meta model version the file declares, or it mixes SAMM namespaces of different versions. The check runs while the file is loaded, before it is migrated to the latest meta model version, and applies to every kind of load, not only to validation.
 
+NOTE: This check was introduced after earlier SDK versions accepted such files. A model that mixes meta model versions, or that uses a term of a newer version under an older version declaration, was loaded silently before and is now rejected. Because the check runs during loading, this affects every entry point (CLI, Maven plugin and the Java API), not only explicit validation, and it cannot be switched off.
+
 **Resolution:** When a term is not defined in the declared version, either raise the meta model version declared in the file to the version that introduced the term, or replace the term with one the declared version provides. When a file mixes versions, align the `samm`, `samm-c` and `samm-e` prefix declarations on the same meta model version.
 
 [[shacl-violations]]

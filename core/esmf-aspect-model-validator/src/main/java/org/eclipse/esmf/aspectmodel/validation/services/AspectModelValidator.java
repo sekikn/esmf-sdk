@@ -28,6 +28,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
+import org.eclipse.esmf.aspectmodel.MetaModelVersionException;
 import org.eclipse.esmf.aspectmodel.RdfUtil;
 import org.eclipse.esmf.aspectmodel.ValueParsingException;
 import org.eclipse.esmf.aspectmodel.loader.AspectModelLoader;
@@ -36,7 +37,6 @@ import org.eclipse.esmf.aspectmodel.resolver.modelfile.MetaModelFile;
 import org.eclipse.esmf.aspectmodel.shacl.ShaclValidator;
 import org.eclipse.esmf.aspectmodel.shacl.violation.Violation;
 import org.eclipse.esmf.aspectmodel.validation.InvalidLexicalValueViolation;
-import org.eclipse.esmf.aspectmodel.MetaModelVersionException;
 import org.eclipse.esmf.aspectmodel.validation.InvalidSyntaxViolation;
 import org.eclipse.esmf.aspectmodel.validation.MetaModelVersionViolation;
 import org.eclipse.esmf.aspectmodel.validation.ProcessingViolation;

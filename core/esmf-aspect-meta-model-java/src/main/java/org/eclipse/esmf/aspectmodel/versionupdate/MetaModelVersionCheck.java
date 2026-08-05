@@ -13,11 +13,12 @@
 
 package org.eclipse.esmf.aspectmodel.versionupdate;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.eclipse.esmf.aspectmodel.urn.AspectModelUrn;
 import org.eclipse.esmf.aspectmodel.urn.ElementType;
@@ -58,8 +59,8 @@ final class MetaModelVersionCheck {
    static List<String> check( final Model model, final KnownVersion declaredVersion, final String sourceLocation ) {
       // Keyed by term URI so that a term used many times is only reported once
       final Map<String, String> messages = new LinkedHashMap<>();
-      for ( final RDFNode node : metaModelNodes( model ) ) {
-         AspectModelUrn.from( node.asResource().getURI() ).toJavaOptional()
+      for ( final String uri : candidateUris( model ) ) {
+         AspectModelUrn.from( uri ).toJavaOptional()
                .filter( MetaModelTerms::isMetaModelTerm )
                .flatMap( urn -> checkTerm( urn, declaredVersion, sourceLocation )
                      .map( message -> Map.entry( urn.getUrn().toString(), message ) ) )
@@ -71,8 +72,10 @@ final class MetaModelVersionCheck {
    private static Optional<String> checkTerm( final AspectModelUrn urn, final KnownVersion declaredVersion,
          final String sourceLocation ) {
       if ( !declaredVersion.toVersionString().equals( urn.getVersion() ) ) {
+         // Name where the version comes from: it is taken from the samm: prefix, so without this the
+         // message reads as if the reported term were the one at fault rather than the mismatching prefix
          return Optional.of( String.format(
-               "%s: this file declares SAMM %s but uses %s from SAMM %s. All SAMM namespaces in a file must use the same "
+               "%s: the samm: prefix declares SAMM %s, but %s is from SAMM %s. All SAMM namespaces in a file must use the same "
                      + "meta model version.",
                sourceLocation, declaredVersion.toVersionString(), urn.getUrn(), urn.getVersion() ) );
       }
@@ -97,30 +100,44 @@ final class MetaModelVersionCheck {
    }
 
    /**
-    * Collects all nodes of the model that may address a meta model term. Datatypes of literals are
-    * included because they are versioned as well and are rewritten during migration, see
+    * Collects the distinct URIs of the model that may address a meta model term. Datatypes of literals
+    * are included because they are versioned as well and are rewritten during migration, see
     * {@link AbstractUriRewriter#updateLiteral}.
+    *
+    * <p>
+    * Subjects and predicates repeat across the statements of a model, so the URIs are collected into a
+    * set: this check runs on every load, and each URI that survives here is parsed into an
+    * {@link AspectModelUrn}, which is comparatively expensive.
     */
-   private static List<RDFNode> metaModelNodes( final Model model ) {
-      final List<RDFNode> nodes = new ArrayList<>();
+   private static Set<String> candidateUris( final Model model ) {
+      final Set<String> uris = new LinkedHashSet<>();
       for ( final Statement statement : model.listStatements().toList() ) {
-         addIfUriResource( statement.getSubject(), nodes );
-         addIfUriResource( statement.getPredicate(), nodes );
+         addIfUriResource( statement.getSubject(), uris );
+         addIfUriResource( statement.getPredicate(), uris );
          final RDFNode object = statement.getObject();
          if ( object.isLiteral() ) {
-            Optional.ofNullable( object.asLiteral().getDatatypeURI() )
-                  .map( model::createResource )
-                  .ifPresent( nodes::add );
+            addIfInSammUrnSpace( object.asLiteral().getDatatypeURI(), uris );
          } else {
-            addIfUriResource( object, nodes );
+            addIfUriResource( object, uris );
          }
       }
-      return nodes;
+      return uris;
    }
 
-   private static void addIfUriResource( final RDFNode node, final List<RDFNode> nodes ) {
+   private static void addIfUriResource( final RDFNode node, final Set<String> uris ) {
       if ( node.isURIResource() ) {
-         nodes.add( node );
+         addIfInSammUrnSpace( node.asResource().getURI(), uris );
+      }
+   }
+
+   /**
+    * Only a URI in the SAMM URN space can address a meta model term. Filtering on the prefix first
+    * keeps the bulk of a model's URIs, in particular all XSD datatypes and all RDF and SHACL terms, out
+    * of the URN parsing below.
+    */
+   private static void addIfInSammUrnSpace( final String uri, final Set<String> uris ) {
+      if ( uri != null && uri.startsWith( AspectModelUrn.PROTOCOL_AND_NAMESPACE_PREFIX ) ) {
+         uris.add( uri );
       }
    }
 }
