@@ -106,7 +106,7 @@ class MetaModelVersionCheckTest {
    }
 
    @Test
-   void testTermRemovedInALaterVersionIsNotReported() {
+   void testTermRemovedInLaterVersionIsNotReported() {
       // samm:name exists in SAMM 1.0.0 and was removed afterwards. SammRemoveSammNameMigrator drops it
       // during migration, so reporting it here would both be wrong and make legacy BAMM models
       // unloadable. Only terms from a newer version indicate a wrong version declaration.

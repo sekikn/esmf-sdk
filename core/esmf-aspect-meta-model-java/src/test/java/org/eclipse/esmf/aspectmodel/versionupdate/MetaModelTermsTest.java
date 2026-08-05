@@ -63,7 +63,7 @@ class MetaModelTermsTest {
    }
 
    @Test
-   void testUserNamespaceElementIsNotAMetaModelTerm() {
+   void testUserNamespaceElementIsNotMetaModelTerm() {
       assertThat( MetaModelTerms.isMetaModelTerm( AspectModelUrn.fromUrn( "urn:samm:org.eclipse.esmf.test:1.0.0#TestAspect" ) ) )
             .isFalse();
    }
