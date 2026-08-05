@@ -36,7 +36,9 @@ import org.eclipse.esmf.aspectmodel.resolver.modelfile.MetaModelFile;
 import org.eclipse.esmf.aspectmodel.shacl.ShaclValidator;
 import org.eclipse.esmf.aspectmodel.shacl.violation.Violation;
 import org.eclipse.esmf.aspectmodel.validation.InvalidLexicalValueViolation;
+import org.eclipse.esmf.aspectmodel.MetaModelVersionException;
 import org.eclipse.esmf.aspectmodel.validation.InvalidSyntaxViolation;
+import org.eclipse.esmf.aspectmodel.validation.MetaModelVersionViolation;
 import org.eclipse.esmf.aspectmodel.validation.ProcessingViolation;
 import org.eclipse.esmf.aspectmodel.validation.RdfBasedValidator;
 import org.eclipse.esmf.aspectmodel.validation.Validator;
@@ -112,6 +114,12 @@ public class AspectModelValidator implements Validator<Violation, List<Violation
          final String sourceLine = exception.getSourceDocument().lines().toList().get( (int) exception.getLine() - 1 );
          return Either.left( List.of( new InvalidLexicalValueViolation( exception.getType(), exception.getValue(),
                (int) exception.getLine(), (int) exception.getColumn(), sourceLine, exception.getSourceLocation() ) ) );
+      } catch ( final MetaModelVersionException exception ) {
+         // The file uses meta model terms that do not exist in the version it declares, so it was not
+         // migrated and could not be loaded. One violation is reported per offending term.
+         return Either.left( exception.problems().stream()
+               .<Violation>map( MetaModelVersionViolation::new )
+               .toList() );
       } catch ( final CancelValidation cancelValidation ) {
          // The validation was short-circuited by the aspectModelLoader function
          return Either.left( cancelValidation.violations );

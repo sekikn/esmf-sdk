@@ -31,6 +31,7 @@ import org.eclipse.esmf.aspectmodel.urn.AspectModelUrn;
 import org.eclipse.esmf.aspectmodel.validation.CycleViolation;
 import org.eclipse.esmf.aspectmodel.validation.InvalidLexicalValueViolation;
 import org.eclipse.esmf.aspectmodel.validation.InvalidSyntaxViolation;
+import org.eclipse.esmf.aspectmodel.validation.MetaModelVersionViolation;
 import org.eclipse.esmf.aspectmodel.validation.ProcessingViolation;
 import org.eclipse.esmf.aspectmodel.validation.RegularExpressionConstraintViolation;
 
@@ -220,5 +221,12 @@ public class ViolationFormatter implements Function<List<Violation>, String>, Vi
    public String visitRegularExpressionConstraint( final RegularExpressionConstraintViolation violation ) {
       return formatter.constructDetailedMessage( violation.highlight(), violation.violationSpecificMessage(),
             violation.highlight().getModel() );
+   }
+
+   @Override
+   public String visitMetaModelVersionViolation( final MetaModelVersionViolation violation ) {
+      // This violation is determined before the model is instantiated, so there is no RDF node to
+      // highlight and no source line to show. The message names the file itself.
+      return String.format( "[%s] %s", violation.errorCode(), violation.message() );
    }
 }
