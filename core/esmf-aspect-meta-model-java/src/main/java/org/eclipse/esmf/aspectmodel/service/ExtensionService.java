@@ -2,7 +2,7 @@
  * Copyright (c) 2026 Robert Bosch Manufacturing Solutions GmbH, Germany. All rights reserved.
  */
 
-package org.eclipse.esmf.turtle.languageserver.lsp;
+package org.eclipse.esmf.aspectmodel.service;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -28,7 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Extension Point for SAMM LSP. Currently supports loading of custom ResolutionStrategies for
+ * Extension Point for SAMM. Currently supports loading of custom ResolutionStrategies for
  * resolving Aspect Models from custom locations.
  * <p>
  * Custom Implementations need to be annotated with {@link RequiredInterfaceVersion}, which needs to
@@ -36,14 +36,14 @@ import org.slf4j.LoggerFactory;
  * The custom implementation will not be loaded if there is a version mismatch of the
  * implementations {@link RequiredInterfaceVersion} and the interfaces {@link InterfaceVersion}.
  */
-public class LanguageServerExtensionService {
-   private static final Logger LOG = LoggerFactory.getLogger( LanguageServerExtensionService.class );
+public class ExtensionService {
+   private static final Logger LOG = LoggerFactory.getLogger( ExtensionService.class );
    private static final Path PLUGIN_DIRECTORY =
          Path.of( AppDirsFactory.getInstance().getUserDataDir( "esmf", "1", "esmf" ) ).resolve( "plugins" );
    private static final ClassLoader PLUGIN_CLASS_LOADER = createPluginClassLoader( PLUGIN_DIRECTORY );
    private static final List<ResolutionStrategy> RESOLUTION_STRATEGIES = loadServiceProviders( ResolutionStrategy.class );
 
-   private LanguageServerExtensionService() {}
+   private ExtensionService() {}
 
    public static List<ResolutionStrategy> getResolutionStrategies() {
       return RESOLUTION_STRATEGIES;
@@ -143,12 +143,12 @@ public class LanguageServerExtensionService {
          try ( Stream<Path> files = Files.list( pluginDirectory ) ) {
             final URL[] jarUrls = files
                   .filter( path -> path.toString().endsWith( ".jar" ) )
-                  .map( LanguageServerExtensionService::toUrl )
+                  .map( ExtensionService::toUrl )
                   .filter( Optional::isPresent )
                   .map( Optional::get )
                   .toArray( URL[]::new );
             LOG.debug( "[extension-service] Found {} plugin jar(s) in {}", jarUrls.length, pluginDirectory );
-            return new URLClassLoader( jarUrls, LanguageServerExtensionService.class.getClassLoader() );
+            return new URLClassLoader( jarUrls, ExtensionService.class.getClassLoader() );
          }
       } catch ( final RuntimeException | IOException exception ) {
          // Never let a plugin-loading problem take down the whole class (and with it every subsequent call
@@ -156,7 +156,7 @@ public class LanguageServerExtensionService {
          // "no extensions" instead.
          LOG.warn( "[extension-service] Could not set up plugin classloader for {}, extensions are disabled: {}",
                pluginDirectory, exception.getMessage() );
-         return LanguageServerExtensionService.class.getClassLoader();
+         return ExtensionService.class.getClassLoader();
       }
    }
 

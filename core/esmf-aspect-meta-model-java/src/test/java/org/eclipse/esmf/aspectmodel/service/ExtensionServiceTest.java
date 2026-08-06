@@ -2,7 +2,7 @@
  * Copyright (c) 2026 Robert Bosch Manufacturing Solutions GmbH, Germany. All rights reserved.
  */
 
-package org.eclipse.esmf.turtle.languageserver.lsp;
+package org.eclipse.esmf.aspectmodel.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -27,7 +27,7 @@ import org.eclipse.esmf.aspectmodel.resolver.exceptions.ModelResolutionException
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-class LanguageServerExtensionServiceTest {
+class ExtensionServiceTest {
    @InterfaceVersion( version = 1 )
    private interface FakeExtensionPoint {
    }
@@ -47,13 +47,13 @@ class LanguageServerExtensionServiceTest {
    }
 
    /**
-    * Invokes a private static method of {@link LanguageServerExtensionService} via reflection,
+    * Invokes a private static method of {@link ExtensionService} via reflection,
     * unwrapping any
     * exception thrown by the method itself so that tests can assert on it directly instead of on the
     * {@link InvocationTargetException} wrapper.
     */
    private static Object invokeStatic( final String methodName, final Class<?>[] parameterTypes, final Object... args ) throws Exception {
-      final Method method = LanguageServerExtensionService.class.getDeclaredMethod( methodName, parameterTypes );
+      final Method method = ExtensionService.class.getDeclaredMethod( methodName, parameterTypes );
       method.setAccessible( true );
       try {
          return method.invoke( null, args );
@@ -333,6 +333,6 @@ class LanguageServerExtensionServiceTest {
       final ClassLoader classLoader = (ClassLoader) invokeStatic( "createPluginClassLoader", new Class<?>[] { Path.class },
             blockingFile );
 
-      assertThat( classLoader ).isSameAs( LanguageServerExtensionService.class.getClassLoader() );
+      assertThat( classLoader ).isSameAs( ExtensionService.class.getClassLoader() );
    }
 }
