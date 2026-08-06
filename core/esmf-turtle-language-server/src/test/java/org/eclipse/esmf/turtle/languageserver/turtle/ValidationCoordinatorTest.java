@@ -60,7 +60,7 @@ class ValidationCoordinatorTest {
             new ViolationProvider() {
                @Override
                public ViolationReport validate( final ParsedDocument document1 ) {
-                  return new ViolationReport( new ProcessingViolation( "processing violation", new RuntimeException() ) );
+                  return new ViolationReport( new ProcessingViolation( "processing violation" ) );
                }
 
                @Override

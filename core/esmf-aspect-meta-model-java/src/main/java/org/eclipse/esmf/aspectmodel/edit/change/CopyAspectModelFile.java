@@ -59,7 +59,7 @@ public class CopyAspectModelFile extends StructuralChange {
       addFileChange = new AddAspectModelFile(
             RawAspectModelFileBuilder.builder()
                   .sourceModel( newSourceModel )
-                  .sourceLocation( Optional.of( newLocation ) )
+                  .sourceUri( newLocation )
                   .headerComment( sourceFile.headerComment() )
                   .build() );
       return addFileChange.fire( changeContext );

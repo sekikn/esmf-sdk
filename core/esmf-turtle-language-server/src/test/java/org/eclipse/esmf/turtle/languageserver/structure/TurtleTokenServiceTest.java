@@ -22,7 +22,7 @@ import org.eclipse.lsp4j.SemanticTokens;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class TurtleTokenServiceTest {
+class TurtleTokenServiceTest {
    private TurtleTokenService tokenService;
    private TreeSitterTurtleParserService parserService;
 

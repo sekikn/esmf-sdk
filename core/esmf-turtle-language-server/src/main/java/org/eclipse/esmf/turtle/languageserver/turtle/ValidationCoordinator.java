@@ -15,6 +15,7 @@ package org.eclipse.esmf.turtle.languageserver.turtle;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -176,7 +177,7 @@ public class ValidationCoordinator implements AutoCloseable {
                parsedDocument.sourceDocument().uri(), throwable );
          return new ViolationReport( ProcessingViolationBuilder.builder()
                .message( throwable.getMessage() )
-               .cause( throwable )
+               .cause( Optional.of( throwable ) )
                .build() );
       }
    }

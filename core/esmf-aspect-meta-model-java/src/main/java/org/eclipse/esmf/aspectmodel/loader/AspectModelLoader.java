@@ -344,7 +344,7 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
     */
    public AspectModel loadNamespace( final AspectModelUrn urn ) {
       if ( !urn.getName().isEmpty() ) {
-         throw new AspectLoadingException( "URN does not denote a namespace" );
+         throw new AspectLoadingException( "URN " + urn + " does not denote a namespace" );
       }
       return loadAspectModelFiles( loadContentsForNamespace( urn ).toList() );
    }
@@ -543,13 +543,12 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
    }
 
    private void markModelFileAsLoaded( final AspectModelFile modelFile, final LoaderContext context ) {
-      if ( context.loadedFiles().contains( modelFile )
-            || modelFile.sourceLocation().map( location -> context.loadedSourceLocations().contains( location ) ).orElse( false ) ) {
+      if ( context.loadedFiles().contains( modelFile ) || context.loadedSourceLocations().contains( modelFile.sourceUri() ) ) {
          return;
       }
 
       context.loadedFiles().add( modelFile );
-      modelFile.sourceLocation().ifPresent( sourceLocation -> context.loadedSourceLocations().add( sourceLocation ) );
+      context.loadedSourceLocations().add( modelFile.sourceUri() );
       urnsFromModelNeedResolution( modelFile, context );
    }
 
@@ -643,7 +642,7 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
             definedElements.put( subject.getURI(), file );
          }
 
-         final URI graphName = file.sourceLocation().orElse( URI.create( "inmemory:graph:" + file.sourceModel().hashCode() ) );
+         final URI graphName = file.sourceUri();
          graphContent.put( graphName, file.sourceModel() );
       }
       return RdfUtil.mergedView( graphContent );
@@ -676,7 +675,7 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
       final List<AspectModelFile> files = new ArrayList<>();
       for ( final AspectModelFile file : migratedInputs ) {
          final DefaultAspectModelFile aspectModelFile = new DefaultAspectModelFile( file.sourceModel(), file.headerComment(),
-               file.sourceLocation() );
+               file.sourceUri() );
          files.add( aspectModelFile );
          final Model model = file.sourceModel();
          final ModelElementFactory modelElementFactory = new ModelElementFactory( mergedModel, Map.of(), element -> aspectModelFile );
@@ -768,10 +767,12 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
    public AspectModel merge( final AspectModel aspectModel1, final AspectModel aspectModel2 ) {
       final List<AspectModelFile> files = new ArrayList<>( aspectModel1.files() );
       final Set<URI> locations = aspectModel1.files().stream()
-            .flatMap( f -> f.sourceLocation().stream() )
+            .map( AspectModelFile::sourceUri )
             .collect( Collectors.toSet() );
       for ( final AspectModelFile file : aspectModel2.files() ) {
-         file.sourceLocation().filter( uri -> !locations.contains( uri ) ).ifPresent( uri -> files.add( file ) );
+         if ( !locations.contains( file.sourceUri() ) ) {
+            files.add( file );
+         }
       }
       return loadAspectModelFiles( files );
    }

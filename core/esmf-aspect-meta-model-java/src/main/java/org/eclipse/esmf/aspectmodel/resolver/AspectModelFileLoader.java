@@ -62,14 +62,22 @@ public class AspectModelFileLoader {
       try {
          final String stringContent = content( new FileInputStream( file ), file.toURI() );
          final RawAspectModelFile fromString = load( stringContent, file.toURI() );
-         return new RawAspectModelFile( stringContent, fromString.sourceModel(), fromString.headerComment(), Optional.of( file.toURI() ) );
+         return new RawAspectModelFile( stringContent, fromString.sourceModel(), fromString.headerComment(), file.toURI() );
       } catch ( final ModelResolutionException exception ) {
          if ( exception.getMessage().startsWith( "Encountered invalid encoding" ) ) {
-            throw new ModelResolutionException( new ModelResolutionViolation( file.toURI(), exception.getMessage(), exception ) );
+            throw new ModelResolutionException( ModelResolutionViolationBuilder.builder()
+                  .location( file.toURI() )
+                  .message( exception.getMessage() )
+                  .cause( Optional.of( exception ) )
+                  .build() );
          }
          throw exception;
       } catch ( final FileNotFoundException exception ) {
-         throw new ModelResolutionException( new ModelResolutionViolation( file.toURI(), "File not found: " + file, exception ) );
+         throw new ModelResolutionException( ModelResolutionViolationBuilder.builder()
+               .location( file.toURI() )
+               .message( "File not found: " + file )
+               .cause( Optional.of( exception ) )
+               .build() );
       }
    }
 
@@ -88,7 +96,7 @@ public class AspectModelFileLoader {
       }
       final Model model = tryModel.getOrElseThrow(
             () -> new ModelResolutionException( "Can not load model", tryModel.getCause() ) );
-      return new RawAspectModelFile( rdfTurtle, model, headerComment, Optional.of( sourceLocation ) );
+      return new RawAspectModelFile( rdfTurtle, model, headerComment, sourceLocation );
    }
 
    public static RawAspectModelFile load( final TurtleSyntaxTree syntaxTree, final URI sourceLocation ) {
@@ -100,7 +108,7 @@ public class AspectModelFileLoader {
       }
       final Model model = tryModel.getOrElseThrow(
             () -> new ModelResolutionException( "Can not load model", tryModel.getCause() ) );
-      return new RawAspectModelFile( sourceRepresentation, model, headerComment, Optional.of( sourceLocation ) );
+      return new RawAspectModelFile( sourceRepresentation, model, headerComment, sourceLocation );
    }
 
    /**
@@ -122,7 +130,7 @@ public class AspectModelFileLoader {
     * @return the loaded file content
     */
    public static RawAspectModelFile load( final Model model, final URI sourceLocation ) {
-      return new RawAspectModelFile( RdfUtil.modelToString( model ), model, List.of(), Optional.of( sourceLocation ) );
+      return new RawAspectModelFile( RdfUtil.modelToString( model ), model, List.of(), sourceLocation );
    }
 
    /**
@@ -189,11 +197,17 @@ public class AspectModelFileLoader {
          charsetDecoder.decode( ByteBuffer.wrap( bytes ) );
          return new String( bytes, StandardCharsets.UTF_8 );
       } catch ( final MalformedInputException | UnmappableCharacterException exception ) {
-         throw new ModelResolutionException( new ModelResolutionViolation(
-               sourceLocation, "Encountered invalid encoding in input", exception ) );
+         throw new ModelResolutionException( ModelResolutionViolationBuilder.builder()
+               .location( sourceLocation )
+               .message( "Encountered invalid encoding in input" )
+               .cause( Optional.of( exception ) )
+               .build() );
       } catch ( final IOException exception ) {
-         throw new ModelResolutionException( new ModelResolutionViolation(
-               sourceLocation, "Could not load content from input stream", exception ) );
+         throw new ModelResolutionException( ModelResolutionViolationBuilder.builder()
+               .location( sourceLocation )
+               .message( "Could not load content from input stream" )
+               .cause( Optional.of( exception ) )
+               .build() );
       }
    }
 

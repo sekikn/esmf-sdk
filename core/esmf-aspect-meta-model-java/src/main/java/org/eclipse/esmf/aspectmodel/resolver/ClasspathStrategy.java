@@ -172,11 +172,13 @@ public class ClasspathStrategy implements ResolutionStrategy {
       final List<ModelResolutionViolation> checkedLocations = new ArrayList<>();
       final Try<RawAspectModelFile> tryFile = Try.of( () -> AspectModelFileLoader.load( namedResourceFile ) );
       if ( tryFile.isFailure() ) {
-         checkedLocations.add(
-               new ModelResolutionViolation( aspectModelUrn,
-                     Optional.ofNullable( namedResourceFile ).map( f -> URI.create( f.toString() ) )
-                           .orElse( URI.create( aspectModelUrn.getName() + ".ttl" ) ),
-                     tryFile.getCause().getMessage(), tryFile.getCause() ) );
+         checkedLocations.add( ModelResolutionViolationBuilder.builder()
+               .element( Optional.of( aspectModelUrn ) )
+               .location( Optional.ofNullable( namedResourceFile ).map( f -> URI.create( f.toString() ) )
+                     .orElse( URI.create( aspectModelUrn.getName() + ".ttl" ) ) )
+               .message( tryFile.getCause().getMessage() )
+               .cause( Optional.ofNullable( tryFile.getCause() ) )
+               .build() );
       } else {
          return tryFile.get();
       }
@@ -192,16 +194,23 @@ public class ClasspathStrategy implements ResolutionStrategy {
          final URL url = it.next();
          final Try<RawAspectModelFile> file = Try.of( () -> AspectModelFileLoader.load( url ) );
          if ( file.isFailure() ) {
-            checkedLocations.add( new ModelResolutionViolation( aspectModelUrn, URI.create( url.toString() ),
-                  "Could not load file", file.getCause() ) );
+            checkedLocations.add( ModelResolutionViolationBuilder.builder()
+                  .element( Optional.of( aspectModelUrn ) )
+                  .location( URI.create( url.toString() ) )
+                  .message( "Could not load file" )
+                  .cause( Optional.ofNullable( file.getCause() ) )
+                  .build() );
             continue;
          }
          final AspectModelFile result = file.get();
          if ( resolutionStrategySupport.containsDefinition( result, aspectModelUrn ) ) {
             return result;
          }
-         checkedLocations.add( new ModelResolutionViolation( aspectModelUrn, URI.create( url.toString() ),
-               "File does not contain the element definition" ) );
+         checkedLocations.add( ModelResolutionViolationBuilder.builder()
+               .element( Optional.of( aspectModelUrn ) )
+               .location( URI.create( url.toString() ) )
+               .message( "File does not contain the element definition" )
+               .build() );
       }
       throw new ModelResolutionException( checkedLocations );
    }

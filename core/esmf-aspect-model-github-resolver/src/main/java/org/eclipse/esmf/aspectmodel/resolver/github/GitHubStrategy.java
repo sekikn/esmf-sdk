@@ -16,10 +16,12 @@ package org.eclipse.esmf.aspectmodel.resolver.github;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
 import org.eclipse.esmf.aspectmodel.resolver.GithubRepository;
 import org.eclipse.esmf.aspectmodel.resolver.ModelResolutionViolation;
+import org.eclipse.esmf.aspectmodel.resolver.ModelResolutionViolationBuilder;
 import org.eclipse.esmf.aspectmodel.resolver.ResolutionStrategy;
 import org.eclipse.esmf.aspectmodel.resolver.ResolutionStrategySupport;
 import org.eclipse.esmf.aspectmodel.resolver.exceptions.ModelResolutionException;
@@ -69,8 +71,12 @@ public class GitHubStrategy extends GitHubModelSource implements ResolutionStrat
       try {
          files = loadContentsForNamespace( aspectModelUrn ).toList();
       } catch ( final Exception exception ) {
-         final ModelResolutionViolation failure = new ModelResolutionViolation( aspectModelUrn,
-               repositoryLocation, "In " + humanReadableRepositoryLocation + ": " + exception.getMessage(), exception );
+         final ModelResolutionViolation failure = ModelResolutionViolationBuilder.builder()
+               .element( Optional.of( aspectModelUrn ) )
+               .location( repositoryLocation )
+               .message( "In " + humanReadableRepositoryLocation + ": " + exception.getMessage() )
+               .cause( Optional.of( exception ) )
+               .build();
          throw new ModelResolutionException( failure );
       }
 
@@ -79,14 +85,19 @@ public class GitHubStrategy extends GitHubModelSource implements ResolutionStrat
          if ( resolutionStrategySupport.containsDefinition( file, aspectModelUrn ) ) {
             return file;
          }
-         file.sourceLocation().map( sourceLocation -> new ModelResolutionViolation( aspectModelUrn,
-               sourceLocation, "File does not contain the element definition" ) )
-               .ifPresent( checkedLocations::add );
+         checkedLocations.add( ModelResolutionViolationBuilder.builder()
+               .element( Optional.of( aspectModelUrn ) )
+               .location( file.sourceUri() )
+               .message( "File does not contain the element definition" )
+               .build() );
       }
 
       if ( checkedLocations.isEmpty() ) {
-         final ModelResolutionViolation failure = new ModelResolutionViolation( aspectModelUrn,
-               repositoryLocation, "Repository does not contain any file that contains the element definition" );
+         final ModelResolutionViolation failure = ModelResolutionViolationBuilder.builder()
+               .element( Optional.of( aspectModelUrn ) )
+               .location( repositoryLocation )
+               .message( "Repository does not contain any file that contains the element definition" )
+               .build();
          checkedLocations.add( failure );
       }
 

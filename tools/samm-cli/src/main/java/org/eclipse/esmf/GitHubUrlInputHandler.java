@@ -91,7 +91,7 @@ public class GitHubUrlInputHandler extends AbstractInputHandler {
       final AspectModel aspectModel = loadAspectModel();
       return aspectModel.files()
             .stream()
-            .filter( file -> file.sourceLocation().map( location -> location.equals( inputUri() ) ).orElse( false ) )
+            .filter( file -> file.sourceUri().equals( inputUri() ) )
             .findFirst()
             .orElseThrow( () -> new CommandException( "Could not load: " + inputUri() ) );
    }

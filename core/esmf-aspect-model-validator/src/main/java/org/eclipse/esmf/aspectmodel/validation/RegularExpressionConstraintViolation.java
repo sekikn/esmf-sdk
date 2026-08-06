@@ -17,28 +17,22 @@ import java.util.Optional;
 
 import org.apache.jena.rdf.model.RDFNode;
 
-import org.eclipse.esmf.aspectmodel.ElementFocussedViolation;
 import org.eclipse.esmf.aspectmodel.ProjectInfo;
+import org.eclipse.esmf.aspectmodel.loader.TokenBasedElementFocussedViolation;
 import org.eclipse.esmf.aspectmodel.resolver.parser.TokenRegistry;
 import org.eclipse.esmf.aspectmodel.shacl.violation.EvaluationContext;
 
 /**
  * Violation for regular expressions that are too complex to automatically generate example values.
  *
+ * @param context the evaluation context
+ * @param regexp the problematic regular expression
  */
-public final class RegularExpressionConstraintViolation extends AbstractElementFocussedViolation {
+public record RegularExpressionConstraintViolation(
+      EvaluationContext context,
+      String regexp
+) implements TokenBasedElementFocussedViolation {
    public static final String ERROR_CODE = "ERR_INVALID_REGEX";
-   private final EvaluationContext context;
-   private final String regexp;
-
-   /**
-    * @param context the evaluation context
-    * @param regexp the problematic regular expression
-    */
-   public RegularExpressionConstraintViolation( final EvaluationContext context, final String regexp ) {
-      this.context = context;
-      this.regexp = regexp;
-   }
 
    @Override
    public Code code() {
@@ -66,9 +60,5 @@ public final class RegularExpressionConstraintViolation extends AbstractElementF
             .filter( property -> TokenRegistry.getToken( property.asNode() ).isPresent() )
             .map( resource -> resource.as( RDFNode.class ) )
             .orElse( context.element() );
-   }
-
-   public String regexp() {
-      return regexp;
    }
 }

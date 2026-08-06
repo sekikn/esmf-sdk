@@ -104,7 +104,7 @@ public class RustLikeFormatter {
             .toList();
 
       return formatError( highlightToken.content(), formatStatements(), highlightToken.line(), highlightToken.column(), message,
-            sourceFile.flatMap( AspectModelFile::sourceLocation ) );
+            sourceFile.map( AspectModelFile::sourceUri ) );
    }
 
    public RdfTextFormatter getFormatter() {

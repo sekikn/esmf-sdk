@@ -166,9 +166,7 @@ public class AspectCrossFileDefinitionService extends TurtleService {
    Optional<Path> resolveFilePath( final ParsedDocument parsedDocument, final AspectModelUrn urn ) {
       try {
          final URI sourceUri =
-               resolutionStrategyService.buildResolutionStrategyForDocument( parsedDocument ).apply( urn, RESOLUTION_SUPPORT )
-                     .sourceLocation()
-                     .orElseThrow( () -> new ModelResolutionException( "No source location in resolved file for " + urn ) );
+               resolutionStrategyService.buildResolutionStrategyForDocument( parsedDocument ).apply( urn, RESOLUTION_SUPPORT ).sourceUri();
          return Optional.of( Paths.get( sourceUri ) );
       } catch ( final ModelResolutionException | IllegalArgumentException e ) {
          LOG.debug( "[cross-file] could not resolve {} to a local file: {}", urn, e.getMessage() );

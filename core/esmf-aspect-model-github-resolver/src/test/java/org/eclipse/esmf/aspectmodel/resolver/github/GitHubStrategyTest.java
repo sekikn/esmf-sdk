@@ -21,7 +21,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
@@ -95,11 +94,10 @@ public class GitHubStrategyTest {
       final GitHubModelSource modelSource = new GitHubModelSource( esmfSdk, "core/esmf-test-aspect-models/src/main/resources/valid/" );
       final List<AspectModelFile> files = modelSource.loadContents().toList();
       assertThat( files ).isNotEmpty();
-      assertThat( files ).allMatch( file -> file.sourceLocation().isPresent()
-            && file.sourceLocation().get().toString().startsWith( "https://github.com" ) );
+      assertThat( files ).allMatch( file -> file.sourceUri().toString().startsWith( "https://github.com" ) );
 
       final AspectModelFile aspectModelFile = files.stream()
-            .filter( file -> file.sourceLocation().map( URI::toString ).get().endsWith( "/Aspect.ttl" ) ).findFirst().get();
+            .filter( file -> file.sourceUri().toString().endsWith( "/Aspect.ttl" ) ).findFirst().get();
       final AspectModel aspectModel = new AspectModelLoader().loadAspectModelFiles( List.of( aspectModelFile ) );
       assertThat( aspectModel ).files().hasSize( 1 );
       assertThat( aspectModel ).hasSingleAspectThat().hasName( "Aspect" );

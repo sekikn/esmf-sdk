@@ -40,16 +40,14 @@ public record ModelResolutionViolation(
 ) implements Violation {
    public static final String ERROR_CODE = "ERR_MODEL_RESOLUTION";
 
-   public ModelResolutionViolation( final URI location, final String message, final Throwable cause ) {
-      this( Optional.empty(), location, message, Optional.of( cause ) );
-   }
-
-   public ModelResolutionViolation( final AspectModelUrn element, final URI location, final String message ) {
-      this( Optional.of( element ), location, message, Optional.empty() );
-   }
-
-   public ModelResolutionViolation( final AspectModelUrn element, final URI location, final String message, final Throwable cause ) {
-      this( Optional.of( element ), location, message, Optional.of( cause ) );
+   @SuppressWarnings( "OptionalAssignedToNull" )
+   public ModelResolutionViolation {
+      if ( element == null ) {
+         element = Optional.empty();
+      }
+      if ( cause == null ) {
+         cause = Optional.empty();
+      }
    }
 
    @Override

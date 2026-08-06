@@ -16,19 +16,15 @@ package org.eclipse.esmf.aspectmodel.shacl.violation;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 import org.apache.jena.rdf.model.RDFNode;
 
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
-import org.eclipse.esmf.aspectmodel.DocumentLocationViolation;
-import org.eclipse.esmf.aspectmodel.ElementFocussedViolation;
-import org.eclipse.esmf.aspectmodel.Location;
 import org.eclipse.esmf.aspectmodel.ProjectInfo;
 import org.eclipse.esmf.aspectmodel.Violation;
+import org.eclipse.esmf.aspectmodel.loader.TokenBasedElementFocussedViolation;
 import org.eclipse.esmf.aspectmodel.resolver.parser.SmartToken;
 import org.eclipse.esmf.aspectmodel.resolver.parser.TokenRegistry;
-import org.eclipse.esmf.aspectmodel.shacl.ShaclValidationException;
 import org.eclipse.esmf.aspectmodel.shacl.fix.Fix;
 
 /**
@@ -39,33 +35,13 @@ import org.eclipse.esmf.aspectmodel.shacl.fix.Fix;
  * To handle information specific to each type of violation, implement {@link Visitor} and call
  * {@link #accept(Visitor)} on the violation(s).
  */
-public interface ShaclViolation extends ElementFocussedViolation {
+public interface ShaclViolation extends TokenBasedElementFocussedViolation {
    enum AppliesTo {
       WHOLE_ELEMENT, ONLY_PROPERTY
    }
 
    default AppliesTo appliesTo() {
       return AppliesTo.WHOLE_ELEMENT;
-   }
-
-   @Override
-   default Location location() {
-      return TokenRegistry.getToken( highlight().asNode() )
-            .map( SmartToken::location ).orElse( DocumentLocationViolation.WHOLE_DOCUMENT );
-   }
-
-   @Override
-   default URI sourceDocument() {
-      return TokenRegistry.getToken( highlight().asNode() )
-            .flatMap( token -> Optional.ofNullable( token.getSourceDocument() ) )
-            .orElseThrow( () -> new ShaclValidationException( "Could not determine source document for element " + highlight() ) );
-   }
-
-   @Override
-   default Supplier<String> documentContent() {
-      return () -> TokenRegistry.getToken( highlight().asNode() )
-            .map( token -> token.getOriginatingFile().sourceRepresentation() )
-            .orElseThrow( () -> new ShaclValidationException( "Can not determine source document for element " + highlight() ) );
    }
 
    /**
@@ -115,7 +91,7 @@ public interface ShaclViolation extends ElementFocussedViolation {
       return Optional.ofNullable( highlight() ).map( RDFNode::asNode )
             .flatMap( TokenRegistry::getToken )
             .map( SmartToken::getOriginatingFile )
-            .flatMap( AspectModelFile::sourceLocation );
+            .map( AspectModelFile::sourceUri );
    }
 
    @Override

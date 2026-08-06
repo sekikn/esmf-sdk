@@ -29,16 +29,18 @@ import java.util.zip.ZipFile;
 
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
 import org.eclipse.esmf.aspectmodel.resolver.AspectModelFileLoader;
-import org.eclipse.esmf.util.download.Download;
 import org.eclipse.esmf.aspectmodel.resolver.GithubRepository;
 import org.eclipse.esmf.aspectmodel.resolver.ModelSource;
 import org.eclipse.esmf.aspectmodel.resolver.modelfile.RawAspectModelFile;
 import org.eclipse.esmf.aspectmodel.urn.AspectModelUrn;
+import org.eclipse.esmf.util.download.Download;
 
-import com.google.common.collect.Streams;
-import io.vavr.control.Try;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Streams;
+
+import io.vavr.control.Try;
 
 /**
  * A model source for remote GitHub repositories
@@ -133,7 +135,7 @@ public class GitHubModelSource implements ModelSource {
       if ( files == null ) {
          init();
       }
-      return files.stream().flatMap( file -> file.sourceLocation().stream() );
+      return files.stream().map( AspectModelFile::sourceUri );
    }
 
    @Override

@@ -21,8 +21,7 @@ import org.eclipse.esmf.aspectmodel.Violation;
 import io.soabase.recordbuilder.core.RecordBuilder;
 
 /**
- * Generic violation: The validation was unsuccessful, for example because the model could not be
- * loaded or not be resolved
+ * Generic violation: Loading or validation was unsuccessful, without any more specific details
  *
  * @param message the detailed message
  * @param cause the cause
@@ -30,9 +29,24 @@ import io.soabase.recordbuilder.core.RecordBuilder;
 @RecordBuilder
 public record ProcessingViolation(
       String message,
-      Throwable cause
+      Optional<Throwable> cause
 ) implements Violation {
    public static final String ERROR_CODE = "ERR_PROCESSING";
+
+   public ProcessingViolation( final String message ) {
+      this( message, Optional.empty() );
+   }
+
+   public ProcessingViolation( final String message, final Throwable cause ) {
+      this( message, Optional.of( cause ) );
+   }
+
+   @SuppressWarnings( "OptionalAssignedToNull" )
+   public ProcessingViolation {
+      if ( cause == null ) {
+         cause = Optional.empty();
+      }
+   }
 
    @Override
    public Code code() {
@@ -48,11 +62,4 @@ public record ProcessingViolation(
          }
       };
    }
-
-   // TODO
-   // @Override
-   // public @Nullable RDFNode highlight() {
-   // return cause instanceof final AspectLoadingException aspectLoadingException ?
-   // aspectLoadingException.highlightElement() : null;
-   // }
 }

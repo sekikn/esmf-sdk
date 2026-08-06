@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.function.Function;
 
+import org.eclipse.esmf.aspectmodel.resolver.services.TurtleLoader;
 import org.eclipse.esmf.treesitterturtle.TreeSitterTurtle;
 
 import org.eclipse.lsp4j.Position;
@@ -41,6 +42,7 @@ public class TreeSitterTurtleParserService implements Function<Document, ParsedD
    private final Map<Document, Rope> previousDocumentStates = new WeakHashMap<>();
 
    public TreeSitterTurtleParserService() {
+      TurtleLoader.init();
       parser = new TSParser();
       final TSLanguage turtle = new TreeSitterTurtle();
       parser.setLanguage( turtle );

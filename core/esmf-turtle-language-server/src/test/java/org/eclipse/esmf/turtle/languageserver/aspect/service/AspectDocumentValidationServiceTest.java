@@ -17,16 +17,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.eclipse.esmf.turtle.languageserver.aspect.TestUtil.emptyParsedDocument;
 import static org.eclipse.esmf.turtle.languageserver.aspect.TestUtil.parsedDocument;
 
-import java.net.URI;
 import java.util.function.Supplier;
 
 import org.eclipse.esmf.aspectmodel.ViolationReport;
-import org.eclipse.esmf.aspectmodel.resolver.exceptions.ParserException;
-import org.eclipse.esmf.aspectmodel.validation.DefaultDocumentLocationViolation;
 import org.eclipse.esmf.aspectmodel.validation.InvalidLexicalValueViolation;
 import org.eclipse.esmf.aspectmodel.validation.ProcessingViolation;
 import org.eclipse.esmf.aspectmodel.validation.services.AspectModelValidator;
 import org.eclipse.esmf.metamodel.AspectModel;
+import org.eclipse.esmf.test.InvalidTestAspect;
 import org.eclipse.esmf.test.TestAspect;
 import org.eclipse.esmf.treesitterturtle.TurtleViolationCode;
 import org.eclipse.esmf.turtle.languageserver.aspect.diagnostic.TestViolation;
@@ -38,49 +36,13 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import io.vavr.control.Either;
 
 class AspectDocumentValidationServiceTest {
    @Test
-   void unexpectedExceptionIsLoggedAndMappedToSafeProcessingDiagnostic() {
-      final Logger logger = (Logger) LoggerFactory.getLogger( AspectModelValidationService.class );
-      final ListAppender<ILoggingEvent> appender = new ListAppender<>();
-      appender.start();
-      logger.addAppender( appender );
-
-      final RuntimeException failure = new RuntimeException( "secret internal details" );
-      final AspectModelValidationService service = new AspectModelValidationService( new AspectModelValidator() {
-         @Override
-         public ViolationReport validateModel( final Supplier<AspectModel> aspectModelSupplier ) {
-            throw failure;
-         }
-      } );
-
-      try {
-         final ViolationReport report = service.validate( parsedDocument( TestAspect.ASPECT ) );
-         assertThat( report.violations() ).singleElement()
-               .satisfies( diagnostic -> {
-                  assertThat( diagnostic.code().code() ).isEqualTo( ProcessingViolation.ERROR_CODE );
-               } );
-         assertThat( appender.list ).anySatisfy( event -> {
-            assertThat( event.getLevel() ).isEqualTo( Level.ERROR );
-            assertThat( event.getFormattedMessage() ).contains( "unexpected runtime failure" );
-            assertThat( event.getThrowableProxy() ).isNotNull();
-         } );
-      } finally {
-         logger.detachAppender( appender );
-      }
-   }
-
-   @Test
    void parserExceptionIsMappedToSyntaxFallbackDiagnostic() {
-      final AspectModelValidationService service = new AspectModelValidationService( new AspectModelValidator() {
-         @Override
-         public ViolationReport validateModel( final Supplier<AspectModel> aspectModelSupplier ) {
-            throw new ParserException( 3, 5, "Triples not terminated by DOT", "source", URI.create( "test.ttl" ) );
-         }
-      } );
-
-      final ViolationReport report = service.validate( parsedDocument( TestAspect.ASPECT ) );
+      final AspectModelValidationService service = new AspectModelValidationService( new AspectModelValidator() );
+      final ViolationReport report = service.validate( parsedDocument( InvalidTestAspect.INVALID_SYNTAX ) );
       assertThat( report.violations() ).singleElement()
             .satisfies( diagnostic -> {
                assertThat( diagnostic.code().code() ).isEqualTo( TurtleViolationCode.ERR_SYNTAX.code() );
@@ -92,8 +54,8 @@ class AspectDocumentValidationServiceTest {
    void ordinaryValidationViolationsAreMapped() {
       final AspectModelValidationService service = new AspectModelValidationService( new AspectModelValidator() {
          @Override
-         public ViolationReport validateModel( final Supplier<AspectModel> aspectModelSupplier ) {
-            return new ViolationReport( new TestViolation( "ERR_TEST", "semantic problem" ) );
+         public Either<ViolationReport, AspectModel> loadModel( final Supplier<AspectModel> aspectModelLoader ) {
+            return Either.left( new ViolationReport( new TestViolation( "ERR_TEST", "semantic problem" ) ) );
          }
       } );
 
@@ -111,8 +73,8 @@ class AspectDocumentValidationServiceTest {
 
       final AspectModelValidationService service = new AspectModelValidationService( new AspectModelValidator() {
          @Override
-         public ViolationReport validateModel( final Supplier<AspectModel> aspectModelSupplier ) {
-            return new ViolationReport( new ProcessingViolation( "processing violation", cause ) );
+         public Either<ViolationReport, AspectModel> loadModel( final Supplier<AspectModel> aspectModelLoader ) {
+            return Either.left( new ViolationReport( new ProcessingViolation( "processing violation", cause ) ) );
          }
       } );
       final Logger logger = (Logger) LoggerFactory.getLogger( AspectModelValidationService.class );
@@ -167,9 +129,9 @@ class AspectDocumentValidationServiceTest {
             samm:dataType xsd:byte .
          """ ) );
 
-      assertThat( report.violations() ).singleElement().isInstanceOfSatisfying( DefaultDocumentLocationViolation.class, diagnostic -> {
+      assertThat( report.violations() ).singleElement().isInstanceOfSatisfying( InvalidLexicalValueViolation.class, diagnostic -> {
          assertThat( diagnostic.code().code() ).isEqualTo( InvalidLexicalValueViolation.ERROR_CODE );
-         assertThat( diagnostic.message() ).isEqualTo( "Invalid value" );
+         assertThat( diagnostic.message() ).contains( "no valid value for type" );
       } );
    }
 

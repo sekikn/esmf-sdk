@@ -90,7 +90,7 @@ public class MetaModelStrategy implements ResolutionStrategy {
             return RawAspectModelFileBuilder.builder()
                   .sourceRepresentation( candidate.sourceRepresentation() )
                   .sourceModel( candidate.sourceModel() )
-                  .sourceLocation( Optional.of( tempFile.toUri() ) )
+                  .sourceUri( tempFile.toUri() )
                   .build();
          }
       }

@@ -28,6 +28,7 @@ import javax.script.ScriptException;
 
 import org.apache.jena.rdf.model.RDFNode;
 
+import org.eclipse.esmf.aspectmodel.Violation;
 import org.eclipse.esmf.aspectmodel.shacl.JsLibrary;
 import org.eclipse.esmf.aspectmodel.shacl.ShaclValidationException;
 import org.eclipse.esmf.aspectmodel.shacl.constraint.js.JsFactory;
@@ -36,8 +37,7 @@ import org.eclipse.esmf.aspectmodel.shacl.constraint.js.JsTerm;
 import org.eclipse.esmf.aspectmodel.shacl.constraint.js.TermFactory;
 import org.eclipse.esmf.aspectmodel.shacl.violation.EvaluationContext;
 import org.eclipse.esmf.aspectmodel.shacl.violation.JsConstraintViolation;
-import org.eclipse.esmf.aspectmodel.Violation;
-import org.eclipse.esmf.aspectmodel.validation.ProcessingViolation;
+import org.eclipse.esmf.aspectmodel.validation.ProcessingViolationBuilder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -140,8 +140,9 @@ public class JsConstraint implements Constraint {
             }
             default -> {
                LOG.debug( "JavaScript evaluation of {} returned invalid result: {}", jsFunctionName(), result );
-               yield List.of( new ProcessingViolation( "JavaScript evaluation of " + jsFunctionName() + " returned an invalid result",
-                     new IllegalArgumentException() ) );
+               yield List.of( ProcessingViolationBuilder.builder()
+                     .message( "JavaScript evaluation of " + jsFunctionName() + " returned an invalid result: " + result )
+                     .build() );
             }
          };
       } catch ( final ScriptException exception ) {

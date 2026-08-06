@@ -25,6 +25,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.Statement;
+
 import org.eclipse.esmf.aspectmodel.AspectLoadingException;
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
 import org.eclipse.esmf.aspectmodel.resolver.services.TurtleLoader;
@@ -35,14 +43,8 @@ import org.eclipse.esmf.samm.KnownVersion;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
+
 import io.vavr.Tuple2;
-import org.apache.commons.io.IOUtils;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.rdf.model.Statement;
 
 /**
  * Enumeration of the {@link AspectModelFile}s that contain the SAMM meta model definition.
@@ -168,8 +170,8 @@ public enum MetaModelFile implements AspectModelFile {
    }
 
    @Override
-   public Optional<URI> sourceLocation() {
-      return Optional.of( URI.create( rdfNamespace.getUri() ) );
+   public URI sourceUri() {
+      return URI.create( rdfNamespace.getUri() );
    }
 
    @Override

@@ -104,7 +104,7 @@ public class AspectUsageCommand extends AbstractCommand {
             .getOrElse( () -> {
                final URI targetUri = inputHandler.inputUri();
                final AspectModelFile fileToCheck = aspectModelLoader.loadContents()
-                     .filter( file -> file.sourceLocation().map( targetUri::equals ).orElse( false ) )
+                     .filter( file -> file.sourceUri().equals( targetUri ) )
                      .findFirst()
                      .orElseThrow( () -> new CommandException( "Input is no file, valid URN or any resolvable URI" ) );
                return usage.referencesToAnyElementIn( fileToCheck );

@@ -189,7 +189,7 @@ class EsmfPerformanceTest {
                new DefaultAspectModelFile(
                      ModelFactory.createDefaultModel().read( new StringReader( result.toString() ), "", "TTL" ),
                      List.of(),
-                     Optional.of( URI.create( "namespaceFile" + 0 ) ) )
+                     URI.create( "namespaceFile" + 0 ) )
          );
 
          for ( int aspect = 1; aspect < ASPECTS; aspect++ ) {
@@ -221,7 +221,7 @@ class EsmfPerformanceTest {
                   new DefaultAspectModelFile(
                         ModelFactory.createDefaultModel().read( new StringReader( result.toString() ), "", "TTL" ),
                         List.of(),
-                        Optional.of( URI.create( "namespaceFile" + aspect ) ) )
+                        URI.create( "namespaceFile" + aspect ) )
             );
          }
          return models;

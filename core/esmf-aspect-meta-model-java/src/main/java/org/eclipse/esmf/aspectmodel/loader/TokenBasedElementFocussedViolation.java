@@ -11,7 +11,7 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package org.eclipse.esmf.aspectmodel.validation;
+package org.eclipse.esmf.aspectmodel.loader;
 
 import java.net.URI;
 import java.util.Optional;
@@ -22,30 +22,29 @@ import org.eclipse.esmf.aspectmodel.ElementFocussedViolation;
 import org.eclipse.esmf.aspectmodel.Location;
 import org.eclipse.esmf.aspectmodel.resolver.parser.SmartToken;
 import org.eclipse.esmf.aspectmodel.resolver.parser.TokenRegistry;
-import org.eclipse.esmf.aspectmodel.shacl.ShaclValidationException;
 
 /**
- * Base implementation for and RdfElementViolation that is based on information stored in the
- * {@link TokenRegistry}.
+ * An {@link ElementFocussedViolation} that provides location, sourceDocument and documentContent
+ * based on the information available in the {@link TokenRegistry}.
  */
-public abstract class AbstractElementFocussedViolation implements ElementFocussedViolation {
+public interface TokenBasedElementFocussedViolation extends ElementFocussedViolation {
    @Override
-   public Location location() {
+   default Location location() {
       return TokenRegistry.getToken( highlight().asNode() )
             .map( SmartToken::location ).orElse( DocumentLocationViolation.WHOLE_DOCUMENT );
    }
 
    @Override
-   public URI sourceDocument() {
+   default URI sourceDocument() {
       return TokenRegistry.getToken( highlight().asNode() )
             .flatMap( token -> Optional.ofNullable( token.getSourceDocument() ) )
-            .orElseThrow( () -> new ShaclValidationException( "Could not determine source document for element " + highlight() ) );
+            .orElseThrow( () -> new RuntimeException( "Could not determine source document for element " + highlight() ) );
    }
 
    @Override
-   public Supplier<String> documentContent() {
+   default Supplier<String> documentContent() {
       return () -> TokenRegistry.getToken( highlight().asNode() )
             .map( token -> token.getOriginatingFile().sourceRepresentation() )
-            .orElseThrow( () -> new ShaclValidationException( "Can not determine source document for element " + highlight() ) );
+            .orElseThrow( () -> new RuntimeException( "Can not determine source document for element " + highlight() ) );
    }
 }

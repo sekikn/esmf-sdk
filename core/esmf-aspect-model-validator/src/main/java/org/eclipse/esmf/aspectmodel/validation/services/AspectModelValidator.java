@@ -20,6 +20,8 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -27,13 +29,16 @@ import org.apache.jena.query.ARQ;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 
+import org.eclipse.esmf.aspectmodel.AspectLoadingException;
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
 import org.eclipse.esmf.aspectmodel.Location;
 import org.eclipse.esmf.aspectmodel.RdfUtil;
 import org.eclipse.esmf.aspectmodel.ValueParsingException;
 import org.eclipse.esmf.aspectmodel.Violation;
 import org.eclipse.esmf.aspectmodel.ViolationReport;
+import org.eclipse.esmf.aspectmodel.loader.AspectLoadingViolationBuilder;
 import org.eclipse.esmf.aspectmodel.loader.AspectModelLoader;
+import org.eclipse.esmf.aspectmodel.resolver.exceptions.ModelResolutionException;
 import org.eclipse.esmf.aspectmodel.resolver.exceptions.ParserException;
 import org.eclipse.esmf.aspectmodel.resolver.modelfile.MetaModelFile;
 import org.eclipse.esmf.aspectmodel.shacl.ShaclValidator;
@@ -46,8 +51,6 @@ import org.eclipse.esmf.aspectmodel.validation.RdfBasedValidator;
 import org.eclipse.esmf.aspectmodel.validation.Validator;
 import org.eclipse.esmf.metamodel.AspectModel;
 import org.eclipse.esmf.metamodel.vocabulary.SammNs;
-
-import org.jspecify.annotations.NonNull;
 
 import io.vavr.control.Either;
 
@@ -117,20 +120,50 @@ public class AspectModelValidator implements Validator {
       } catch ( final CancelValidation cancelValidation ) {
          // The validation was short-circuited by the aspectModelLoader function
          return Either.left( cancelValidation.violations );
+      } catch ( final AspectLoadingException exception ) {
+         return Either.left( reportForAspectLoadingException( exception ) );
+      } catch ( final ModelResolutionException exception ) {
+         return Either.left( reportForModelResolutionException( exception ) );
       } catch ( final Exception exception ) {
          // Any other exception, e.g., resolution exception
          return Either.left( reportForDefaultException( exception ) );
       }
    }
 
-   private static @NonNull ViolationReport reportForDefaultException( final Exception exception ) {
+   private static ViolationReport reportForDefaultException( final Exception exception ) {
       return new ViolationReport( ProcessingViolationBuilder.builder()
             .message( exception.getMessage() )
-            .cause( exception )
+            .cause( Optional.of( exception ) )
             .build() );
    }
 
-   private static @NonNull ViolationReport reportForValueParsingException( final ValueParsingException exception ) {
+   private static ViolationReport reportForAspectLoadingException( final AspectLoadingException exception ) {
+      if ( exception.getMessage() == null ) {
+         return new ViolationReport( ProcessingViolationBuilder.builder()
+               .message( "Failed to load Aspect Model" )
+               .cause( Optional.ofNullable( exception.getCause() ) )
+               .build() );
+      }
+      if ( exception.getSourceDocument() != null ) {
+         return new ViolationReport( AspectLoadingViolationBuilder.builder()
+               .message( exception.getMessage() )
+               .sourceDocument( exception.getSourceDocument() )
+               .documentContent( exception.getDocumentContent() )
+               .highlight( exception.highlightElement() )
+               .build() );
+      }
+
+      return new ViolationReport( ProcessingViolationBuilder.builder()
+            .message( exception.getMessage() )
+            .cause( Optional.ofNullable( exception.getCause() ) )
+            .build() );
+   }
+
+   private static ViolationReport reportForModelResolutionException( final ModelResolutionException exception ) {
+      return new ViolationReport( exception.getCheckedLocations().stream().<Violation>map( Function.identity() ).toList() );
+   }
+
+   private static ViolationReport reportForValueParsingException( final ValueParsingException exception ) {
       return new ViolationReport( InvalidLexicalValueViolationBuilder.builder()
             .type( exception.getType() )
             .value( exception.getValue() )
@@ -141,7 +174,7 @@ public class AspectModelValidator implements Validator {
             .build() );
    }
 
-   private static @NonNull ViolationReport reportForParserException( final ParserException exception ) {
+   private static ViolationReport reportForParserException( final ParserException exception ) {
       return new ViolationReport( InvalidSyntaxViolationBuilder.builder()
             .message( exception.getMessage() )
             .sourceDocument( exception.getSourceLocation() )
@@ -178,9 +211,7 @@ public class AspectModelValidator implements Validator {
 
    private Model buildMergedModel( final Collection<AspectModelFile> files ) {
       final Stream<Map.Entry<URI, Model>> filesStream =
-            files.stream().map( file -> Map.entry(
-                  file.sourceLocation().orElse( URI.create( "inmemory:graph:" + file.sourceModel().hashCode() ) ),
-                  file.sourceModel() ) );
+            files.stream().map( file -> Map.entry( file.sourceUri(), file.sourceModel() ) );
       final Stream<Map.Entry<URI, Model>> metaModelFilesStream =
             Stream.of( Map.entry( URI.create( SammNs.SAMM.getUri() ), MetaModelFile.metaModelDefinitions() ) );
       final Map<URI, Model> graphContent = Stream.concat( filesStream, metaModelFilesStream ).collect( asMap() );

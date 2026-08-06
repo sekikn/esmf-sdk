@@ -122,7 +122,7 @@ class AspectSerializerTest {
       final AspectModel aspectModel = new AspectModelLoader().emptyModel();
       final Path file1Path = outputDirectory.resolve( "Aspect1.ttl" );
       final AspectModelFile file1 = RawAspectModelFileBuilder.builder()
-            .sourceLocation( Optional.of( file1Path.toUri() ) )
+            .sourceUri( file1Path.toUri() )
             .sourceModel( createModel( """
                @prefix samm: <urn:samm:org.eclipse.esmf.samm:meta-model:%s#> .
                @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
@@ -137,7 +137,7 @@ class AspectSerializerTest {
             .build();
       final Path file2Path = outputDirectory.resolve( "Aspect2.ttl" );
       final AspectModelFile file2 = RawAspectModelFileBuilder.builder()
-            .sourceLocation( Optional.of( file2Path.toUri() ) )
+            .sourceUri( file2Path.toUri() )
             .sourceModel( createModel( """
                @prefix samm: <urn:samm:org.eclipse.esmf.samm:meta-model:%s#> .
                @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .

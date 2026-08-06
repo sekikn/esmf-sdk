@@ -20,24 +20,20 @@ import java.util.stream.Collectors;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 
-import org.eclipse.esmf.aspectmodel.ElementFocussedViolation;
 import org.eclipse.esmf.aspectmodel.ProjectInfo;
+import org.eclipse.esmf.aspectmodel.loader.TokenBasedElementFocussedViolation;
 import org.eclipse.esmf.aspectmodel.resolver.parser.TokenRegistry;
 
 /**
  * Represents the violation of cycle rules: A cycle in a model (graph) is only allowed, when one of
  * the Properties on the cycle path is marked as optional
+ *
+ * @param path the path of properties in the model that form a cycle
  */
-public class CycleViolation extends AbstractElementFocussedViolation {
+public record CycleViolation(
+      List<Resource> path
+) implements TokenBasedElementFocussedViolation {
    public static final String ERROR_CODE = "ERR_CYCLE";
-   private final List<Resource> path;
-
-   /**
-    * @param path the path of properties in the model that form a cycle
-    */
-   public CycleViolation( final List<Resource> path ) {
-      this.path = path;
-   }
 
    @Override
    public Code code() {
@@ -67,9 +63,5 @@ public class CycleViolation extends AbstractElementFocussedViolation {
             .map( resource -> resource.as( RDFNode.class ) )
             .findFirst()
             .orElse( path.getFirst() );
-   }
-
-   public List<Resource> path() {
-      return path;
    }
 }

@@ -94,7 +94,7 @@ public class NamespacePackage implements ResolutionStrategy, Artifact<URI, byte[
       try {
          return IOUtils.toByteArray( source );
       } catch ( final IOException exception ) {
-         throw new AspectLoadingException( exception );
+         throw new AspectLoadingException( "Failed to read input stream", exception );
       }
    }
 
@@ -194,7 +194,7 @@ public class NamespacePackage implements ResolutionStrategy, Artifact<URI, byte[
    @Override
    public Stream<URI> listContents() {
       if ( content == null ) {
-         return aspectModel.files().stream().flatMap( f -> f.sourceLocation().stream() );
+         return aspectModel.files().stream().map( AspectModelFile::sourceUri );
       }
 
       final List<URI> contents = new ArrayList<>();
@@ -241,9 +241,7 @@ public class NamespacePackage implements ResolutionStrategy, Artifact<URI, byte[
             ? namespace.getNamespaceMainPart() + "/" + namespace.getVersion()
             : modelsRoot + "/" + namespace.getNamespaceMainPart() + "/" + namespace.getVersion();
       return loadContents()
-            .filter( file -> file.sourceLocation().map(
-                  uri -> uri.toString().contains( pathToFilter )
-            ).orElse( false ) );
+            .filter( file -> file.sourceUri().toString().contains( pathToFilter ) );
    }
 
    @Override
@@ -252,9 +250,11 @@ public class NamespacePackage implements ResolutionStrategy, Artifact<URI, byte[
       return loadContentsForNamespace( aspectModelUrn )
             .filter( file -> resolutionStrategySupport.containsDefinition( file, aspectModelUrn ) )
             .findFirst()
-            .orElseThrow( () -> new ModelResolutionException(
-                  new ModelResolutionViolation( aspectModelUrn, location,
-                        "Namespace package " + location + " does not contain definition for " + aspectModelUrn ) ) );
+            .orElseThrow( () -> new ModelResolutionException( ModelResolutionViolationBuilder.builder()
+                  .element( Optional.of( aspectModelUrn ) )
+                  .location( location )
+                  .message( "Namespace package " + location + " does not contain definition for " + aspectModelUrn )
+                  .build() ) );
    }
 
    @Override
@@ -351,7 +351,7 @@ public class NamespacePackage implements ResolutionStrategy, Artifact<URI, byte[
                      .toUri();
                return RawAspectModelFileBuilder.builder()
                      .sourceModel( file.sourceModel() )
-                     .sourceLocation( Optional.of( targetLocation ) )
+                     .sourceUri( targetLocation )
                      .headerComment( file.headerComment() )
                      .build();
             } )
