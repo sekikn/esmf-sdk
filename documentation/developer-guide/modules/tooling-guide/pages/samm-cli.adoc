@@ -360,12 +360,21 @@ Most fields in these Operation Object templates are merged with the generated op
 
 The `responses` field is an exception for those generated operations:
 
-- If `responses` is specified for an operation template,
-it replaces the generated responses object completely for the generated operation.
-
 - If `responses` is omitted, the generated default responses are used.
+This includes the generated success response `200` and the generated error responses `400`, `401`, `403` and `404`.
 
-No automatic success status code is added when custom `responses` are specified.
+- If `responses` is specified, the template defines the non-success responses.
+Generated error responses are not added automatically.
+
+- The generated `200` success response is still added automatically when the template does not define `responses."200"`.
+For read and query endpoints this response references the generated Aspect response.
+For operations endpoints this response references `#/components/responses/OperationResponse`.
+
+- If the template defines `responses."200"`, the template response replaces the generated `200`.
+
+- The operation-level vendor extension `x-esmf-generate-success-response: false` disables adding the generated `200`.
+It only affects the generated success response.
+Responses explicitly defined in the template, including `200`, `201`, `204` or any other response code, are kept.
 
 For example, the template file could look like this:
 
@@ -428,8 +437,34 @@ paths:
 
 ----
 
-To replace the generated responses for generated GET operations that use the operation template,
-specify the complete `responses` object in the template:
+To provide reusable common error responses for generated GET operations that use the operation template,
+specify the error responses in the template.
+The generated `200` response is preserved and reusable common error responses can be provided by reference:
+
+[source,yaml]
+----
+components:
+  responses:
+    BadRequest:
+      description: The request was invalid.
+    NotFound:
+      description: The resource was not found.
+    InternalServerError:
+      description: An error occurred while processing the request.
+
+paths:
+  __DEFAULT_QUERIES_TEMPLATE__:
+    get:
+      responses:
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
+----
+
+To replace the generated `200` success response, define `responses."200"` explicitly:
 
 [source,yaml]
 ----
@@ -438,13 +473,20 @@ paths:
     get:
       responses:
         "200":
-          description: The resource was returned successfully.
-        "400":
-          description: The request was invalid.
-        "404":
-          description: The resource was not found.
-        "500":
-          $ref: '#/components/responses/InternalServerError'
+          description: The resource was returned successfully with a custom response.
+----
+
+To use another success status code without adding the generated `200`, disable the generated success response:
+
+[source,yaml]
+----
+paths:
+  __DEFAULT_QUERIES_TEMPLATE__:
+    post:
+      x-esmf-generate-success-response: false
+      responses:
+        "201":
+          description: Created.
 ----
 
 The full command for the native executable samm-cli would be:
