@@ -358,23 +358,23 @@ This operation template is currently applied to generated read endpoints, query 
 
 Most fields in these Operation Object templates are merged with the generated operations they apply to.
 
-The `responses` field is an exception for those generated operations:
+The `responses` field has special merge semantics for these generated operations:
 
-- If `responses` is omitted, the generated default responses are used.
-This includes the generated success response `200` and the generated error responses `400`, `401`, `403` and `404`.
+- If the operation template does not define `responses`, the generated default responses are used:
+`200`, `400`, `401`, `403` and `404`.
 
-- If `responses` is specified, the template defines the non-success responses.
-Generated error responses are not added automatically.
+- If the operation template defines `responses`, the template responses replace the generated error responses.
+Generated error responses such as `400`, `401`, `403` and `404` are not added unless they are explicitly defined in the template.
 
-- The generated `200` success response is still added automatically when the template does not define `responses."200"`.
+- The generated success response is preserved by default because its schema reference depends on the generated operation.
 For read and query endpoints this response references the generated Aspect response.
 For operations endpoints this response references `#/components/responses/OperationResponse`.
 
-- If the template defines `responses."200"`, the template response replaces the generated `200`.
+- A template-defined `responses."200"` replaces the generated success response.
 
-- The operation-level vendor extension `x-esmf-generate-success-response: false` disables adding the generated `200`.
-It only affects the generated success response.
-Responses explicitly defined in the template, including `200`, `201`, `204` or any other response code, are kept.
+- Set `x-esmf-generate-success-response: false` on the operation template to prevent adding the generated success response.
+This flag only affects the generated success response and only when custom `responses` are defined.
+Responses explicitly defined in the template, including `200`, `201`, `204`, `5xx` or `default`, are kept.
 
 For example, the template file could look like this:
 
@@ -437,9 +437,7 @@ paths:
 
 ----
 
-To provide reusable common error responses for generated GET operations that use the operation template,
-specify the error responses in the template.
-The generated `200` response is preserved and reusable common error responses can be provided by reference:
+The following template replaces the generated error responses for generated GET operations while keeping the generated success response:
 
 [source,yaml]
 ----
@@ -464,7 +462,7 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 ----
 
-To replace the generated `200` success response, define `responses."200"` explicitly:
+To replace the generated success response, define `responses."200"` explicitly:
 
 [source,yaml]
 ----
@@ -476,7 +474,7 @@ paths:
           description: The resource was returned successfully with a custom response.
 ----
 
-To use another success status code without adding the generated `200`, disable the generated success response:
+To provide only template-defined responses, for example `201` without the generated success response:
 
 [source,yaml]
 ----
