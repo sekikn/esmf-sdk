@@ -21,7 +21,8 @@ import net.harawata.appdirs.AppDirsFactory;
 public final class ExternalModelFileCache {
    private static final Logger LOG = LoggerFactory.getLogger( ExternalModelFileCache.class );
 
-   private static final Path CACHE_DIR = Path.of( AppDirsFactory.getInstance().getUserCacheDir( "esmf", "1", "esmf" ) );
+   private static final Path CACHE_DIR = Path.of( AppDirsFactory.getInstance().getUserCacheDir( "esmf", "1", "esmf" ) )
+         .resolve( "modelCache" );
    private static final Map<String, Path> CACHED_FILES = new ConcurrentHashMap<>();
 
    private ExternalModelFileCache() {}
