@@ -203,7 +203,15 @@ public class JsonPayloadGenerator<S extends StructureElement>
                .orElse( null );
       } else {
          return property.getExampleValue()
-               .map( value -> value.accept( this, context ) )
+               .map( value -> {
+                  final JsonNode exampleValueNode = value.accept( this, context );
+                  final boolean isCollection = property.getEffectiveCharacteristic()
+                        .map( c -> c.is( Collection.class ) )
+                        .orElse( false );
+                  return isCollection
+                        ? (JsonNode) JsonNodeFactory.instance.arrayNode().add( exampleValueNode )
+                        : exampleValueNode;
+               } )
                .orElseGet( () -> property.getCharacteristic()
                      .map( c -> c.accept( this, context ) )
                      .orElse( null ) );
