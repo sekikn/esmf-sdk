@@ -179,14 +179,12 @@ class AspectModelValidatorTest {
 
    @Test
    void testMetaModelVersionViolationNamesTheFile() {
-      // The violation is determined before the model is instantiated, so it has no RDF node to point at
-      // and no source line to show. The file must therefore be named in the message itself, otherwise a
-      // multi-file model gives the user no way to find the problem.
       final Either<ViolationReport, AspectModel> result = TestResources.loadWithValidation(
             InvalidTestAspect.TERM_NOT_IN_DECLARED_VERSION, validator );
       assertThat( result.getLeft().violations() )
-            .isNotEmpty()
-            .allSatisfy( violation -> assertThat( violation.message() ).contains( "TermNotInDeclaredVersion.ttl" ) );
+            .isNotEmpty().first().isInstanceOfSatisfying( MetaModelVersionViolation.class, violation -> {
+               assertThat( violation.sourceDocument().toString() ).contains( "TermNotInDeclaredVersion.ttl" );
+            } );
    }
 
    @Test
