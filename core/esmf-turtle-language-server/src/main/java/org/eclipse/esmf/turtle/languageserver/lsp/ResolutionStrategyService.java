@@ -21,11 +21,12 @@ import org.eclipse.esmf.aspectmodel.resolver.fs.FlatModelsRoot;
 import org.eclipse.esmf.aspectmodel.resolver.fs.StructuredModelsRoot;
 import org.eclipse.esmf.aspectmodel.resolver.github.GitHubStrategy;
 import org.eclipse.esmf.aspectmodel.resolver.github.GithubModelSourceConfig;
+import org.eclipse.esmf.aspectmodel.service.ExtensionService;
 import org.eclipse.esmf.turtle.languageserver.aspect.MetaModelStrategy;
-import org.eclipse.esmf.turtle.languageserver.lsp.config.LspModelResolutionConfigurationParser;
-import org.eclipse.esmf.turtle.languageserver.lsp.config.GithubResolutionConfiguration;
-import org.eclipse.esmf.turtle.languageserver.lsp.text.ParsedDocument;
 import org.eclipse.esmf.turtle.languageserver.aspect.navigation.GithubMaterializingStrategy;
+import org.eclipse.esmf.turtle.languageserver.lsp.config.GithubResolutionConfiguration;
+import org.eclipse.esmf.turtle.languageserver.lsp.config.LspModelResolutionConfigurationParser;
+import org.eclipse.esmf.turtle.languageserver.lsp.text.ParsedDocument;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +62,7 @@ public class ResolutionStrategyService {
       strategies.add( structuredStrategy );
       strategies.add( flatStrategy );
       strategies.add( metaModelStrategy );
+      strategies.addAll( ExtensionService.getResolutionStrategies() );
       for ( final GithubModelSourceConfig repository : githubConfiguration.repositories() ) {
          strategies.add( githubStrategyCache.computeIfAbsent( repository,
                config -> new GithubMaterializingStrategy( new GitHubStrategy( config ) ) ) );
