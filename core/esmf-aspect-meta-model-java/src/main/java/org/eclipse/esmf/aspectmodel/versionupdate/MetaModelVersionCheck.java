@@ -13,6 +13,7 @@
 
 package org.eclipse.esmf.aspectmodel.versionupdate;
 
+import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -20,13 +21,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import org.eclipse.esmf.aspectmodel.urn.AspectModelUrn;
-import org.eclipse.esmf.aspectmodel.urn.ElementType;
-import org.eclipse.esmf.samm.KnownVersion;
-
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Statement;
+
+import org.eclipse.esmf.aspectmodel.MetaModelVersionException;
+import org.eclipse.esmf.aspectmodel.urn.AspectModelUrn;
+import org.eclipse.esmf.aspectmodel.urn.ElementType;
+import org.eclipse.esmf.samm.KnownVersion;
 
 /**
  * Checks an Aspect Model file against the SAMM meta model version it declares.
@@ -56,28 +58,30 @@ final class MetaModelVersionCheck {
     * @param sourceLocation the human readable location of the file, used in the messages
     * @return the messages describing the inconsistencies, empty if the file is consistent
     */
-   static List<String> check( final Model model, final KnownVersion declaredVersion, final String sourceLocation ) {
+   static List<MetaModelVersionException.Problem> check( final Model model, final KnownVersion declaredVersion,
+         final URI sourceLocation ) {
       // Keyed by term URI so that a term used many times is only reported once
-      final Map<String, String> messages = new LinkedHashMap<>();
-      for ( final String uri : candidateUris( model ) ) {
-         AspectModelUrn.from( uri ).toJavaOptional()
+      final Map<String, MetaModelVersionException.Problem> messages = new LinkedHashMap<>();
+      for ( final CandidateUri uri : candidateUris( model ) ) {
+         AspectModelUrn.from( uri.uri() ).toJavaOptional()
                .filter( MetaModelTerms::isMetaModelTerm )
-               .flatMap( urn -> checkTerm( urn, declaredVersion, sourceLocation )
-                     .map( message -> Map.entry( urn.getUrn().toString(), message ) ) )
+               .flatMap( urn -> checkTerm( urn, uri.node(), declaredVersion, sourceLocation )
+                     .map( problem -> Map.entry( urn.getUrn().toString(), problem ) ) )
                .ifPresent( entry -> messages.putIfAbsent( entry.getKey(), entry.getValue() ) );
       }
       return List.copyOf( messages.values() );
    }
 
-   private static Optional<String> checkTerm( final AspectModelUrn urn, final KnownVersion declaredVersion,
-         final String sourceLocation ) {
+   private static Optional<MetaModelVersionException.Problem> checkTerm( final AspectModelUrn urn, final RDFNode node,
+         final KnownVersion declaredVersion, final URI sourceLocation ) {
       if ( !declaredVersion.toVersionString().equals( urn.getVersion() ) ) {
          // Name where the version comes from: it is taken from the samm: prefix, so without this the
          // message reads as if the reported term were the one at fault rather than the mismatching prefix
-         return Optional.of( String.format(
-               "%s: the samm: prefix declares SAMM %s, but %s is from SAMM %s. All SAMM namespaces in a file must use the same "
+         final String message = String.format(
+               "The samm: prefix declares SAMM %s, but %s is from SAMM %s. All SAMM namespaces in a file must use the same "
                      + "meta model version.",
-               sourceLocation, declaredVersion.toVersionString(), urn.getUrn(), urn.getVersion() ) );
+               declaredVersion.toVersionString(), urn.getUrn(), urn.getVersion() );
+         return Optional.of( new MetaModelVersionException.Problem( message, sourceLocation, node ) );
       }
 
       // Unit definitions are not part of the term inventory, see MetaModelTerms
@@ -92,12 +96,28 @@ final class MetaModelVersionCheck {
       // for example, exists in SAMM 1.0.0 and is dropped by SammRemoveSammNameMigrator.
       return MetaModelTerms.firstVersionDefining( urn )
             .filter( introducedIn -> introducedIn.isNewerThan( declaredVersion ) )
-            .map( introducedIn -> String.format(
-                  "%s: %s is not defined in SAMM %s (introduced in %s). Change the meta model version declared in this "
-                        + "file to at least %s.",
-                  sourceLocation, urn.getUrn(), declaredVersion.toVersionString(), introducedIn.toVersionString(),
-                  introducedIn.toVersionString() ) );
+            .map( introducedIn -> {
+               final String message = String.format(
+                     "%s is not defined in SAMM %s (introduced in %s). Change the meta model version declared in this "
+                           + "file to at least %s.",
+                     urn.getUrn(), declaredVersion.toVersionString(), introducedIn.toVersionString(),
+                     introducedIn.toVersionString() );
+               return new MetaModelVersionException.Problem( message, sourceLocation, node );
+            } );
    }
+
+   /**
+    * Represents a candidate URI with the RDF node this URI is related to. In most cases, this is the
+    * URI of the node itself (if it's a resource), but for literals it is the datatype URI of the
+    * literal.
+    *
+    * @param uri the URI
+    * @param node the corresponding node
+    */
+   private record CandidateUri(
+         String uri,
+         RDFNode node
+   ) {}
 
    /**
     * Collects the distinct URIs of the model that may address a meta model term. Datatypes of literals
@@ -109,14 +129,14 @@ final class MetaModelVersionCheck {
     * set: this check runs on every load, and each URI that survives here is parsed into an
     * {@link AspectModelUrn}, which is comparatively expensive.
     */
-   private static Set<String> candidateUris( final Model model ) {
-      final Set<String> uris = new LinkedHashSet<>();
+   private static Set<CandidateUri> candidateUris( final Model model ) {
+      final Set<CandidateUri> uris = new LinkedHashSet<>();
       for ( final Statement statement : model.listStatements().toList() ) {
          addIfUriResource( statement.getSubject(), uris );
          addIfUriResource( statement.getPredicate(), uris );
          final RDFNode object = statement.getObject();
          if ( object.isLiteral() ) {
-            addIfInSammUrnSpace( object.asLiteral().getDatatypeURI(), uris );
+            addIfInSammUrnSpace( object.asLiteral().getDatatypeURI(), object, uris );
          } else {
             addIfUriResource( object, uris );
          }
@@ -124,9 +144,9 @@ final class MetaModelVersionCheck {
       return uris;
    }
 
-   private static void addIfUriResource( final RDFNode node, final Set<String> uris ) {
+   private static void addIfUriResource( final RDFNode node, final Set<CandidateUri> uris ) {
       if ( node.isURIResource() ) {
-         addIfInSammUrnSpace( node.asResource().getURI(), uris );
+         addIfInSammUrnSpace( node.asResource().getURI(), node, uris );
       }
    }
 
@@ -135,9 +155,9 @@ final class MetaModelVersionCheck {
     * keeps most of a model's URIs out of the URN parsing below, in particular all XSD datatypes and
     * all RDF and SHACL terms.
     */
-   private static void addIfInSammUrnSpace( final String uri, final Set<String> uris ) {
+   private static void addIfInSammUrnSpace( final String uri, final RDFNode node, final Set<CandidateUri> uris ) {
       if ( uri != null && uri.startsWith( AspectModelUrn.PROTOCOL_AND_NAMESPACE_PREFIX ) ) {
-         uris.add( uri );
+         uris.add( new CandidateUri( uri, node ) );
       }
    }
 }

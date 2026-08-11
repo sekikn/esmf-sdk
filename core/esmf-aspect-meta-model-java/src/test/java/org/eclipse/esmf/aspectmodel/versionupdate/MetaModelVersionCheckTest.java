@@ -15,16 +15,13 @@ package org.eclipse.esmf.aspectmodel.versionupdate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
+import java.net.URI;
 import java.util.List;
 
+import org.eclipse.esmf.aspectmodel.MetaModelVersionException;
+import org.eclipse.esmf.aspectmodel.resolver.services.TurtleLoader;
 import org.eclipse.esmf.samm.KnownVersion;
 
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.RDFDataMgr;
 import org.junit.jupiter.api.Test;
 
 class MetaModelVersionCheckTest {
@@ -173,8 +170,9 @@ class MetaModelVersionCheckTest {
    }
 
    private List<String> check( final String turtle, final KnownVersion declaredVersion ) {
-      final Model model = ModelFactory.createDefaultModel();
-      RDFDataMgr.read( model, new ByteArrayInputStream( turtle.getBytes( StandardCharsets.UTF_8 ) ), Lang.TURTLE );
-      return MetaModelVersionCheck.check( model, declaredVersion, "Test.ttl" );
+      return TurtleLoader.loadTurtle( turtle, URI.create( "file:Test.ttl" ) ).toJavaStream()
+            .flatMap( model -> MetaModelVersionCheck.check( model, declaredVersion, URI.create( "file:Test.ttl" ) ).stream() )
+            .map( MetaModelVersionException.Problem::message )
+            .toList();
    }
 }

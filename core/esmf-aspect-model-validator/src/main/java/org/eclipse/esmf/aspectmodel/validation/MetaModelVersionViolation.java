@@ -13,9 +13,11 @@
 
 package org.eclipse.esmf.aspectmodel.validation;
 
+import org.apache.jena.rdf.model.RDFNode;
+
 import org.eclipse.esmf.aspectmodel.ProjectInfo;
-import org.eclipse.esmf.aspectmodel.Violation;
 import org.eclipse.esmf.aspectmodel.ViolationCode;
+import org.eclipse.esmf.aspectmodel.loader.TokenBasedElementFocussedViolation;
 
 /**
  * The Aspect Model file uses a SAMM meta model term that is not defined in the meta model version
@@ -31,8 +33,9 @@ import org.eclipse.esmf.aspectmodel.ViolationCode;
  * @param message the description of the inconsistency, including how to resolve it
  */
 public record MetaModelVersionViolation(
-      String message
-) implements Violation {
+      String message,
+      RDFNode highlight
+) implements TokenBasedElementFocussedViolation {
    public static final String ERROR_CODE = "ERR_METAMODEL_VERSION";
 
    @Override

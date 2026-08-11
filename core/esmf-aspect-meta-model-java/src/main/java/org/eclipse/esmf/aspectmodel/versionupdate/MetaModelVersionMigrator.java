@@ -132,7 +132,8 @@ public class MetaModelVersionMigrator implements UnaryOperator<AspectModelFile> 
       // file that declared an older version is indistinguishable from a correct one. Migration cannot
       // report a result, so an inconsistent file is rejected outright.
       KnownVersion.fromVersionString( sourceVersion.toString() ).ifPresent( declaredVersion -> {
-         final List<String> problems = MetaModelVersionCheck.check( input, declaredVersion, modelFile.humanReadableLocation() );
+         final List<MetaModelVersionException.Problem> problems =
+               MetaModelVersionCheck.check( input, declaredVersion, modelFile.sourceUri() );
          if ( !problems.isEmpty() ) {
             throw new MetaModelVersionException( problems );
          }

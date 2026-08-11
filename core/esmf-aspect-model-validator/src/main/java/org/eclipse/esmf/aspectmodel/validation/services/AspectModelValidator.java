@@ -123,7 +123,7 @@ public class AspectModelValidator implements Validator {
          // The file uses meta model terms that do not exist in the version it declares, so it was not
          // migrated and could not be loaded. One violation is reported per offending term.
          return Either.left( new ViolationReport( exception.problems().stream()
-               .<Violation>map( MetaModelVersionViolation::new )
+               .<Violation>map( problem -> new MetaModelVersionViolation( problem.message(), problem.highlight() ) )
                .toList() ) );
       } catch ( final CancelValidation cancelValidation ) {
          // The validation was short-circuited by the aspectModelLoader function
