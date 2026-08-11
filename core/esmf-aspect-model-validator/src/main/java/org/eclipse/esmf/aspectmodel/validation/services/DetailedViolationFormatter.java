@@ -122,28 +122,30 @@ public class DetailedViolationFormatter extends ViolationFormatter implements Sh
       if ( violations.isEmpty() ) {
          return "";
       }
-      final StringBuilder result = new StringBuilder();
+      final StringBuilder builder = new StringBuilder();
       if ( violations.size() == 1 && violations.getFirst().element().isEmpty() ) {
          final ModelResolutionViolation violation = violations.getFirst();
-         result.append( "could-not-load: " ).append( violations.getFirst().message() ).append( "\n" );
-         result.append( "  - location: " ).append( violation.location() ).append( "\n" );
+         builder.append( "could-not-load: " ).append( violation.message() ).append( "\n" );
+         builder.append( "  - error-code: " ).append( violation.code().code() ).append( "\n" );
+         builder.append( "  - location: " ).append( violation.location() ).append( "\n" );
       }
       final Map<String, List<ModelResolutionViolation>> violationsByElement = violations.stream()
             .collect( Collectors.groupingBy( violation -> violation.element().map( AspectModelUrn::toString ).orElse( "" ) ) );
       for ( final Map.Entry<String, List<ModelResolutionViolation>> entry : violationsByElement.entrySet() ) {
-         result.append( "could-not-resolve: " ).append( entry.getKey() ).append( "\n" );
+         builder.append( "could-not-resolve: " ).append( entry.getKey() ).append( "\n" );
          for ( final ModelResolutionViolation violation : entry.getValue() ) {
-            result.append( "  - checked-location: " ).append( violation.location() ).append( "\n" );
-            result.append( "    - reason: " ).append( violation.message() ).append( "\n" );
+            builder.append( "  - checked-location: " ).append( violation.location() ).append( "\n" );
+            builder.append( "    - reason: " ).append( violation.message() ).append( "\n" );
          }
       }
-      return result.toString();
+      return builder.toString();
    }
 
    @Override
    protected String handleProcessingViolation( final ProcessingViolation violation ) {
       final StringBuilder builder = new StringBuilder();
       builder.append( "processing-failure: " ).append( violation.message() ).append( "\n" );
+      builder.append( "  - error-code: " ).append( violation.code().code() ).append( "\n" );
       violation.cause().ifPresent( cause -> {
          builder.append( String.format( "cause: |%n" ) );
          final StringWriter stringWriter = new StringWriter();
@@ -159,9 +161,14 @@ public class DetailedViolationFormatter extends ViolationFormatter implements Sh
       return violation.accept( this );
    }
 
+   @SuppressWarnings( "StringBufferReplaceableByString" )
    @Override
    protected String handleViolation( final Violation violation ) {
-      return "processing-failure:%n  - message: %s".formatted( violation.message() );
+      final StringBuilder builder = new StringBuilder();
+      builder.append( "processing-failure: " ).append( "\n" );
+      builder.append( "  - message: " ).append( violation.message() ).append( "\n" );
+      builder.append( "  - error-code: " ).append( violation.code().code() ).append( "\n" );
+      return builder.toString();
    }
 
    @SuppressWarnings( "StringBufferReplaceableByString" )
@@ -170,6 +177,7 @@ public class DetailedViolationFormatter extends ViolationFormatter implements Sh
       final StringBuilder builder = new StringBuilder();
       builder.append( "processing-failure: " ).append( "\n" );
       builder.append( "  - message: " ).append( violation.message() ).append( "\n" );
+      builder.append( "  - error-code: " ).append( violation.code().code() ).append( "\n" );
       builder.append( "  - location: (line %d, col %d)".formatted( violation.location().fromLine() + 1,
             violation.location().fromColumn() + 1 ) ).append( "\n" );
       return builder.toString();
