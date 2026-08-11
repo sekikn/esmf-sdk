@@ -258,6 +258,20 @@ class AasToAspectModelGeneratorTest {
    }
 
    @Test
+   void testXmlSubmodelElementListWithSelfClosingDisplayNameCanBeTranslated() {
+      final Environment environment = loadEnvironment( "SubmodelElementListWithEmptyDisplayName.aas.xml" );
+      final SubmodelElementList submodelElementList = (SubmodelElementList) environment.getSubmodels().getFirst()
+            .getSubmodelElements().getFirst();
+      final org.eclipse.digitaltwin.aas4j.v3.model.Property valueElement =
+            (org.eclipse.digitaltwin.aas4j.v3.model.Property) submodelElementList.getValue().getFirst();
+      assertThat( valueElement.getDisplayName() ).isNull();
+
+      final AasToAspectModelGenerator aspectModelGenerator = AasToAspectModelGenerator.fromEnvironment( environment );
+
+      assertThatCode( () -> aspectModelGenerator.generate().toList() ).doesNotThrowAnyException();
+   }
+
+   @Test
    void testNonOrderRelevantSubmodelElementListIsMappedToSammSet() {
       final SubmodelElementList submodelElementList = buildSubmodelElementList( false );
       final AasToAspectModelGenerator aspectModelGenerator =
