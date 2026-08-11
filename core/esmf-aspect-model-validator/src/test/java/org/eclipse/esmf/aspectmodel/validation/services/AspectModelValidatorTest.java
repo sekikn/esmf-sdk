@@ -14,6 +14,7 @@
 package org.eclipse.esmf.aspectmodel.validation.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -25,6 +26,7 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.XSD;
 
+import org.eclipse.esmf.aspectmodel.MetaModelVersionException;
 import org.eclipse.esmf.aspectmodel.ProjectInfo;
 import org.eclipse.esmf.aspectmodel.Violation;
 import org.eclipse.esmf.aspectmodel.ViolationReport;
@@ -36,6 +38,7 @@ import org.eclipse.esmf.aspectmodel.shacl.violation.MinCountViolation;
 import org.eclipse.esmf.aspectmodel.shacl.violation.SparqlConstraintViolation;
 import org.eclipse.esmf.aspectmodel.validation.CycleViolation;
 import org.eclipse.esmf.aspectmodel.validation.InvalidSyntaxViolation;
+import org.eclipse.esmf.aspectmodel.validation.MetaModelVersionViolation;
 import org.eclipse.esmf.aspectmodel.validation.ProcessingViolation;
 import org.eclipse.esmf.metamodel.AspectModel;
 import org.eclipse.esmf.metamodel.vocabulary.SammNs;
@@ -108,6 +111,97 @@ class AspectModelValidatorTest {
          // Make sure the violation does not indicate that the test model can't be loaded
          assertThat( violation.message() ).doesNotContain( "inputStream" );
       } );
+   }
+
+   @Test
+   void testValidateTermNotDefinedInDeclaredMetaModelVersion() {
+      final Either<ViolationReport, AspectModel> result = TestResources.loadWithValidation(
+            InvalidTestAspect.TERM_NOT_IN_DECLARED_VERSION, validator );
+      assertThat( result.isLeft() ).isTrue();
+      assertThat( result.getLeft().violations() )
+            .hasSize( 1 )
+            .first()
+            .satisfies( violation -> assertThat( violation ).isInstanceOfSatisfying( MetaModelVersionViolation.class,
+                  metaModelVersionViolation -> {
+                     assertThat( metaModelVersionViolation.code().code() ).isEqualTo( MetaModelVersionViolation.ERROR_CODE );
+                     assertThat( metaModelVersionViolation.message() )
+                           .contains( "meta-model:2.1.0#Value" )
+                           .contains( "is not defined in SAMM 2.1.0" )
+                           .contains( "introduced in 2.2.0" )
+                           .contains( "at least 2.2.0" );
+                  } ) );
+   }
+
+   @Test
+   void testValidateEntityTermNotDefinedInDeclaredMetaModelVersion() {
+      // The samm-e: namespace is checked just like samm: and samm-c:, and Quantity.ttl only exists from
+      // SAMM 2.2.0 on, so the term is resolved against a version whose resource file is absent
+      final Either<ViolationReport, AspectModel> result = TestResources.loadWithValidation(
+            InvalidTestAspect.TERM_NOT_IN_DECLARED_VERSION_ENTITY, validator );
+      assertThat( result.isLeft() ).isTrue();
+      assertThat( result.getLeft().violations() )
+            .hasSize( 1 )
+            .first()
+            .satisfies( violation -> assertThat( violation ).isInstanceOfSatisfying( MetaModelVersionViolation.class,
+                  metaModelVersionViolation -> assertThat( metaModelVersionViolation.message() )
+                        .contains( "entity:2.1.0#Quantity" )
+                        .contains( "is not defined in SAMM 2.1.0" )
+                        .contains( "introduced in 2.2.0" ) ) );
+   }
+
+   @Test
+   void testValidateMixedMetaModelVersions() {
+      for ( final InvalidTestAspect testModel : List.of( InvalidTestAspect.MIXED_META_MODEL_VERSIONS_OLD_SAMM,
+            InvalidTestAspect.MIXED_META_MODEL_VERSIONS_NEW_SAMM ) ) {
+         final Either<ViolationReport, AspectModel> result = TestResources.loadWithValidation( testModel, validator );
+         assertThat( result.isLeft() ).isTrue();
+         assertThat( result.getLeft().violations() )
+               .describedAs( "Expected a meta model version violation for %s", testModel )
+               .allMatch( MetaModelVersionViolation.class::isInstance )
+               .first()
+               .satisfies( violation -> assertThat( violation.message() )
+                     .contains( "All SAMM namespaces in a file must use the same meta model version" ) );
+      }
+   }
+
+   @Test
+   void testPlainLoadingIsRejectedOnMetaModelVersionMismatch() {
+      // The check runs during migration, which every kind of load performs. A file that uses terms of a
+      // newer meta model version is therefore rejected outright, not only when it is validated.
+      assertThatThrownBy( () -> TestResources.load( InvalidTestAspect.TERM_NOT_IN_DECLARED_VERSION ) )
+            .isInstanceOf( MetaModelVersionException.class )
+            .satisfies( exception -> assertThat( ( (MetaModelVersionException) exception ).problems() )
+                  .singleElement()
+                  .asString()
+                  .contains( "meta-model:2.1.0#Value" )
+                  .contains( "introduced in 2.2.0" ) );
+   }
+
+   @Test
+   void testMetaModelVersionViolationNamesTheFile() {
+      // The violation is determined before the model is instantiated, so it has no RDF node to point at
+      // and no source line to show. The file must therefore be named in the message itself, otherwise a
+      // multi-file model gives the user no way to find the problem.
+      final Either<ViolationReport, AspectModel> result = TestResources.loadWithValidation(
+            InvalidTestAspect.TERM_NOT_IN_DECLARED_VERSION, validator );
+      assertThat( result.getLeft().violations() )
+            .isNotEmpty()
+            .allSatisfy( violation -> assertThat( violation.message() ).contains( "TermNotInDeclaredVersion.ttl" ) );
+   }
+
+   @Test
+   void testMetaModelVersionViolationDoesNotReuseProcessingErrorCode() {
+      // Downstream tools distinguish violations by error code rather than by type. In particular, the
+      // Aspect Model Editor treats ERR_PROCESSING as a reason to refuse a model outright. This
+      // violation has its own code so that tools can tell a version mismatch apart from a load failure.
+      final Either<ViolationReport, AspectModel> result = TestResources.loadWithValidation(
+            InvalidTestAspect.TERM_NOT_IN_DECLARED_VERSION, validator );
+      assertThat( result.getLeft().violations() )
+            .isNotEmpty()
+            .allSatisfy( violation -> {
+               assertThat( violation.code().code() ).isEqualTo( MetaModelVersionViolation.ERROR_CODE );
+               assertThat( violation.code().code() ).isNotEqualTo( ProcessingViolation.ERROR_CODE );
+            } );
    }
 
    @Test

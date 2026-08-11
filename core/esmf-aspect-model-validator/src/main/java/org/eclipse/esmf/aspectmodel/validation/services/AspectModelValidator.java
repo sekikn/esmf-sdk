@@ -32,6 +32,7 @@ import org.apache.jena.rdf.model.Resource;
 import org.eclipse.esmf.aspectmodel.AspectLoadingException;
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
 import org.eclipse.esmf.aspectmodel.Location;
+import org.eclipse.esmf.aspectmodel.MetaModelVersionException;
 import org.eclipse.esmf.aspectmodel.RdfUtil;
 import org.eclipse.esmf.aspectmodel.ValueParsingException;
 import org.eclipse.esmf.aspectmodel.Violation;
@@ -45,6 +46,7 @@ import org.eclipse.esmf.aspectmodel.shacl.ShaclValidator;
 import org.eclipse.esmf.aspectmodel.validation.InvalidLexicalValueViolationBuilder;
 import org.eclipse.esmf.aspectmodel.validation.InvalidSyntaxViolation;
 import org.eclipse.esmf.aspectmodel.validation.InvalidSyntaxViolationBuilder;
+import org.eclipse.esmf.aspectmodel.validation.MetaModelVersionViolation;
 import org.eclipse.esmf.aspectmodel.validation.ProcessingViolation;
 import org.eclipse.esmf.aspectmodel.validation.ProcessingViolationBuilder;
 import org.eclipse.esmf.aspectmodel.validation.RdfBasedValidator;
@@ -117,6 +119,12 @@ public class AspectModelValidator implements Validator {
       } catch ( final ValueParsingException exception ) {
          // Failure to parse value literals
          return Either.left( reportForValueParsingException( exception ) );
+      } catch ( final MetaModelVersionException exception ) {
+         // The file uses meta model terms that do not exist in the version it declares, so it was not
+         // migrated and could not be loaded. One violation is reported per offending term.
+         return Either.left( new ViolationReport( exception.problems().stream()
+               .<Violation>map( MetaModelVersionViolation::new )
+               .toList() ) );
       } catch ( final CancelValidation cancelValidation ) {
          // The validation was short-circuited by the aspectModelLoader function
          return Either.left( cancelValidation.violations );

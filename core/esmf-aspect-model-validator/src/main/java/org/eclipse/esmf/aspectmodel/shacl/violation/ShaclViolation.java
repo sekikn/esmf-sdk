@@ -27,6 +27,14 @@ import org.eclipse.esmf.aspectmodel.loader.TokenBasedElementFocussedViolation;
 import org.eclipse.esmf.aspectmodel.resolver.parser.SmartToken;
 import org.eclipse.esmf.aspectmodel.resolver.parser.TokenRegistry;
 import org.eclipse.esmf.aspectmodel.shacl.fix.Fix;
+import org.eclipse.esmf.aspectmodel.validation.CycleViolation;
+import org.eclipse.esmf.aspectmodel.validation.InvalidLexicalValueViolation;
+import org.eclipse.esmf.aspectmodel.validation.InvalidSyntaxViolation;
+import org.eclipse.esmf.aspectmodel.validation.MetaModelVersionViolation;
+import org.eclipse.esmf.aspectmodel.validation.ProcessingViolation;
+import org.eclipse.esmf.aspectmodel.validation.RegularExpressionConstraintViolation;
+
+import org.jspecify.annotations.Nullable;
 
 /**
  * Represents a single violation raised by one or more SHACL shapes against an RDF model. A
