@@ -15,11 +15,14 @@ package org.eclipse.esmf.aspectmodel.generator.json;
 import static org.assertj.core.api.Assertions.anyOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.eclipse.esmf.metamodel.DataTypes.xsd;
 import static org.eclipse.esmf.metamodel.Elements.samm_c;
 import static org.eclipse.esmf.metamodel.builder.SammBuilder.aspect;
 import static org.eclipse.esmf.metamodel.builder.SammBuilder.either;
 import static org.eclipse.esmf.metamodel.builder.SammBuilder.list;
 import static org.eclipse.esmf.metamodel.builder.SammBuilder.property;
+import static org.eclipse.esmf.metamodel.builder.SammBuilder.set;
+import static org.eclipse.esmf.metamodel.builder.SammBuilder.value;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -102,6 +105,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 import tools.jackson.core.StreamReadFeature;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -341,6 +345,47 @@ class AspectModelJsonPayloadGeneratorTest {
             .build();
 
       assertThatCode( () -> generateJsonForModel( aspect ) ).doesNotThrowAnyException();
+   }
+
+   @Test
+   void testGenerateJsonForAspectWithSetCharacteristicAndSingleExampleValue() {
+      // A Property whose Characteristic is a Collection (samm-c:Set) but carries only a single scalar
+      // exampleValue must still produce a JSON array in the payload, matching the "type": "array" that
+      // the JSON Schema generator produces for the same property.
+      final AspectModelUrn namespace = TestAspect.ASPECT.getUrn();
+      final Aspect aspect = aspect( TestAspect.ASPECT.getUrn() )
+            .property( property( namespace.withName( "property" ) )
+                  .characteristic( set( namespace.withName( "Set" ) )
+                        .dataType( xsd.string )
+                        .build() )
+                  .exampleValue( value( "foo" ) )
+                  .build() )
+            .build();
+
+      final String generatedJson = generateJsonForModel( aspect );
+      final JsonNode propertyNode = objectMapper().readTree( generatedJson ).get( "property" );
+      assertThat( propertyNode.isArray() ).isTrue();
+      assertThat( propertyNode ).hasSize( 1 );
+      assertThat( propertyNode.get( 0 ).asString() ).isEqualTo( "foo" );
+   }
+
+   @Test
+   void testGenerateJsonForAspectWithListCharacteristicAndSingleExampleValue() {
+      final AspectModelUrn namespace = TestAspect.ASPECT.getUrn();
+      final Aspect aspect = aspect( TestAspect.ASPECT.getUrn() )
+            .property( property( namespace.withName( "property" ) )
+                  .characteristic( list( namespace.withName( "List" ) )
+                        .dataType( xsd.string )
+                        .build() )
+                  .exampleValue( value( "foo" ) )
+                  .build() )
+            .build();
+
+      final String generatedJson = generateJsonForModel( aspect );
+      final JsonNode propertyNode = objectMapper().readTree( generatedJson ).get( "property" );
+      assertThat( propertyNode.isArray() ).isTrue();
+      assertThat( propertyNode ).hasSize( 1 );
+      assertThat( propertyNode.get( 0 ).asString() ).isEqualTo( "foo" );
    }
 
    @Test
