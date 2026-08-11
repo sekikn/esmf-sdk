@@ -39,8 +39,6 @@ import org.eclipse.esmf.aspectmodel.shacl.RustLikeFormatter;
 import org.eclipse.esmf.aspectmodel.shacl.violation.ShaclViolation;
 import org.eclipse.esmf.aspectmodel.urn.AspectModelUrn;
 import org.eclipse.esmf.aspectmodel.validation.InvalidLexicalValueViolation;
-import org.eclipse.esmf.aspectmodel.validation.InvalidSyntaxViolation;
-import org.eclipse.esmf.aspectmodel.validation.MetaModelVersionViolation;
 import org.eclipse.esmf.aspectmodel.validation.ProcessingViolation;
 
 public class ViolationFormatter implements Function<ViolationReport, String> {
