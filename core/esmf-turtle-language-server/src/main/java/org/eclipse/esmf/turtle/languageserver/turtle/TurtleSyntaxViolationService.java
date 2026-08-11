@@ -21,8 +21,7 @@ import org.eclipse.esmf.aspectmodel.DocumentLocationViolation;
 import org.eclipse.esmf.aspectmodel.Location;
 import org.eclipse.esmf.aspectmodel.Violation;
 import org.eclipse.esmf.aspectmodel.ViolationReport;
-import org.eclipse.esmf.aspectmodel.validation.DefaultDocumentLocationViolationBuilder;
-import org.eclipse.esmf.treesitterturtle.TurtleViolationCode;
+import org.eclipse.esmf.aspectmodel.validation.InvalidSyntaxViolationBuilder;
 import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.ViolationProvider;
 import org.eclipse.esmf.turtle.languageserver.lsp.text.ParsedDocument;
 
@@ -35,14 +34,14 @@ public class TurtleSyntaxViolationService implements ViolationProvider {
             parsedDocument.sourceDocument().uri(), parsedDocument ).toList() );
    }
 
-   private Stream<Violation> checkNode( final TSNode node, final URI sourceLocation, ParsedDocument parsedDocument ) {
+   private Stream<Violation> checkNode( final TSNode node, final URI sourceLocation, final ParsedDocument parsedDocument ) {
       return Stream.concat(
             node.isError() || node.isMissing() ? Stream.of( violationForNode( node, sourceLocation, parsedDocument ) ) : Stream.empty(),
             IntStream.range( 0, node.getChildCount() ).boxed().map( node::getChild )
                   .flatMap( child -> checkNode( child, sourceLocation, parsedDocument ) ) );
    }
 
-   private DocumentLocationViolation violationForNode( final TSNode node, final URI sourceLocation, ParsedDocument parsedDocument ) {
+   private DocumentLocationViolation violationForNode( final TSNode node, final URI sourceLocation, final ParsedDocument parsedDocument ) {
       final String message;
       if ( node.isMissing() ) {
          message = "Syntax error: Missing '" + node.getGrammarType() + "'";
@@ -51,9 +50,8 @@ public class TurtleSyntaxViolationService implements ViolationProvider {
       }
       final Location location = new Location( node.getStartPoint().getRow(), node.getStartPoint().getColumn(), node.getEndPoint().getRow(),
             node.getEndPoint().getColumn() );
-      return DefaultDocumentLocationViolationBuilder.builder()
+      return InvalidSyntaxViolationBuilder.builder()
             .message( message )
-            .code( TurtleViolationCode.ERR_SYNTAX )
             .sourceDocument( sourceLocation )
             .documentContent( () -> parsedDocument.sourceDocument().content() )
             .location( location )

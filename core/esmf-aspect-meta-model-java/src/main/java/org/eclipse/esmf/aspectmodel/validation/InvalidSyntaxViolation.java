@@ -20,6 +20,9 @@ import java.util.function.Supplier;
 import org.eclipse.esmf.aspectmodel.DocumentLocationViolation;
 import org.eclipse.esmf.aspectmodel.Location;
 import org.eclipse.esmf.aspectmodel.ProjectInfo;
+import org.eclipse.esmf.aspectmodel.ViolationCode;
+import org.eclipse.esmf.aspectmodel.ViolationCodeBuilder;
+import org.eclipse.esmf.treesitterturtle.TurtleViolationCode;
 
 import io.soabase.recordbuilder.core.RecordBuilder;
 
@@ -33,26 +36,16 @@ import io.soabase.recordbuilder.core.RecordBuilder;
  */
 @RecordBuilder
 public record InvalidSyntaxViolation(
-      String message, URI sourceDocument, Supplier<String> documentContent, Location location
+      String message,
+      URI sourceDocument,
+      Supplier<String> documentContent,
+      Location location
 ) implements DocumentLocationViolation {
-   public static final String ERROR_CODE = "ERR_SYNTAX";
-
-   public InvalidSyntaxViolation( final String message, final URI sourceDocument, final String documentContent, final Location location ) {
-      this( message, sourceDocument, () -> documentContent, location );
-   }
+   public static final String ERROR_CODE = TurtleViolationCode.ERR_SYNTAX.code();
 
    @Override
    public Code code() {
-      return new Code() {
-         @Override
-         public String code() {
-            return ERROR_CODE;
-         }
-
-         @Override
-         public Optional<String> href() {
-            return Optional.of( ProjectInfo.esmfErrorCodeUrl( ERROR_CODE ) );
-         }
-      };
+      return ViolationCodeBuilder.from( (ViolationCode) TurtleViolationCode.ERR_SYNTAX )
+            .withHref( Optional.of( ProjectInfo.esmfErrorCodeUrl( ERROR_CODE ) ) );
    }
 }

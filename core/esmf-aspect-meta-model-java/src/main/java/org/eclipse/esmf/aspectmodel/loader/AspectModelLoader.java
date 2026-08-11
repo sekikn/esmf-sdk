@@ -643,6 +643,9 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
          }
 
          final URI graphName = file.sourceUri();
+         if ( graphName == null ) {
+            throw new AspectLoadingException( "AspectModelFile has no source URI, cannot merge models." );
+         }
          graphContent.put( graphName, file.sourceModel() );
       }
       return RdfUtil.mergedView( graphContent );

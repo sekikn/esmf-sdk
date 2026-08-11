@@ -45,11 +45,6 @@ public record InvalidLexicalValueViolation(
 ) implements DocumentLocationViolation {
    public static final String ERROR_CODE = "ERR_INVALID_LEXICAL_VALUE";
 
-   public InvalidLexicalValueViolation( final Resource type, final Object value, final int fromLine, final int toLine,
-         final String sourceLine, final URI sourceDocument, final String documentContent ) {
-      this( type, value, sourceLine, sourceDocument, new Location( fromLine, toLine ), () -> documentContent );
-   }
-
    @Override
    public Code code() {
       return () -> ERROR_CODE;

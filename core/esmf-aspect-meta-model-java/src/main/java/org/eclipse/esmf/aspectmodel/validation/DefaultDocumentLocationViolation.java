@@ -22,6 +22,16 @@ import org.eclipse.esmf.aspectmodel.Violation;
 
 import io.soabase.recordbuilder.core.RecordBuilder;
 
+/**
+ * Default implementation for DocumentDocumentLocationViolation
+ *
+ * @param message see {@link DocumentLocationViolation#message()}
+ * @param code see {@link DocumentLocationViolation#code()}
+ * @param sourceDocument see {@link DocumentLocationViolation#sourceDocument()}
+ * @param documentContent see {@link DocumentLocationViolation#documentContent()}
+ * @param location see {@link DocumentLocationViolation#location()}
+ * @param severity see {@link DocumentLocationViolation#severity()}
+ */
 @RecordBuilder
 public record DefaultDocumentLocationViolation(
       String message,

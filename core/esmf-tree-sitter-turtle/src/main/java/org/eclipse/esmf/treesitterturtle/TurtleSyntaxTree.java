@@ -142,37 +142,7 @@ public class TurtleSyntaxTree {
 
       @Override
       public String apply( final Location location ) {
-         if ( sourceDocument == null || sourceDocument.isEmpty() ) {
-            return "";
-         }
-
-         int startIndex = 0;
-         int currentLine = 0;
-         for ( int i = 0; i < sourceDocument.length() && currentLine < location.fromLine(); i++ ) {
-            if ( sourceDocument.charAt( i ) == '\n' ) {
-               currentLine++;
-            }
-            startIndex = i + 1;
-         }
-         startIndex += location.fromColumn();
-         int endIndex = 0;
-         currentLine = 0;
-
-         for ( int i = 0; i < sourceDocument.length() && currentLine < location.toLine(); i++ ) {
-            if ( sourceDocument.charAt( i ) == '\n' ) {
-               currentLine++;
-            }
-            endIndex = i + 1;
-         }
-         endIndex += location.toColumn();
-         startIndex = Math.clamp( startIndex, 0, sourceDocument.length() );
-         endIndex = Math.clamp( endIndex, 0, sourceDocument.length() );
-
-         if ( startIndex > endIndex ) {
-            return "";
-         }
-
-         return sourceDocument.substring( startIndex, endIndex );
+         return location.forDocument( sourceDocument );
       }
    }
 
@@ -204,10 +174,8 @@ public class TurtleSyntaxTree {
             .filter( Objects::nonNull )
             .map( child -> nodeForTsNode( child, content ) )
             .toList();
-      if ( inputNode.isError() ) {
+      if ( inputNode.isError() || inputNode.isMissing() ) {
          return new Error( inputNode.getType(), TurtleViolationCode.ERR_SYNTAX, location, children );
-      } else if ( inputNode.isMissing() ) {
-         return new Error( inputNode.getType(), TurtleViolationCode.ERR_MISSING_TOKEN, location, children );
       }
       final Supplier<String> token = () -> new String(
             // bytes

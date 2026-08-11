@@ -19,6 +19,7 @@ import java.util.List;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 
+import org.eclipse.esmf.aspectmodel.AspectLoadingException;
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
 import org.eclipse.esmf.aspectmodel.resolver.exceptions.ModelResolutionException;
 import org.eclipse.esmf.aspectmodel.urn.AspectModelUrn;
@@ -42,14 +43,16 @@ public record RawAspectModelFile(
       Model sourceModel,
       List<String> headerComment,
       URI sourceUri
-)
-      implements AspectModelFile {
+) implements AspectModelFile {
    public RawAspectModelFile {
       if ( sourceModel == null ) {
          sourceModel = ModelFactory.createDefaultModel();
       }
       if ( headerComment == null ) {
          headerComment = List.of();
+      }
+      if ( sourceUri == null ) {
+         throw new AspectLoadingException( "Can not create Aspect Model file without source location" );
       }
    }
 

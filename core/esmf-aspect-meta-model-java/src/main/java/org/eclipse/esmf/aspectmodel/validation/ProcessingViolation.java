@@ -17,6 +17,7 @@ import java.util.Optional;
 
 import org.eclipse.esmf.aspectmodel.ProjectInfo;
 import org.eclipse.esmf.aspectmodel.Violation;
+import org.eclipse.esmf.aspectmodel.ViolationCode;
 
 import io.soabase.recordbuilder.core.RecordBuilder;
 
@@ -50,16 +51,6 @@ public record ProcessingViolation(
 
    @Override
    public Code code() {
-      return new Code() {
-         @Override
-         public String code() {
-            return ERROR_CODE;
-         }
-
-         @Override
-         public Optional<String> href() {
-            return Optional.of( ProjectInfo.esmfErrorCodeUrl( ERROR_CODE ) );
-         }
-      };
+      return new ViolationCode( ERROR_CODE, ProjectInfo.esmfErrorCodeUrl( ERROR_CODE ) );
    }
 }

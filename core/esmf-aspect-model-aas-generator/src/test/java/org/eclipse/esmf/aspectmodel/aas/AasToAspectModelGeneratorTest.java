@@ -59,7 +59,7 @@ import org.eclipse.digitaltwin.aas4j.v3.model.impl.DefaultSubmodel;
 import org.eclipse.digitaltwin.aas4j.v3.model.impl.DefaultSubmodelElementCollection;
 import org.eclipse.digitaltwin.aas4j.v3.model.impl.DefaultSubmodelElementList;
 
-import org.eclipse.esmf.aspectmodel.Violation;
+import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.aspectmodel.generator.AspectArtifact;
 import org.eclipse.esmf.aspectmodel.loader.AspectModelLoader;
 import org.eclipse.esmf.aspectmodel.serializer.AspectSerializer;
@@ -125,7 +125,7 @@ class AasToAspectModelGeneratorTest {
             }
          } );
 
-         final List<Violation> violations = new AspectModelValidator().validateModel( aspectModel ).violations();
+         final ViolationReport violations = new AspectModelValidator().validateModel( aspectModel );
          if ( !violations.isEmpty() ) {
             final String report = new ViolationFormatter().apply( violations );
             System.out.println( report );

@@ -18,6 +18,7 @@ import java.util.Optional;
 
 import org.eclipse.esmf.aspectmodel.ProjectInfo;
 import org.eclipse.esmf.aspectmodel.Violation;
+import org.eclipse.esmf.aspectmodel.ViolationCode;
 import org.eclipse.esmf.aspectmodel.urn.AspectModelUrn;
 
 import io.soabase.recordbuilder.core.RecordBuilder;
@@ -25,7 +26,7 @@ import io.soabase.recordbuilder.core.RecordBuilder;
 /**
  * Represents the failure to load (resolve) a document or a specific element from a document at a
  * given location.
- * 
+ *
  * @param element the model element that could not be resolved, if known
  * @param location the location (e.g. URL) that could not be resolved
  * @param message the specific message
@@ -52,16 +53,6 @@ public record ModelResolutionViolation(
 
    @Override
    public Code code() {
-      return new Code() {
-         @Override
-         public String code() {
-            return ERROR_CODE;
-         }
-
-         @Override
-         public Optional<String> href() {
-            return Optional.of( ProjectInfo.esmfErrorCodeUrl( ERROR_CODE ) );
-         }
-      };
+      return new ViolationCode( ERROR_CODE, ProjectInfo.esmfErrorCodeUrl( ERROR_CODE ) );
    }
 }

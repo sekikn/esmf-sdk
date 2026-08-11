@@ -44,7 +44,7 @@ public class Validate extends AspectModelMojo {
             .flatMap( aspectModel -> validator.validateModel( aspectModel ).violations().stream() ).toList();
 
       if ( !violations.isEmpty() ) {
-         throw new MojoFailureException( new ViolationFormatter().apply( violations ) );
+         throw new MojoFailureException( new ViolationFormatter().apply( new ViolationReport( violations ) ) );
       }
 
       LOG.info( "Aspect Models are valid." );

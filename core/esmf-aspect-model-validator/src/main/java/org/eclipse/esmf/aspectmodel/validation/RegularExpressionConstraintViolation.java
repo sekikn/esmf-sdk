@@ -18,6 +18,7 @@ import java.util.Optional;
 import org.apache.jena.rdf.model.RDFNode;
 
 import org.eclipse.esmf.aspectmodel.ProjectInfo;
+import org.eclipse.esmf.aspectmodel.ViolationCode;
 import org.eclipse.esmf.aspectmodel.loader.TokenBasedElementFocussedViolation;
 import org.eclipse.esmf.aspectmodel.resolver.parser.TokenRegistry;
 import org.eclipse.esmf.aspectmodel.shacl.violation.EvaluationContext;
@@ -36,17 +37,7 @@ public record RegularExpressionConstraintViolation(
 
    @Override
    public Code code() {
-      return new Code() {
-         @Override
-         public String code() {
-            return ERROR_CODE;
-         }
-
-         @Override
-         public Optional<String> href() {
-            return Optional.of( ProjectInfo.esmfErrorCodeUrl( ERROR_CODE ) );
-         }
-      };
+      return new ViolationCode( ERROR_CODE, ProjectInfo.esmfErrorCodeUrl( ERROR_CODE ) );
    }
 
    @Override

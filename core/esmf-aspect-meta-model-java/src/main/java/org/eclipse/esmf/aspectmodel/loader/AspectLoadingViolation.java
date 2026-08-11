@@ -14,18 +14,19 @@
 package org.eclipse.esmf.aspectmodel.loader;
 
 import java.net.URI;
-import java.util.Optional;
 import java.util.function.Supplier;
 
-import io.soabase.recordbuilder.core.RecordBuilder;
 import org.apache.jena.rdf.model.RDFNode;
 
 import org.eclipse.esmf.aspectmodel.DocumentLocationViolation;
 import org.eclipse.esmf.aspectmodel.ElementFocussedViolation;
 import org.eclipse.esmf.aspectmodel.Location;
 import org.eclipse.esmf.aspectmodel.ProjectInfo;
+import org.eclipse.esmf.aspectmodel.ViolationCode;
 import org.eclipse.esmf.aspectmodel.resolver.parser.SmartToken;
 import org.eclipse.esmf.aspectmodel.resolver.parser.TokenRegistry;
+
+import io.soabase.recordbuilder.core.RecordBuilder;
 
 /**
  * Represents the failure to load an Aspect Model or Aspect Model file.
@@ -46,17 +47,7 @@ public record AspectLoadingViolation(
 
    @Override
    public Code code() {
-      return new Code() {
-         @Override
-         public String code() {
-            return ERROR_CODE;
-         }
-
-         @Override
-         public Optional<String> href() {
-            return Optional.of( ProjectInfo.esmfErrorCodeUrl( ERROR_CODE ) );
-         }
-      };
+      return new ViolationCode( ERROR_CODE, ProjectInfo.esmfErrorCodeUrl( ERROR_CODE ) );
    }
 
    @Override

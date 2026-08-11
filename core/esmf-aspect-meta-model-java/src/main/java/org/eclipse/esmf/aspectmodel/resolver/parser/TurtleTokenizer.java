@@ -14,18 +14,20 @@
 package org.eclipse.esmf.aspectmodel.resolver.parser;
 
 import java.io.InputStream;
+import java.net.URI;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Streams;
 import org.apache.jena.atlas.iterator.PeekIterator;
 import org.apache.jena.riot.RiotParseException;
 import org.apache.jena.riot.system.ErrorHandler;
 import org.apache.jena.riot.tokens.Token;
 import org.apache.jena.riot.tokens.Tokenizer;
 import org.apache.jena.riot.tokens.TokenizerText;
+
+import com.google.common.collect.Streams;
 
 /**
  * This tokenizer implementation wraps a {@link TokenizerText} and does things on top: (1) It
@@ -42,14 +44,15 @@ public class TurtleTokenizer implements Tokenizer {
    private PeekIterator<Token> iterator;
    private List<SmartToken> tokens;
    private Token lastToken;
+   private URI documentUri;
 
-   public TurtleTokenizer( final InputStream stream, final ErrorHandler errorHandler ) {
+   public TurtleTokenizer( final InputStream stream, final URI documentUri, final ErrorHandler errorHandler ) {
       tokens = Collections.emptyList();
       try {
          final Iterator<Token> tokenizer = TokenizerText.create()
                .source( stream )
                .errorHandler( errorHandler ).build();
-         tokens = Streams.stream( tokenizer ).map( SmartToken::new ).collect( Collectors.toList() );
+         tokens = Streams.stream( tokenizer ).map( token -> new SmartToken( token, documentUri ) ).collect( Collectors.toList() );
          // TODO: Extract comments from source document and put them into tokens list. These are thrown away
          // by TokenizerText, but
          // nobody stops us from extracting them ourselves and adding them; there is even a corresponding

@@ -182,8 +182,8 @@ class AspectModelValidatorTest {
       final List<Violation> violations = validator.validateModel( invalidTurtleSyntax ).violations();
       assertThat( violations ).hasSize( 1 );
       final InvalidSyntaxViolation violation = (InvalidSyntaxViolation) violations.getFirst();
-      assertThat( violation.location().fromLine() ).isEqualTo( 17 );
-      assertThat( violation.location().fromColumn() ).isEqualTo( 4 );
+      assertThat( violation.location().fromLine() ).isEqualTo( 16 );
+      assertThat( violation.location().fromColumn() ).isEqualTo( 3 );
       assertThat( violation.message() ).contains( "Triples not terminated by DOT" );
    }
 
@@ -191,8 +191,10 @@ class AspectModelValidatorTest {
    void testDocumentationLinkInDetailedMessage() {
       final Supplier<AspectModel> invalidTurtleSyntax = () -> TestResources.load( InvalidTestAspect.INVALID_SYNTAX );
       final List<Violation> violations = validator.validateModel( invalidTurtleSyntax ).violations();
-      final String report = new DetailedViolationFormatter().apply( violations );
-      assertThat( report.contains( "documentation: " + ProjectInfo.esmfErrorCodeUrl( "ERR-SYNTAX" ) ) ).isTrue();
+      assertThat( violations.getFirst() ).isInstanceOfSatisfying( InvalidSyntaxViolation.class, violation -> {
+         assertThat( violation.code().code() ).isEqualTo( InvalidSyntaxViolation.ERROR_CODE );
+         assertThat( violation.code().href() ).contains( ProjectInfo.esmfErrorCodeUrl( InvalidSyntaxViolation.ERROR_CODE ) );
+      } );
    }
 
    @Test
@@ -201,8 +203,8 @@ class AspectModelValidatorTest {
       final List<Violation> violations = validator.validateModel( invalidTurtleSyntax ).violations();
       assertThat( violations ).hasSize( 1 );
       final InvalidSyntaxViolation violation = (InvalidSyntaxViolation) violations.getFirst();
-      assertThat( violation.location().fromLine() ).isEqualTo( 12 );
-      assertThat( violation.location().fromColumn() ).isEqualTo( 1 );
+      assertThat( violation.location().fromLine() ).isEqualTo( 11 );
+      assertThat( violation.location().fromColumn() ).isEqualTo( 0 );
       assertThat( violation.message() ).contains( "Not implemented (formulae, graph literals)" );
    }
 
@@ -263,8 +265,8 @@ class AspectModelValidatorTest {
       final Supplier<AspectModel> versionedModel = () -> TestResources.load( TestAspect.ASPECT_WITH_ENTITY );
       final Either<ViolationReport, AspectModel> model = validator.loadModel( versionedModel );
       if ( model.isLeft() ) {
-         final List<Violation> violations = model.getLeft().violations();
-         final String report = new DetailedViolationFormatter().apply( violations );
+         final ViolationReport violations = model.getLeft();
+         final String report = new ViolationFormatter().apply( violations );
          System.out.println( report );
       }
       assertThat( model.isRight() ).isTrue();

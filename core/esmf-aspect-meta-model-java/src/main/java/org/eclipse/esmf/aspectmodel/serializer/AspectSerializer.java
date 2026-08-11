@@ -147,7 +147,10 @@ public class AspectSerializer {
       RdfUtil.cleanPrefixes( rdfModel );
       RdfUtil.cleanRedundantTypeAssertions( rdfModel );
       final AspectModel aspectModel = new AspectModelLoader().loadAspectModelFiles(
-            List.of( RawAspectModelFileBuilder.builder().sourceModel( rdfModel ).build() ) );
+            List.of( RawAspectModelFileBuilder.builder()
+                  .sourceModel( rdfModel )
+                  .sourceUri( URI.create( element.urn().toString() ) )
+                  .build() ) );
       final AspectModelFile newSourceFile = aspectModel.files().getFirst();
       return aspectModelFileToString( newSourceFile );
    }

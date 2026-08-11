@@ -29,12 +29,12 @@ import java.util.stream.Stream;
 import org.eclipse.esmf.aspectmodel.RdfUtil;
 import org.eclipse.esmf.aspectmodel.VersionInfo;
 import org.eclipse.esmf.aspectmodel.Violation;
+import org.eclipse.esmf.aspectmodel.ViolationCode;
 import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.aspectmodel.validation.DefaultDocumentLocationViolationBuilder;
 import org.eclipse.esmf.metamodel.vocabulary.SammNs;
 import org.eclipse.esmf.treesitterturtle.ParserTokenType;
 import org.eclipse.esmf.treesitterturtle.TurtleSyntaxTree;
-import org.eclipse.esmf.turtle.languageserver.aspect.diagnostic.AspectDiagnosticCode;
 import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.ViolationProvider;
 import org.eclipse.esmf.turtle.languageserver.lsp.text.ParsedDocument;
 import org.eclipse.esmf.turtle.languageserver.turtle.TurtleService;
@@ -46,10 +46,8 @@ public class AspectModelNamingConventionValidationService extends TurtleService 
    private static final String BEST_PRACTICES_DOCS =
          "https://eclipse-esmf.github.io/samm-specification/%s/appendix/best-practices.html"
                .formatted( VersionInfo.ASPECT_META_MODEL_VERSION );
-   private static final AspectDiagnosticCode NAMING_CONVENTION_CODE = new AspectDiagnosticCode( "WARN_NAMING_CONVENTION",
-         Optional.of( NAMING_CONVENTION_DOCS_HREF ) );
-   private static final AspectDiagnosticCode NAMING_BEST_PRACTICES_CODE = new AspectDiagnosticCode( "WARN_NAMING_BEST_PRACTICES",
-         Optional.of( BEST_PRACTICES_DOCS ) );
+   private static final Violation.Code NAMING_CONVENTION_CODE = new ViolationCode( "WARN_NAMING_CONVENTION", NAMING_CONVENTION_DOCS_HREF );
+   private static final Violation.Code NAMING_BEST_PRACTICES_CODE = new ViolationCode( "WARN_NAMING_BEST_PRACTICES", BEST_PRACTICES_DOCS );
    private static final Pattern UPPERCASE_ACRONYM = Pattern.compile( "\\p{Upper}{2,}" );
    private static final String SAMM_DESCRIPTION_PREDICATE = RdfUtil.curie( SammNs.SAMM.description().getURI() );
    private static final Set<String> UPPERCASE_TYPES;

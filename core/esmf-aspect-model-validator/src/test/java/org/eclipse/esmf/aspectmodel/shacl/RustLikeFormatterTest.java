@@ -27,7 +27,7 @@ import org.eclipse.esmf.aspectmodel.AspectModelFile;
 import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.aspectmodel.loader.AspectModelLoader;
 import org.eclipse.esmf.aspectmodel.resolver.modelfile.RawAspectModelFileBuilder;
-import org.eclipse.esmf.aspectmodel.resolver.parser.PlainTextFormatter;
+import org.eclipse.esmf.aspectmodel.validation.InvalidSyntaxViolation;
 import org.eclipse.esmf.aspectmodel.validation.services.AspectModelValidator;
 import org.eclipse.esmf.aspectmodel.validation.services.ViolationFormatter;
 import org.eclipse.esmf.metamodel.AspectModel;
@@ -286,10 +286,10 @@ public class RustLikeFormatterTest {
       final Either<ViolationReport, AspectModel> result = TestResources.loadWithValidation( testModel, new AspectModelValidator() );
       assertThat( result.isLeft() ).isTrue();
       final ViolationReport violations = result.getLeft();
-      final String report = new ViolationFormatter( new PlainTextFormatter() ).apply( violations );
-      assertThat( report ).contains( "Syntax" );
-      // Report contains source file location
-      assertThat( report ).contains( "in testmodel:invalid/" );
+      assertThat( violations.violations() ).first().isInstanceOfSatisfying( InvalidSyntaxViolation.class, violation -> {
+         assertThat( violation.code().code() ).isEqualTo( InvalidSyntaxViolation.ERROR_CODE );
+         assertThat( violation.sourceDocument().toString() ).contains( "testmodel:invalid/" );
+      } );
    }
 
    @Test
@@ -311,8 +311,7 @@ public class RustLikeFormatterTest {
             .loadAspectModelFiles( List.of( file1, file2 ) );
       assertThat( result.isLeft() ).isTrue();
       final ViolationReport violations = result.getLeft();
-      final String report = new ViolationFormatter().apply( violations );
-      assertThat( report ).contains( "Duplicate definition" );
+      assertThat( violations.violations().getFirst().message() ).contains( "Duplicate definition" );
    }
 
    private void assertCorrectFormatting( final String messageText, final String expectedLine ) {

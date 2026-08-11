@@ -14,14 +14,11 @@
 package org.eclipse.esmf.treesitterturtle;
 
 import org.eclipse.esmf.aspectmodel.Violation;
+import org.eclipse.esmf.aspectmodel.ViolationCode;
 
-public enum TurtleViolationCode implements Violation.Code {
-   ERR_UNCATEGORIZED,
-   ERR_SYNTAX,
-   ERR_MISSING_TOKEN;
-
-   @Override
-   public String code() {
-      return name();
-   }
+/**
+ * Violation codes that are specific to the RDF/Turtle parser
+ */
+public class TurtleViolationCode {
+   public static final Violation.Code ERR_SYNTAX = new ViolationCode( "ERR_SYNTAX" );
 }

@@ -43,7 +43,6 @@ import org.apache.jena.vocabulary.RDF;
 
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
 import org.eclipse.esmf.aspectmodel.RdfUtil;
-import org.eclipse.esmf.aspectmodel.Violation;
 import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.aspectmodel.generator.AspectArtifact;
 import org.eclipse.esmf.aspectmodel.generator.EntityArtifact;
@@ -123,8 +122,8 @@ public class JsonSchemaImporterTest {
 
       final Aspect importedAspect = new JsonSchemaToAspect( jsonSchema,
             JsonSchemaImporterConfigBuilder.builder().aspectModelUrn( testUrn ).build() ).getContent();
-      final List<Violation> violations = validator.validateModel( loadAsAspectModel( importedAspect ) ).violations();
-      assertThat( violations ).describedAs( () -> new ViolationFormatter().apply( violations ) ).isEmpty();
+      final ViolationReport violations = validator.validateModel( loadAsAspectModel( importedAspect ) );
+      assertThat( violations ).describedAs( () -> new ViolationFormatter().apply( violations ) ).satisfies( report -> report.isEmpty() );
    }
 
    /**

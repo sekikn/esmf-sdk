@@ -155,7 +155,7 @@ public class TurtleParserProfile implements ParserProfile {
       final Node node = parserProfile.create( currentGraph, token );
       final TurtleSyntaxTree.@Nullable Token treeSitterToken = findMatchingTreeSitterToken( token );
       final SmartToken smartToken = treeSitterToken == null
-            ? new SmartToken( token )
+            ? new SmartToken( token, documentUri )
             : new SmartToken( treeSitterToken, documentUri );
       TokenRegistry.put( node, smartToken );
       return node;
@@ -242,7 +242,7 @@ public class TurtleParserProfile implements ParserProfile {
       final Token token = new Token( line, col );
       token.setType( TokenType.LBRACKET );
       final Node node = parserProfile.createBlankNode( scope, line, col );
-      TokenRegistry.put( node, new SmartToken( token ) );
+      TokenRegistry.put( node, new SmartToken( token, documentUri ) );
       return node;
    }
 

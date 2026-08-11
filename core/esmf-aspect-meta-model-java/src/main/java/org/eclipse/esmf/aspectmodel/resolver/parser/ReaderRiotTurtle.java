@@ -50,7 +50,7 @@ public class ReaderRiotTurtle implements ReaderRIOT {
             .or( () -> Optional.ofNullable( baseUri ).map( URI::create ) )
             .orElse( URI.create( "inmemory:stream" + in.hashCode() ) );
       final ParserProfile wrappedParserProfile = new TurtleParserProfile( parserProfile, syntaxTree, documentUri );
-      final TurtleTokenizer tokenizer = new TurtleTokenizer( in, wrappedParserProfile.getErrorHandler() );
+      final TurtleTokenizer tokenizer = new TurtleTokenizer( in, documentUri, wrappedParserProfile.getErrorHandler() );
       final TurtleParser parser = TurtleParser.create( tokenizer, wrappedParserProfile, output );
       parser.parse();
    }

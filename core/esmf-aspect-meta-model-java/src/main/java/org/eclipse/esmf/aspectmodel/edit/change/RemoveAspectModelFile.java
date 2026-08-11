@@ -20,7 +20,6 @@ import org.eclipse.esmf.aspectmodel.AspectModelFile;
 import org.eclipse.esmf.aspectmodel.edit.Change;
 import org.eclipse.esmf.aspectmodel.edit.ChangeContext;
 import org.eclipse.esmf.aspectmodel.edit.ChangeReport;
-import org.eclipse.esmf.aspectmodel.edit.ModelChangeException;
 
 /**
  * Refactoring operation: Removes an AspectModelFile from an Aspect Model

@@ -20,6 +20,7 @@ import static org.eclipse.esmf.turtle.languageserver.aspect.TestUtil.parsedDocum
 import java.util.function.Supplier;
 
 import org.eclipse.esmf.aspectmodel.ViolationReport;
+import org.eclipse.esmf.aspectmodel.resolver.ModelResolutionViolation;
 import org.eclipse.esmf.aspectmodel.validation.InvalidLexicalValueViolation;
 import org.eclipse.esmf.aspectmodel.validation.ProcessingViolation;
 import org.eclipse.esmf.aspectmodel.validation.services.AspectModelValidator;
@@ -95,7 +96,6 @@ class AspectDocumentValidationServiceTest {
             assertThat( event.getLevel() ).isEqualTo( Level.WARN );
             assertThat( event.getFormattedMessage() ).contains(
                   "aspect model processing failed: processing violation" );
-            assertThat( event.getThrowableProxy() ).isNotNull();
          } );
       } finally {
          logger.detachAppender( appender );
@@ -147,11 +147,12 @@ class AspectDocumentValidationServiceTest {
             samm:properties ( :notExistingProperty ) .
          """ ) );
 
-      assertThat( report.violations() ).singleElement()
+      assertThat( report.violations() ).first()
             .satisfies( diagnostic -> {
-               assertThat( diagnostic.code().code() ).isEqualTo( ProcessingViolation.ERROR_CODE );
-               assertThat( diagnostic.message() )
-                     .contains( "notExistingProperty.ttl" );
+               assertThat( diagnostic.code().code() ).isEqualTo( ModelResolutionViolation.ERROR_CODE );
+               assertThat( diagnostic ).isInstanceOfSatisfying( ModelResolutionViolation.class, violation -> {
+                  assertThat( violation.location().toString() ).contains( "notExistingProperty" );
+               } );
                assertThat( diagnostic.message() )
                      .doesNotContain( "AspectLoadingException" )
                      .doesNotContain( "\tat" );

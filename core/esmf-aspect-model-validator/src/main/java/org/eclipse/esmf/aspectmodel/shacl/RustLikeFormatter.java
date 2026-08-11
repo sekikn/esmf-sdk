@@ -123,6 +123,11 @@ public class RustLikeFormatter {
    }
 
    public String formatError( final int tokenLength, final Map<Integer, String> lines, final int lineNumber, final int columnNumber,
+         final String errorMessage, final URI sourceLocation ) {
+      return formatError( tokenLength, lines, lineNumber, columnNumber, errorMessage, Optional.of( sourceLocation ) );
+   }
+
+   public String formatError( final int tokenLength, final Map<Integer, String> lines, final int lineNumber, final int columnNumber,
          final String errorMessage, final Optional<URI> sourceLocation ) {
       return formatError( tokenLength, lines, lineNumber, columnNumber, errorMessage,
             sourceLocation.map( URI::toString )

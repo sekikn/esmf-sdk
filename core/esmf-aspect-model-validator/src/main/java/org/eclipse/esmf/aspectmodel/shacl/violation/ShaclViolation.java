@@ -22,6 +22,7 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
 import org.eclipse.esmf.aspectmodel.ProjectInfo;
 import org.eclipse.esmf.aspectmodel.Violation;
+import org.eclipse.esmf.aspectmodel.ViolationCode;
 import org.eclipse.esmf.aspectmodel.loader.TokenBasedElementFocussedViolation;
 import org.eclipse.esmf.aspectmodel.resolver.parser.SmartToken;
 import org.eclipse.esmf.aspectmodel.resolver.parser.TokenRegistry;
@@ -68,17 +69,8 @@ public interface ShaclViolation extends TokenBasedElementFocussedViolation {
 
    @Override
    default Violation.Code code() {
-      return new Code() {
-         @Override
-         public String code() {
-            return errorCode();
-         }
-
-         @Override
-         public Optional<String> href() {
-            return Optional.of( ProjectInfo.esmfErrorCodeUrl( errorCode() ) );
-         }
-      };
+      final String code = errorCode();
+      return new ViolationCode( code, ProjectInfo.esmfErrorCodeUrl( code ) );
    }
 
    String errorCode();
