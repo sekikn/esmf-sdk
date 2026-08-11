@@ -19,6 +19,7 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
+import org.eclipse.esmf.aspectmodel.MetaModelVersionException;
 import org.eclipse.esmf.aspectmodel.RdfUtil;
 import org.eclipse.esmf.aspectmodel.VersionNumber;
 import org.eclipse.esmf.aspectmodel.resolver.exceptions.InvalidVersionException;
@@ -124,6 +125,16 @@ public class MetaModelVersionMigrator implements UnaryOperator<AspectModelFile> 
       // Before any semantic migration, perform the mechanical translation of legacy BAMM models
       final Model input = convertBammToSamm( modelFile.sourceModel() );
       final VersionNumber sourceVersion = getUsedMetaModelVersion( input );
+
+      // The check must run here, before the rewriters below replace the meta model URIs: afterwards a
+      // file that declared an older version is indistinguishable from a correct one. Migration cannot
+      // report a result, so an inconsistent file is rejected outright.
+      KnownVersion.fromVersionString( sourceVersion.toString() ).ifPresent( declaredVersion -> {
+         final List<String> problems = MetaModelVersionCheck.check( input, declaredVersion, modelFile.humanReadableLocation() );
+         if ( !problems.isEmpty() ) {
+            throw new MetaModelVersionException( problems );
+         }
+      } );
 
       if ( sourceVersion.equals( LATEST_SAMM ) ) {
          return modelFile;

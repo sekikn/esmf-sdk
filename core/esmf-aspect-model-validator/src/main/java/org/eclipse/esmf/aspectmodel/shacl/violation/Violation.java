@@ -26,6 +26,7 @@ import org.eclipse.esmf.aspectmodel.shacl.fix.Fix;
 import org.eclipse.esmf.aspectmodel.validation.CycleViolation;
 import org.eclipse.esmf.aspectmodel.validation.InvalidLexicalValueViolation;
 import org.eclipse.esmf.aspectmodel.validation.InvalidSyntaxViolation;
+import org.eclipse.esmf.aspectmodel.validation.MetaModelVersionViolation;
 import org.eclipse.esmf.aspectmodel.validation.ProcessingViolation;
 import org.eclipse.esmf.aspectmodel.validation.RegularExpressionConstraintViolation;
 
@@ -93,6 +94,10 @@ public interface Violation {
       T visit( final Violation violation );
 
       default T visitProcessingViolation( final ProcessingViolation violation ) {
+         return visit( violation );
+      }
+
+      default T visitMetaModelVersionViolation( final MetaModelVersionViolation violation ) {
          return visit( violation );
       }
 
