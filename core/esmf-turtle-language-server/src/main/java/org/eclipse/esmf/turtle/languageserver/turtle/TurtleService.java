@@ -112,6 +112,6 @@ public abstract class TurtleService {
       final Range range = new Range(
             new Position( node.location().fromLine(), node.location().fromColumn() ),
             new Position( node.location().toLine(), node.location().toColumn() ) );
-      return new Location( parsedDocument.getUri(), range );
+      return new Location( parsedDocument.getUri().toString(), range );
    }
 }

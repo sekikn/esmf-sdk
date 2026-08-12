@@ -24,7 +24,7 @@ import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.eclipse.esmf.Location;
+import org.eclipse.esmf.aspectmodel.Location;
 import org.eclipse.esmf.aspectmodel.RdfUtil;
 import org.eclipse.esmf.metamodel.datatype.SammType;
 import org.eclipse.esmf.metamodel.vocabulary.SammNs;

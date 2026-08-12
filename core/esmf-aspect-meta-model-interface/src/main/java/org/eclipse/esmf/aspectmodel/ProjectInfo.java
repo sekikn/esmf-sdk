@@ -11,16 +11,12 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package org.eclipse.esmf.turtle.languageserver.aspect.diagnostic;
+package org.eclipse.esmf.aspectmodel;
 
-import org.eclipse.esmf.Diagnostic;
+public class ProjectInfo {
+   private static final String ESMF_ERROR_CODES = "https://eclipse-esmf.github.io/esmf-developer-guide/tooling-guide/error-codes.html#";
 
-public record AspectDiagnostic(
-      String message,
-      AspectDiagnosticCode code,
-      Diagnostic.Severity severity
-) implements Diagnostic<AspectDiagnosticCode> {
-   public AspectDiagnostic( final String message, final AspectDiagnosticCode code ) {
-      this( message, code, Severity.ERROR );
+   public static String esmfErrorCodeUrl( final String errorCode ) {
+      return ESMF_ERROR_CODES + errorCode.toLowerCase().replace( "_", "-" );
    }
 }

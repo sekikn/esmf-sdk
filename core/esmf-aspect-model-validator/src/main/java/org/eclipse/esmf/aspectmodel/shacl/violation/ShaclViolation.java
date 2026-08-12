@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Robert Bosch Manufacturing Solutions GmbH
+ * Copyright (c) 2026 Robert Bosch Manufacturing Solutions GmbH
  *
  * See the AUTHORS file(s) distributed with this work for additional
  * information regarding authorship.
@@ -20,17 +20,13 @@ import java.util.Optional;
 import org.apache.jena.rdf.model.RDFNode;
 
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
+import org.eclipse.esmf.aspectmodel.ProjectInfo;
+import org.eclipse.esmf.aspectmodel.Violation;
+import org.eclipse.esmf.aspectmodel.ViolationCode;
+import org.eclipse.esmf.aspectmodel.loader.TokenBasedElementFocussedViolation;
 import org.eclipse.esmf.aspectmodel.resolver.parser.SmartToken;
 import org.eclipse.esmf.aspectmodel.resolver.parser.TokenRegistry;
 import org.eclipse.esmf.aspectmodel.shacl.fix.Fix;
-import org.eclipse.esmf.aspectmodel.validation.CycleViolation;
-import org.eclipse.esmf.aspectmodel.validation.InvalidLexicalValueViolation;
-import org.eclipse.esmf.aspectmodel.validation.InvalidSyntaxViolation;
-import org.eclipse.esmf.aspectmodel.validation.MetaModelVersionViolation;
-import org.eclipse.esmf.aspectmodel.validation.ProcessingViolation;
-import org.eclipse.esmf.aspectmodel.validation.RegularExpressionConstraintViolation;
-
-import org.jspecify.annotations.Nullable;
 
 /**
  * Represents a single violation raised by one or more SHACL shapes against an RDF model. A
@@ -40,11 +36,14 @@ import org.jspecify.annotations.Nullable;
  * To handle information specific to each type of violation, implement {@link Visitor} and call
  * {@link #accept(Visitor)} on the violation(s).
  */
-public interface Violation {
-   /**
-    * The error code that identifies this type of violation
-    */
-   String errorCode();
+public interface ShaclViolation extends TokenBasedElementFocussedViolation {
+   enum AppliesTo {
+      WHOLE_ELEMENT, ONLY_PROPERTY
+   }
+
+   default AppliesTo appliesTo() {
+      return AppliesTo.WHOLE_ELEMENT;
+   }
 
    /**
     * The evaluation context providing information about the source location, context element etc. if
@@ -55,16 +54,26 @@ public interface Violation {
    EvaluationContext context();
 
    /**
+    * The RDF node this violation focusses on
+    */
+   @Override
+   default RDFNode highlight() {
+      return context().element();
+   }
+
+
+   /**
     * The message specific to this violation
     */
    String violationSpecificMessage();
 
-   /**
-    * The RDF node this violation focusses on
-    */
-   default @Nullable RDFNode highlight() {
-      return context() == null ? null : context().element();
+   @Override
+   default Violation.Code code() {
+      final String code = errorCode();
+      return new ViolationCode( code, ProjectInfo.esmfErrorCodeUrl( code ) );
    }
+
+   String errorCode();
 
    /**
     * The logical location of the input (e.g., {@link AspectModelFile}) the violation applies to if
@@ -74,7 +83,16 @@ public interface Violation {
       return Optional.ofNullable( highlight() ).map( RDFNode::asNode )
             .flatMap( TokenRegistry::getToken )
             .map( SmartToken::getOriginatingFile )
-            .flatMap( AspectModelFile::sourceLocation );
+            .map( AspectModelFile::sourceUri );
+   }
+
+   @Override
+   default String message() {
+      final String nodeShapeMessage = context().shape().attributes().message().map( message -> message.replaceAll( "\\.$", "" )
+            + ", more specifically: " ).orElse( "" );
+      final String propertyShapeMessage = context().propertyShape().flatMap( propertyShape -> propertyShape.attributes().message() )
+            .orElseGet( this::violationSpecificMessage );
+      return nodeShapeMessage + propertyShapeMessage;
    }
 
    /**
@@ -86,36 +104,8 @@ public interface Violation {
     */
    <T> T accept( Visitor<T> visitor );
 
-   enum AppliesTo {
-      WHOLE_ELEMENT, ONLY_PROPERTY
-   }
-
    interface Visitor<T> {
-      T visit( final Violation violation );
-
-      default T visitProcessingViolation( final ProcessingViolation violation ) {
-         return visit( violation );
-      }
-
-      default T visitMetaModelVersionViolation( final MetaModelVersionViolation violation ) {
-         return visit( violation );
-      }
-
-      default T visitInvalidSyntaxViolation( final InvalidSyntaxViolation violation ) {
-         return visit( violation );
-      }
-
-      default T visitInvalidLexicalValueViolation( final InvalidLexicalValueViolation violation ) {
-         return visit( violation );
-      }
-
-      default T visitCycleViolation( final CycleViolation violation ) {
-         return visit( violation );
-      }
-
-      default T visitRegularExpressionConstraint( final RegularExpressionConstraintViolation violation ) {
-         return visit( violation );
-      }
+      T visit( final ShaclViolation violation );
 
       default T visitClassTypeViolation( final ClassTypeViolation violation ) {
          return visit( violation );
@@ -224,18 +214,6 @@ public interface Violation {
       default T visitJsViolation( final JsConstraintViolation violation ) {
          return visit( violation );
       }
-   }
-
-   default AppliesTo appliesTo() {
-      return AppliesTo.WHOLE_ELEMENT;
-   }
-
-   default String message() {
-      final String nodeShapeMessage = context().shape().attributes().message().map( message -> message.replaceAll( "\\.$", "" )
-            + ", more specifically: " ).orElse( "" );
-      final String propertyShapeMessage = context().propertyShape().flatMap( propertyShape -> propertyShape.attributes().message() )
-            .orElseGet( this::violationSpecificMessage );
-      return nodeShapeMessage + propertyShapeMessage;
    }
 
    default List<Fix> fixes() {

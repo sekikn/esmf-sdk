@@ -6,6 +6,6 @@ package org.eclipse.esmf.turtle.languageserver.lsp.diagnostic;
 
 import org.eclipse.esmf.turtle.languageserver.lsp.ResolutionStrategyService;
 
-public interface ResolutionStrategyAwareDiagnosticsProvider extends DiagnosticsProvider {
-   public void setResolutionStrategyService( final ResolutionStrategyService resolutionStrategyService );
+public interface ResolutionStrategyAwareViolationProvider extends ViolationProvider {
+   void setResolutionStrategyService( final ResolutionStrategyService resolutionStrategyService );
 }

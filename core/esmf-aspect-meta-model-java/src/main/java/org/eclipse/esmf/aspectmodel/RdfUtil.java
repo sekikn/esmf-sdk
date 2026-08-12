@@ -229,7 +229,7 @@ public class RdfUtil {
    }
 
    /**
-    * Turn a an RDF model to its String representation. Note that this method should only be used where
+    * Turn an RDF model to its String representation. Note that this method should only be used where
     * {@link AspectSerializer} can not be used since it does not honor Aspect Model formatting rules.
     *
     * @param model the input model

@@ -14,7 +14,6 @@
 package org.eclipse.esmf.turtle.languageserver.lsp.text;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Path;
 
 import org.eclipse.esmf.treesitterturtle.TurtleSyntaxTree;
@@ -44,15 +43,11 @@ public class ParsedDocument {
       return turtleSyntaxTree;
    }
 
-   public String getUri() {
+   public URI getUri() {
       return sourceDocument.uri();
    }
 
    public boolean storedIn( final Path path ) {
-      try {
-         return Path.of( new URI( sourceDocument.uri() ) ).getParent().toAbsolutePath().equals( path.toAbsolutePath() );
-      } catch ( final URISyntaxException e ) {
-         return false;
-      }
+      return Path.of( sourceDocument.uri() ).getParent().toAbsolutePath().equals( path.toAbsolutePath() );
    }
 }

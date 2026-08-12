@@ -248,7 +248,7 @@ public class AspectEditMoveCommand extends AbstractCommand {
    private AspectModelFile determineTargetAspectModelFile( final AspectModel aspectModel, final Namespace targetNamespace ) {
       return aspectModel.files().stream()
             .filter( file -> file.namespace().urn().equals( targetNamespace.urn() )
-                  && file.sourceLocation().map( uri -> Paths.get( uri ).toFile().getName().equals( targetFile ) ).orElse( false ) )
+                  && Paths.get( file.sourceUri() ).toFile().getName().equals( targetFile ) )
             .findFirst()
             .orElseThrow( () -> new CommandException( "Could not determine target file" ) );
    }

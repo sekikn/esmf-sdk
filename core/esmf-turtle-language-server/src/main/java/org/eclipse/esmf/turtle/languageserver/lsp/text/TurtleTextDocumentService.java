@@ -13,6 +13,7 @@
 
 package org.eclipse.esmf.turtle.languageserver.lsp.text;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -22,12 +23,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.turtle.languageserver.aspect.navigation.AspectCrossFileDefinitionService;
 import org.eclipse.esmf.turtle.languageserver.lsp.ResolutionStrategyService;
 import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.DiagnosticMapper;
-import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.DiagnosticReport;
-import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.DiagnosticsProvider;
-import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.ResolutionStrategyAwareDiagnosticsProvider;
+import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.ViolationProvider;
+import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.ResolutionStrategyAwareViolationProvider;
 import org.eclipse.esmf.turtle.languageserver.structure.DocumentSymbolService;
 import org.eclipse.esmf.turtle.languageserver.structure.TurtleTokenService;
 import org.eclipse.esmf.turtle.languageserver.turtle.TurtleCompletionService;
@@ -86,14 +87,14 @@ public class TurtleTextDocumentService implements TextDocumentService {
       tokenService = new TurtleTokenService();
       aspectCrossFileDefinitionService = new AspectCrossFileDefinitionService( turtleParserService, documents, resolutionStrategyService );
       documentSymbolService = new DocumentSymbolService( turtleParserService );
-      final List<DiagnosticsProvider> diagnosticsProviders =
-            Streams.stream( ServiceLoader.load( DiagnosticsProvider.class ).iterator() ).toList();
-      diagnosticsProviders.forEach( provider -> {
-         if ( provider instanceof final ResolutionStrategyAwareDiagnosticsProvider aware ) {
+      final List<ViolationProvider> violationProviders =
+            Streams.stream( ServiceLoader.load( ViolationProvider.class ).iterator() ).toList();
+      violationProviders.forEach( provider -> {
+         if ( provider instanceof final ResolutionStrategyAwareViolationProvider aware ) {
             aware.setResolutionStrategyService( resolutionStrategyService );
          }
       } );
-      validationCoordinator = new ValidationCoordinator( diagnosticsProviders, clientNotifier::publishDiagnostics );
+      validationCoordinator = new ValidationCoordinator( violationProviders, clientNotifier::publishDiagnostics );
    }
 
    public void connect( final LanguageClient client ) {
@@ -109,10 +110,10 @@ public class TurtleTextDocumentService implements TextDocumentService {
       asyncExecutor.shutdown();
    }
 
-   public CompletableFuture<DiagnosticReport> validateDocument( final String uri ) {
+   public CompletableFuture<ViolationReport> validateDocument( final String uri ) {
       final Document document = documents.get( uri );
       if ( document == null ) {
-         return CompletableFuture.completedFuture( DiagnosticReport.EMPTY );
+         return CompletableFuture.completedFuture( ViolationReport.EMPTY );
       }
       final ParsedDocument parsedDocument = turtleParserService.apply( document );
       return validationCoordinator.validateAsync( parsedDocument );
@@ -123,7 +124,7 @@ public class TurtleTextDocumentService implements TextDocumentService {
       final String uri = params.getTextDocument().getUri();
       final String content = params.getTextDocument().getText();
       LOG.info( "[didOpen] uri={}, contentLength={}", uri, content.length() );
-      final Document document = new Document( uri, content );
+      final Document document = new Document( URI.create( uri ), content );
       documents.put( uri, document );
       turtleParserService.onOpen( document );
       final ParsedDocument parsedDocument = turtleParserService.apply( document );

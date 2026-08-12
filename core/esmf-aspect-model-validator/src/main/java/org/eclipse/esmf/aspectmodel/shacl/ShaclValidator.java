@@ -35,13 +35,14 @@ import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.vocabulary.RDF;
 
+import org.eclipse.esmf.aspectmodel.Violation;
+import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.aspectmodel.shacl.constraint.Constraint;
 import org.eclipse.esmf.aspectmodel.shacl.constraint.MinCountConstraint;
 import org.eclipse.esmf.aspectmodel.shacl.constraint.SparqlConstraint;
 import org.eclipse.esmf.aspectmodel.shacl.path.PathNodeRetriever;
 import org.eclipse.esmf.aspectmodel.shacl.path.PredicatePath;
 import org.eclipse.esmf.aspectmodel.shacl.violation.EvaluationContext;
-import org.eclipse.esmf.aspectmodel.shacl.violation.Violation;
 import org.eclipse.esmf.aspectmodel.validation.RdfBasedValidator;
 
 import com.google.common.collect.Streams;
@@ -51,7 +52,7 @@ import com.google.common.collect.Streams;
  * {@link #validateElement(Resource)} can be used to retrieve validation results only for this
  * specific resource.
  */
-public class ShaclValidator implements RdfBasedValidator<Violation, List<Violation>> {
+public class ShaclValidator implements RdfBasedValidator {
    private final List<Shape.Node> shapes;
    private final Map<Resource, List<Shape.Node>> shapesWithClassTargets;
    private final Model shapesModel;
@@ -122,13 +123,14 @@ public class ShaclValidator implements RdfBasedValidator<Violation, List<Violati
     * @return the list of {@link Violation}s if there are violations
     */
    @Override
-   public List<Violation> validateModel( final Model model ) {
+   public ViolationReport validateModel( final Model model ) {
       final Map<Resource, List<Shape.Node>> sparqlTargetsWithShapes = findSparqlTargets( model );
-      return Streams.stream( model.listStatements( null, RDF.type, (RDFNode) null ) )
-            .map( Statement::getSubject )
-            .filter( s -> !s.isLiteral() )
-            .flatMap( element -> validateElement( element, sparqlTargetsWithShapes, model ).stream() )
-            .toList();
+      return new ViolationReport(
+            Streams.stream( model.listStatements( null, RDF.type, (RDFNode) null ) )
+                  .map( Statement::getSubject )
+                  .filter( s -> !s.isLiteral() )
+                  .flatMap( element -> validateElement( element, sparqlTargetsWithShapes, model ).stream() )
+                  .toList() );
    }
 
    private Map<Resource, List<Shape.Node>> findSparqlTargets( final Model model ) {

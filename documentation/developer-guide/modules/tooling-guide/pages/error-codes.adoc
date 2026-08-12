@@ -41,6 +41,11 @@ The source file contains invalid RDF/Turtle syntax that prevents parsing.
 
 **Resolution:** Check namespace declarations and ensure consistency across files. Verify proper RDF/Turtle syntax including correct use of prefixes, semicolons, and periods.
 
+[[ERR-MODEL-RESOLUTION]]
+=== ERR_MODEL_RESOLUTION - Problem with resolving dependencies during model loading
+
+The model refers to elements which can not be resolved. Either the referenced elements do not exist, or the sources to resolve from are not configured correctly.
+
 [[ERR-PROCESSING]]
 === ERR_PROCESSING - Processing Error
 

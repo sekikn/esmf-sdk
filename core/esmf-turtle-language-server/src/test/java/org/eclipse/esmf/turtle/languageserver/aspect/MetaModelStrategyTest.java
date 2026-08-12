@@ -47,8 +47,7 @@ class MetaModelStrategyTest {
       final AspectModelFile result = strategy.apply( urn, RESOLUTION_SUPPORT );
 
       assertThat( result ).isNotNull();
-      assertThat( result.sourceLocation() ).isPresent();
-      final Path resultPath = Path.of( result.sourceLocation().get() );
+      final Path resultPath = Path.of( result.sourceUri() );
       assertThat( resultPath ).exists();
       assertThat( result.sourceRepresentation() ).isNotBlank();
       assertThat( result.sourceRepresentation() ).contains( "samm:Aspect rdfs:subClassOf mmm:NamedConcept, mmm:ConceptWithProperties ;" );
@@ -59,7 +58,7 @@ class MetaModelStrategyTest {
       final AspectModelUrn urn = AspectModelUrn.fromUrn( SammNs.SAMM.Property().getURI() );
       final AspectModelFile result = strategy.apply( urn, RESOLUTION_SUPPORT );
 
-      final Path tempFile = Path.of( result.sourceLocation().get() );
+      final Path tempFile = Path.of( result.sourceUri() );
       assertThat( tempFile ).exists();
       final String content = Files.readString( tempFile );
       assertThat( content ).contains( "samm:Property rdfs:subClassOf mmm:NamedConcept ;" );
@@ -73,7 +72,7 @@ class MetaModelStrategyTest {
       final AspectModelFile result1 = strategy.apply( urnAspect, RESOLUTION_SUPPORT );
       final AspectModelFile result2 = strategy.apply( urnProperty, RESOLUTION_SUPPORT );
 
-      assertThat( result1.sourceLocation() ).isEqualTo( result2.sourceLocation() );
+      assertThat( result1.sourceUri() ).isEqualTo( result2.sourceUri() );
    }
 
    @Test
@@ -81,7 +80,6 @@ class MetaModelStrategyTest {
       final AspectModelUrn urn = AspectModelUrn.fromUrn( SammNs.SAMMC.SingleEntity().getURI() );
       final AspectModelFile result = strategy.apply( urn, RESOLUTION_SUPPORT );
 
-      assertThat( result.sourceLocation() ).isPresent();
       assertThat( result.sourceRepresentation() ).contains( "samm-c:SingleEntity rdfs:subClassOf samm:Characteristic ;" );
    }
 
@@ -109,8 +107,7 @@ class MetaModelStrategyTest {
       final AspectModelUrn urn = AspectModelUrn.fromUrn( new SAMM( KnownVersion.SAMM_2_1_0 ).Aspect().getURI() );
       final AspectModelFile result = strategy.apply( urn, RESOLUTION_SUPPORT );
 
-      assertThat( result.sourceLocation() ).isPresent();
-      final Path resultPath = Path.of( result.sourceLocation().get() );
+      final Path resultPath = Path.of( result.sourceUri() );
       assertThat( resultPath ).exists();
       assertThat( resultPath.getFileName().toString() ).contains( "2.1.0" );
       assertThat( result.sourceRepresentation() ).contains( "@prefix samm: <urn:samm:org.eclipse.esmf.samm:meta-model:2.1.0#> ." );
@@ -125,6 +122,6 @@ class MetaModelStrategyTest {
       final AspectModelFile result210 = strategy.apply( urn210, RESOLUTION_SUPPORT );
       final AspectModelFile result220 = strategy.apply( urn220, RESOLUTION_SUPPORT );
 
-      assertThat( result210.sourceLocation() ).isNotEqualTo( result220.sourceLocation() );
+      assertThat( result210.sourceUri() ).isNotEqualTo( result220.sourceUri() );
    }
 }

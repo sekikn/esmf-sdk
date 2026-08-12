@@ -34,7 +34,6 @@ import org.apache.tika.mime.MediaType;
 import org.eclipse.esmf.aspectmodel.generator.jsonschema.AspectModelJsonSchemaGenerator;
 import org.eclipse.esmf.aspectmodel.urn.AspectModelUrn;
 import org.eclipse.esmf.aspectmodel.validation.InvalidSyntaxViolation;
-import org.eclipse.esmf.aspectmodel.validation.ProcessingViolation;
 import org.eclipse.esmf.metamodel.Aspect;
 import org.eclipse.esmf.test.InvalidTestAspect;
 import org.eclipse.esmf.test.OrderingTestAspect;
@@ -292,6 +291,8 @@ class SammCliTest extends SammCliAbstractTest {
       assertThat( result2.exitStatus() ).isEqualTo( 1 );
       assertThat( result2.stderr() ).isEmpty();
       assertThat( result2.stdout() ).contains( InvalidSyntaxViolation.ERROR_CODE );
+      assertThat( result2.stdout() ).contains( "line 17, column 4" );
+      assertThat( result2.stdout() ).doesNotContain( "message=" );
    }
 
    @Test
@@ -1211,7 +1212,7 @@ class SammCliTest extends SammCliAbstractTest {
       final File invalidModel = inputFile( InvalidTestAspect.INVALID_ENCODING );
       final ExecutionResult result = sammCli.apply( "--disable-color", "aspect", invalidModel.getAbsolutePath(), "to", "svg", "--details" );
       assertThat( result.exitStatus() ).isEqualTo( 1 );
-      assertThat( result.stdout() ).contains( ProcessingViolation.ERROR_CODE );
+      assertThat( result.stdout() ).contains( "invalid encoding" );
       assertThat( result.stderr() ).isEmpty();
    }
 

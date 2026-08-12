@@ -18,6 +18,10 @@ import java.util.Set;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.Resource;
+
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
 import org.eclipse.esmf.aspectmodel.MetaModelVersionException;
 import org.eclipse.esmf.aspectmodel.RdfUtil;
@@ -30,12 +34,10 @@ import org.eclipse.esmf.aspectmodel.urn.ElementType;
 import org.eclipse.esmf.metamodel.vocabulary.SammNs;
 import org.eclipse.esmf.samm.KnownVersion;
 
-import com.google.common.collect.ImmutableList;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * The service that migrates all migrators in the correct order.
@@ -130,7 +132,8 @@ public class MetaModelVersionMigrator implements UnaryOperator<AspectModelFile> 
       // file that declared an older version is indistinguishable from a correct one. Migration cannot
       // report a result, so an inconsistent file is rejected outright.
       KnownVersion.fromVersionString( sourceVersion.toString() ).ifPresent( declaredVersion -> {
-         final List<String> problems = MetaModelVersionCheck.check( input, declaredVersion, modelFile.humanReadableLocation() );
+         final List<MetaModelVersionException.Problem> problems =
+               MetaModelVersionCheck.check( input, declaredVersion, modelFile.sourceUri() );
          if ( !problems.isEmpty() ) {
             throw new MetaModelVersionException( problems );
          }
@@ -140,13 +143,13 @@ public class MetaModelVersionMigrator implements UnaryOperator<AspectModelFile> 
          return modelFile;
       }
       if ( sourceVersion.greaterThan( LATEST_SAMM ) ) {
-         throw new InvalidVersionException( "Aspect Meta Model version %s in source model %sis not supported".formatted( sourceVersion,
-               modelFile.sourceLocation().map( l -> l + " " ).orElse( "" ) ) );
+         throw new InvalidVersionException( "Aspect Meta Model version %s in source model %s is not supported".formatted( sourceVersion,
+               modelFile.sourceUri() ) );
       }
 
       final Model migratedModel = migrate( migrators, sourceVersion, LATEST_SAMM, modelFile.sourceModel() );
       return new RawAspectModelFile( RdfUtil.modelToString( migratedModel ), migratedModel, modelFile.headerComment(),
-            modelFile.sourceLocation() );
+            modelFile.sourceUri() );
    }
 
    private Model migrate( final List<Migrator> migrators, final VersionNumber sourceVersion, final VersionNumber targetVersion,

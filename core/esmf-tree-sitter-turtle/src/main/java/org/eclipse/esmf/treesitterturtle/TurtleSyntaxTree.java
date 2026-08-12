@@ -23,8 +23,8 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import org.eclipse.esmf.Diagnostic;
-import org.eclipse.esmf.Location;
+import org.eclipse.esmf.aspectmodel.Location;
+import org.eclipse.esmf.aspectmodel.Violation;
 
 import org.jspecify.annotations.Nullable;
 import org.treesitter.TSNode;
@@ -99,7 +99,7 @@ public class TurtleSyntaxTree {
 
    public record Error(
          String type,
-         Diagnostic.Code errorType,
+         Violation.Code errorType,
          Location location,
          List<Node> children
    ) implements Node {
@@ -142,37 +142,7 @@ public class TurtleSyntaxTree {
 
       @Override
       public String apply( final Location location ) {
-         if ( sourceDocument == null || sourceDocument.isEmpty() ) {
-            return "";
-         }
-
-         int startIndex = 0;
-         int currentLine = 0;
-         for ( int i = 0; i < sourceDocument.length() && currentLine < location.fromLine(); i++ ) {
-            if ( sourceDocument.charAt( i ) == '\n' ) {
-               currentLine++;
-            }
-            startIndex = i + 1;
-         }
-         startIndex += location.fromColumn();
-         int endIndex = 0;
-         currentLine = 0;
-
-         for ( int i = 0; i < sourceDocument.length() && currentLine < location.toLine(); i++ ) {
-            if ( sourceDocument.charAt( i ) == '\n' ) {
-               currentLine++;
-            }
-            endIndex = i + 1;
-         }
-         endIndex += location.toColumn();
-         startIndex = Math.clamp( startIndex, 0, sourceDocument.length() );
-         endIndex = Math.clamp( endIndex, 0, sourceDocument.length() );
-
-         if ( startIndex > endIndex ) {
-            return "";
-         }
-
-         return sourceDocument.substring( startIndex, endIndex );
+         return location.forDocument( sourceDocument );
       }
    }
 
@@ -204,10 +174,8 @@ public class TurtleSyntaxTree {
             .filter( Objects::nonNull )
             .map( child -> nodeForTsNode( child, content ) )
             .toList();
-      if ( inputNode.isError() ) {
-         return new Error( inputNode.getType(), TurtleDiagnosticCode.E0003, location, children );
-      } else if ( inputNode.isMissing() ) {
-         return new Error( inputNode.getType(), TurtleDiagnosticCode.E0004, location, children );
+      if ( inputNode.isError() || inputNode.isMissing() ) {
+         return new Error( inputNode.getType(), TurtleViolationCode.ERR_SYNTAX, location, children );
       }
       final Supplier<String> token = () -> new String(
             // bytes

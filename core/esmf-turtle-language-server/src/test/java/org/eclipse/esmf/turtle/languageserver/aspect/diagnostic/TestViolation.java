@@ -14,11 +14,11 @@
 package org.eclipse.esmf.turtle.languageserver.aspect.diagnostic;
 
 import org.eclipse.esmf.aspectmodel.shacl.violation.EvaluationContext;
-import org.eclipse.esmf.aspectmodel.shacl.violation.Violation;
+import org.eclipse.esmf.aspectmodel.shacl.violation.ShaclViolation;
 
 public record TestViolation(
       String errorCode, String message
-) implements Violation {
+) implements ShaclViolation {
    @Override
    public EvaluationContext context() {
       return null;

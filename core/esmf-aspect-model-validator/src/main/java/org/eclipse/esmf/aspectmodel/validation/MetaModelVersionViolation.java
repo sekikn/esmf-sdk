@@ -13,8 +13,11 @@
 
 package org.eclipse.esmf.aspectmodel.validation;
 
-import org.eclipse.esmf.aspectmodel.shacl.violation.EvaluationContext;
-import org.eclipse.esmf.aspectmodel.shacl.violation.Violation;
+import org.apache.jena.rdf.model.RDFNode;
+
+import org.eclipse.esmf.aspectmodel.ProjectInfo;
+import org.eclipse.esmf.aspectmodel.ViolationCode;
+import org.eclipse.esmf.aspectmodel.loader.TokenBasedElementFocussedViolation;
 
 /**
  * The Aspect Model file uses a SAMM meta model term that is not defined in the meta model version
@@ -27,30 +30,16 @@ import org.eclipse.esmf.aspectmodel.shacl.violation.Violation;
  * check
  * relies on. The message names the file it applies to.
  *
- * @param violationSpecificMessage the description of the inconsistency, including how to resolve it
+ * @param message the description of the inconsistency, including how to resolve it
  */
 public record MetaModelVersionViolation(
-      String violationSpecificMessage
-) implements Violation {
+      String message,
+      RDFNode highlight
+) implements TokenBasedElementFocussedViolation {
    public static final String ERROR_CODE = "ERR_METAMODEL_VERSION";
 
    @Override
-   public String errorCode() {
-      return ERROR_CODE;
-   }
-
-   @Override
-   public EvaluationContext context() {
-      return null;
-   }
-
-   @Override
-   public String message() {
-      return violationSpecificMessage();
-   }
-
-   @Override
-   public <T> T accept( final Visitor<T> visitor ) {
-      return visitor.visitMetaModelVersionViolation( this );
+   public Code code() {
+      return new ViolationCode( ERROR_CODE, ProjectInfo.esmfErrorCodeUrl( ERROR_CODE ) );
    }
 }

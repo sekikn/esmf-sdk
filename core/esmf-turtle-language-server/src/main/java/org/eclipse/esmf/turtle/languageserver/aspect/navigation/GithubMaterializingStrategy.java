@@ -6,7 +6,6 @@ package org.eclipse.esmf.turtle.languageserver.aspect.navigation;
 
 import java.net.URI;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
@@ -28,8 +27,8 @@ public class GithubMaterializingStrategy implements ResolutionStrategy {
    public AspectModelFile apply( final AspectModelUrn urn, final ResolutionStrategySupport support )
          throws ModelResolutionException {
       final AspectModelFile resolved = delegate.apply( urn, support );
-      final Optional<URI> sourceLocation = resolved.sourceLocation();
-      if ( sourceLocation.isEmpty() || "file".equals( sourceLocation.get().getScheme() ) ) {
+      final URI sourceLocation = resolved.sourceUri();
+      if ( "file".equals( sourceLocation.getScheme() ) ) {
          return resolved;
       }
 
@@ -39,7 +38,7 @@ public class GithubMaterializingStrategy implements ResolutionStrategy {
       return RawAspectModelFileBuilder.builder()
             .sourceRepresentation( resolved.sourceRepresentation() )
             .sourceModel( resolved.sourceModel() )
-            .sourceLocation( Optional.of( localFile.toUri() ) )
+            .sourceUri( localFile.toUri() )
             .build();
    }
 
