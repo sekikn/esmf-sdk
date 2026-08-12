@@ -95,9 +95,8 @@ public class ViolationFormatter implements Function<ViolationReport, String> {
             ? textFormatter.formatHyperlink( violation.code().code(), violation.code().href().get() )
             : violation.code().code();
       return "[%s] %s".formatted( code,
-            formatter.formatError( 1, sourceContext, violation.location().fromLine(),
-                  violation.location().fromColumn(), violation.message(),
-                  violation.sourceDocument() ) );
+            formatter.formatError( 1, sourceContext, violation.location().fromLine() + 1,
+                  violation.location().fromColumn() + 1, violation.message(), violation.sourceDocument() ) );
    }
 
    protected String handleInvalidLexicalValueViolation( final InvalidLexicalValueViolation violation ) {
@@ -107,9 +106,8 @@ public class ViolationFormatter implements Function<ViolationReport, String> {
             ? textFormatter.formatHyperlink( violation.code().code(), violation.code().href().get() )
             : violation.code().code();
       return "[%s] %s".formatted( code,
-            formatter.formatError( violation.value().toString().length(), sourceContext, violation.location().fromLine(),
-                  violation.location().fromColumn(), violation.message(),
-                  violation.sourceDocument() ) );
+            formatter.formatError( violation.value().toString().length(), sourceContext, violation.location().fromLine() + 1,
+                  violation.location().fromColumn() + 1, violation.message(), violation.sourceDocument() ) );
    }
 
    protected String handleElementFocussedViolation( final ElementFocussedViolation violation ) {
