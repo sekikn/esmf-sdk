@@ -152,7 +152,7 @@ public class ViolationFormatter implements Function<ViolationReport, String> {
             .filter( entry -> entry.getKey().isAssignableFrom( violation.getClass() ) )
             .map( Map.Entry::getValue )
             .findFirst()
-            .orElse( Object::toString );
+            .orElse( this::handleViolation );
    }
 
    protected String formatUri( final URI sourceDocument ) {
