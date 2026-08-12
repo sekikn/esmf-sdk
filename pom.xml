@@ -71,6 +71,7 @@
       <module>tools/esmf-aspect-model-maven-plugin</module>
       <module>tools/samm-cli</module>
       <module>documentation</module>
+      <module>core/esmf-sdk-bom</module>
    </modules>
 
    <properties>
