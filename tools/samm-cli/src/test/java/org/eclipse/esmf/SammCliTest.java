@@ -291,7 +291,7 @@ class SammCliTest extends SammCliAbstractTest {
       assertThat( result2.exitStatus() ).isEqualTo( 1 );
       assertThat( result2.stderr() ).isEmpty();
       assertThat( result2.stdout() ).contains( InvalidSyntaxViolation.ERROR_CODE );
-      assertThat( result2.stdout() ).contains( "line 17 column 4" );
+      assertThat( result2.stdout() ).contains( "line 17, column 4" );
       assertThat( result2.stdout() ).doesNotContain( "message=" );
    }
 
