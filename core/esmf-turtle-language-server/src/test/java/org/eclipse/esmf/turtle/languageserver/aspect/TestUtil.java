@@ -17,15 +17,17 @@ import static org.assertj.core.api.Assertions.fail;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-import org.eclipse.esmf.test.TestAspect;
+import org.apache.commons.io.IOUtils;
+
+import org.eclipse.esmf.test.InvalidTestAspect;
+import org.eclipse.esmf.test.TestModel;
 import org.eclipse.esmf.test.TestResources;
 import org.eclipse.esmf.turtle.languageserver.lsp.text.Document;
 import org.eclipse.esmf.turtle.languageserver.lsp.text.ParsedDocument;
 import org.eclipse.esmf.turtle.languageserver.lsp.text.TreeSitterTurtleParserService;
-
-import org.apache.commons.io.IOUtils;
 
 public class TestUtil {
    public static ParsedDocument emptyParsedDocument() {
@@ -39,11 +41,14 @@ public class TestUtil {
       return parserService.apply( document );
    }
 
-   public static ParsedDocument parsedDocument( final TestAspect aspect ) {
+   public static ParsedDocument parsedDocument( final TestModel testModel ) {
       final String modelContent;
       try {
-         modelContent = IOUtils.toString( TestResources.inputStream( aspect ).inputStream(), StandardCharsets.UTF_8 );
-         final Document document = new Document( new File( aspect.getName() + ".ttl" ).toURI().toString(), modelContent );
+         final InputStream inputStream = testModel instanceof final InvalidTestAspect invalidTestAspect
+               ? TestResources.inputStream( invalidTestAspect ).inputStream()
+               : TestResources.inputStream( testModel ).inputStream();
+         modelContent = IOUtils.toString( inputStream, StandardCharsets.UTF_8 );
+         final Document document = new Document( new File( testModel.getName() + ".ttl" ).toURI().toString(), modelContent );
          return new TreeSitterTurtleParserService().apply( document );
       } catch ( final IOException exception ) {
          fail( exception );

@@ -11,16 +11,13 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package org.eclipse.esmf.treesitterturtle;
+package org.eclipse.esmf.aspectmodel;
 
-import org.eclipse.esmf.Diagnostic;
+import org.apache.jena.rdf.model.RDFNode;
 
-public record TurtleDiagnostic(
-      String message,
-      TurtleDiagnosticCode code,
-      Diagnostic.Severity severity
-) implements Diagnostic<TurtleDiagnosticCode> {
-   public TurtleDiagnostic( final String message, final TurtleDiagnosticCode code ) {
-      this( message, code, Severity.ERROR );
-   }
+/**
+ * A violation that refers to (is logically attached to) an RDF element
+ */
+public interface ElementFocussedViolation extends DocumentLocationViolation {
+   RDFNode highlight();
 }

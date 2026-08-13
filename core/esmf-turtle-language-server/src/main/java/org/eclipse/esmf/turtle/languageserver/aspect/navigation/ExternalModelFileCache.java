@@ -6,7 +6,6 @@ package org.eclipse.esmf.turtle.languageserver.aspect.navigation;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -14,9 +13,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.esmf.aspectmodel.resolver.exceptions.ModelResolutionException;
 
-import net.harawata.appdirs.AppDirsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import net.harawata.appdirs.AppDirsFactory;
 
 public final class ExternalModelFileCache {
    private static final Logger LOG = LoggerFactory.getLogger( ExternalModelFileCache.class );
@@ -41,11 +41,11 @@ public final class ExternalModelFileCache {
       } );
    }
 
-   public static boolean isCachedModelUri( final String uri ) {
+   public static boolean isCachedModelUri( final URI uri ) {
       try {
-         final Path parent = Path.of( new URI( uri ) ).getParent();
+         final Path parent = Path.of( uri ).getParent();
          return parent != null && parent.toAbsolutePath().equals( CACHE_DIR.toAbsolutePath() );
-      } catch ( final URISyntaxException | IllegalArgumentException _ ) {
+      } catch ( final IllegalArgumentException _ ) {
          return false;
       }
    }

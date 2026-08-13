@@ -60,6 +60,9 @@ public class TurtleLoaderTest {
 
    @Test
    void jenaReaderSucceedsWhenPrefixIsNotDefined() throws IOException {
+      // Make sure the test is run under normal conditions: ReaderRiotTurtle needs to be registered
+      TurtleLoader.init();
+
       final Model streamModel = ModelFactory.createDefaultModel();
       try ( final InputStream turtleInputStream = new ByteArrayInputStream( MODEL.getBytes( StandardCharsets.UTF_8 ) ) ) {
          assertThatThrownBy( () -> streamModel.read( turtleInputStream, "", RDFLanguages.TURTLE.getName() ) )

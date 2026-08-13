@@ -50,9 +50,11 @@ import org.apache.jena.vocabulary.XSD;
 import org.eclipse.esmf.aspectmodel.AspectLoadingException;
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
 import org.eclipse.esmf.aspectmodel.RdfUtil;
+import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.aspectmodel.resolver.AspectModelFileLoader;
 import org.eclipse.esmf.aspectmodel.resolver.EitherStrategy;
 import org.eclipse.esmf.aspectmodel.resolver.FileSystemStrategy;
+import org.eclipse.esmf.aspectmodel.resolver.ModelResolutionViolation;
 import org.eclipse.esmf.aspectmodel.resolver.ModelSource;
 import org.eclipse.esmf.aspectmodel.resolver.NamespacePackage;
 import org.eclipse.esmf.aspectmodel.resolver.ResolutionStrategy;
@@ -141,14 +143,11 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
    /**
     * An interface to the AspectModelValidator that validates RDF graphs of the single files before
     * instantiating {@link ModelElement}s
-    *
-    * @param <P> the "problem" type that describes loading or validation failures
-    * @param <C> the "collection of problem" type that constitutes a validation report
     */
-   public class AspectModelLoaderWithValidation<P, C extends Collection<? super P>> {
-      private final Validator<P, C> validator;
+   public class AspectModelLoaderWithValidation {
+      private final Validator validator;
 
-      private AspectModelLoaderWithValidation( final Validator<P, C> validator ) {
+      private AspectModelLoaderWithValidation( final Validator validator ) {
          this.validator = validator;
       }
 
@@ -161,9 +160,9 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
        * @return the validation report on failure ({@link Try.Failure}) or the Aspect Model on success
        *         ({@link Try.Success})
        */
-      private <T> Either<C, AspectModel> callInternalLoader( final Function<T, AspectModel> loader, final T argument ) {
+      private <T> Either<ViolationReport, AspectModel> callInternalLoader( final Function<T, AspectModel> loader, final T argument ) {
          mergedModelValidator = model -> {
-            final C result = validator.validateModel( model );
+            final ViolationReport result = validator.validateModel( model );
             if ( !result.isEmpty() ) {
                throw validator.cancelValidation( result );
             }
@@ -182,10 +181,10 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
        * @return the validation report on failure ({@link Try.Failure}) or the Aspect Model on success
        *         ({@link Try.Success})
        */
-      private <T, U> Either<C, AspectModel> callInternalLoader( final BiFunction<T, U, AspectModel> loader, final T argument1,
+      private <T, U> Either<ViolationReport, AspectModel> callInternalLoader( final BiFunction<T, U, AspectModel> loader, final T argument1,
             final U argument2 ) {
          mergedModelValidator = identifiedModel -> {
-            final C result = validator.validateModel( identifiedModel );
+            final ViolationReport result = validator.validateModel( identifiedModel );
             if ( !result.isEmpty() ) {
                throw validator.cancelValidation( result );
             }
@@ -196,56 +195,56 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
       /**
        * Sets up validation, then delegates to {@link AspectModelLoader#load(File)}
        */
-      public Either<C, AspectModel> load( final File file ) {
+      public Either<ViolationReport, AspectModel> load( final File file ) {
          return callInternalLoader( AspectModelLoader.this::load, file );
       }
 
       /**
        * Sets up validation, then delegates to {@link AspectModelLoader#load(Collection)}
        */
-      public Either<C, AspectModel> load( final Collection<File> files ) {
+      public Either<ViolationReport, AspectModel> load( final Collection<File> files ) {
          return callInternalLoader( AspectModelLoader.this::load, files );
       }
 
       /**
        * Sets up validation, then delegates to {@link AspectModelLoader#load(AspectModelUrn)}
        */
-      public Either<C, AspectModel> load( final AspectModelUrn aspectModelUrn ) {
+      public Either<ViolationReport, AspectModel> load( final AspectModelUrn aspectModelUrn ) {
          return callInternalLoader( AspectModelLoader.this::load, aspectModelUrn );
       }
 
       /**
        * Sets up validation, then delegates to {@link AspectModelLoader#loadNamespace(AspectModelUrn)}
        */
-      public Either<C, AspectModel> loadNamespace( final AspectModelUrn namespaceUrn ) {
+      public Either<ViolationReport, AspectModel> loadNamespace( final AspectModelUrn namespaceUrn ) {
          return callInternalLoader( AspectModelLoader.this::loadNamespace, namespaceUrn );
       }
 
       /**
        * Sets up validation, then delegates to {@link AspectModelLoader#loadUrns(Collection)}
        */
-      public Either<C, AspectModel> loadUrns( final Collection<AspectModelUrn> urns ) {
+      public Either<ViolationReport, AspectModel> loadUrns( final Collection<AspectModelUrn> urns ) {
          return callInternalLoader( AspectModelLoader.this::loadUrns, urns );
       }
 
       /**
        * Sets up validation, then delegates to {@link AspectModelLoader#load(InputStream, URI)}
        */
-      public Either<C, AspectModel> load( final InputStream inputStream, final URI sourceLocation ) {
+      public Either<ViolationReport, AspectModel> load( final InputStream inputStream, final URI sourceLocation ) {
          return callInternalLoader( AspectModelLoader.this::load, inputStream, sourceLocation );
       }
 
       /**
        * Sets up validation, then delegates to {@link AspectModelLoader#loadNamespacePackage(File)}
        */
-      public Either<C, AspectModel> loadNamespacePackage( final File namespacePackage ) {
+      public Either<ViolationReport, AspectModel> loadNamespacePackage( final File namespacePackage ) {
          return callInternalLoader( AspectModelLoader.this::loadNamespacePackage, namespacePackage );
       }
 
       /**
        * Sets up validation, then delegates to {@link AspectModelLoader#loadNamespacePackage(byte[], URI)}
        */
-      public Either<C, AspectModel> loadNamespacePackage( final byte[] binaryContent, final URI location ) {
+      public Either<ViolationReport, AspectModel> loadNamespacePackage( final byte[] binaryContent, final URI location ) {
          return callInternalLoader( AspectModelLoader.this::loadNamespacePackage, binaryContent, location );
       }
 
@@ -253,14 +252,14 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
        * Sets up validation, then delegates to
        * {@link AspectModelLoader#loadNamespacePackage(InputStream, URI)}
        */
-      public Either<C, AspectModel> loadNamespacePackage( final InputStream inputStream, final URI location ) {
+      public Either<ViolationReport, AspectModel> loadNamespacePackage( final InputStream inputStream, final URI location ) {
          return callInternalLoader( AspectModelLoader.this::loadNamespacePackage, inputStream, location );
       }
 
       /**
        * Sets up validation, then delegates to {@link AspectModelLoader#loadAspectModelFiles(Collection)}
        */
-      public Either<C, AspectModel> loadAspectModelFiles( final Collection<AspectModelFile> inputFiles ) {
+      public Either<ViolationReport, AspectModel> loadAspectModelFiles( final Collection<AspectModelFile> inputFiles ) {
          return callInternalLoader( AspectModelLoader.this::loadAspectModelFiles, inputFiles );
       }
    }
@@ -270,12 +269,10 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
     * validate loaded files
     *
     * @param validator the validator to use
-    * @param <P> the "problem" type that describes loading or validation failures
-    * @param <C> the "collection of problem" type that constitutes a validation report
     * @return the view to this AspectModelLoader
     */
-   public <P, C extends Collection<? super P>> AspectModelLoaderWithValidation<P, C> withValidation( final Validator<P, C> validator ) {
-      return new AspectModelLoaderWithValidation<>( validator );
+   public AspectModelLoaderWithValidation withValidation( final Validator validator ) {
+      return new AspectModelLoaderWithValidation( validator );
    }
 
    /**
@@ -305,22 +302,22 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
    }
 
    /**
-    * Load an Aspect Model from a given RawAspectModelFile
+    * Load an Aspect Model from a given AspectModelFile
     *
     * @param file the file
     * @return the Aspect Model
     */
-   public AspectModel loadRawAspectModelFile( final RawAspectModelFile file ) {
-      return loadRawAspectModelFile( List.of( file ) );
+   public AspectModel load( final AspectModelFile file ) {
+      return loadAndResolveAspectModelFiles( List.of( file ) );
    }
 
    /**
-    * Load a set of RawAspectModelFiles into a single Aspect Model
+    * Load a set of AspectModelFiles into a single Aspect Model
     *
     * @param files the files
     * @return the Aspect Model
     */
-   public AspectModel loadRawAspectModelFile( final Collection<RawAspectModelFile> files ) {
+   public AspectModel loadAndResolveAspectModelFiles( final Collection<AspectModelFile> files ) {
       final List<AspectModelFile> migratedFiles = files.stream()
             .map( this::migrate )
             .toList();
@@ -347,7 +344,7 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
     */
    public AspectModel loadNamespace( final AspectModelUrn urn ) {
       if ( !urn.getName().isEmpty() ) {
-         throw new AspectLoadingException( "URN does not denote a namespace" );
+         throw new AspectLoadingException( "URN " + urn + " does not denote a namespace" );
       }
       return loadAspectModelFiles( loadContentsForNamespace( urn ).toList() );
    }
@@ -546,13 +543,12 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
    }
 
    private void markModelFileAsLoaded( final AspectModelFile modelFile, final LoaderContext context ) {
-      if ( context.loadedFiles().contains( modelFile )
-            || modelFile.sourceLocation().map( location -> context.loadedSourceLocations().contains( location ) ).orElse( false ) ) {
+      if ( context.loadedFiles().contains( modelFile ) || context.loadedSourceLocations().contains( modelFile.sourceUri() ) ) {
          return;
       }
 
       context.loadedFiles().add( modelFile );
-      modelFile.sourceLocation().ifPresent( sourceLocation -> context.loadedSourceLocations().add( sourceLocation ) );
+      context.loadedSourceLocations().add( modelFile.sourceUri() );
       urnsFromModelNeedResolution( modelFile, context );
    }
 
@@ -561,7 +557,7 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
          context.unresolvedFiles().push( aspectModelFile );
       }
 
-      final List<ModelResolutionException.LoadingFailure> loadingFailures = new ArrayList<>();
+      final List<ModelResolutionViolation> loadingFailures = new ArrayList<>();
       while ( !context.unresolvedFiles().isEmpty() || !context.unresolvedUrns().isEmpty() ) {
          if ( !context.unresolvedFiles().isEmpty() ) {
             final AspectModelFile modelFile = context.unresolvedFiles().pop();
@@ -646,7 +642,10 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
             definedElements.put( subject.getURI(), file );
          }
 
-         final URI graphName = file.sourceLocation().orElse( URI.create( "inmemory:graph:" + file.sourceModel().hashCode() ) );
+         final URI graphName = file.sourceUri();
+         if ( graphName == null ) {
+            throw new AspectLoadingException( "AspectModelFile has no source URI, cannot merge models." );
+         }
          graphContent.put( graphName, file.sourceModel() );
       }
       return RdfUtil.mergedView( graphContent );
@@ -655,7 +654,9 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
    /**
     * Creates a new Aspect Model from a collection of {@link AspectModelFile}s. The AspectModelFiles
     * can be {@link RawAspectModelFile} (i.e., not contain {@link ModelElement} instances yet); this
-    * method takes care of instantiating the model elements.
+    * method takes care of instantiating the model elements. Note that this method does not resolve
+    * elements from the input files. In order to load a collection of AspectModelFiles including
+    * model resolution, use {@link #loadAndResolveAspectModelFiles(Collection)}.
     *
     * @param inputFiles the list of input files
     * @return the Aspect Model
@@ -677,7 +678,7 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
       final List<AspectModelFile> files = new ArrayList<>();
       for ( final AspectModelFile file : migratedInputs ) {
          final DefaultAspectModelFile aspectModelFile = new DefaultAspectModelFile( file.sourceModel(), file.headerComment(),
-               file.sourceLocation() );
+               file.sourceUri() );
          files.add( aspectModelFile );
          final Model model = file.sourceModel();
          final ModelElementFactory modelElementFactory = new ModelElementFactory( mergedModel, Map.of(), element -> aspectModelFile );
@@ -769,10 +770,12 @@ public class AspectModelLoader implements ModelSource, ResolutionStrategySupport
    public AspectModel merge( final AspectModel aspectModel1, final AspectModel aspectModel2 ) {
       final List<AspectModelFile> files = new ArrayList<>( aspectModel1.files() );
       final Set<URI> locations = aspectModel1.files().stream()
-            .flatMap( f -> f.sourceLocation().stream() )
+            .map( AspectModelFile::sourceUri )
             .collect( Collectors.toSet() );
       for ( final AspectModelFile file : aspectModel2.files() ) {
-         file.sourceLocation().filter( uri -> !locations.contains( uri ) ).ifPresent( uri -> files.add( file ) );
+         if ( !locations.contains( file.sourceUri() ) ) {
+            files.add( file );
+         }
       }
       return loadAspectModelFiles( files );
    }

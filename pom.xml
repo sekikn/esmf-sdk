@@ -18,7 +18,7 @@
    <parent>
       <groupId>org.eclipse.esmf</groupId>
       <artifactId>esmf-parent</artifactId>
-      <version>29</version>
+      <version>30</version>
    </parent>
 
    <artifactId>esmf-sdk-parent</artifactId>
@@ -71,6 +71,7 @@
       <module>tools/esmf-aspect-model-maven-plugin</module>
       <module>tools/samm-cli</module>
       <module>documentation</module>
+      <module>core/esmf-sdk-bom</module>
    </modules>
 
    <properties>

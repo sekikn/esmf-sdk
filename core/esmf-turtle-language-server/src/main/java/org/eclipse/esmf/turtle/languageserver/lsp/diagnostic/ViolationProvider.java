@@ -13,20 +13,21 @@
 
 package org.eclipse.esmf.turtle.languageserver.lsp.diagnostic;
 
+import org.eclipse.esmf.aspectmodel.ViolationReport;
 import org.eclipse.esmf.turtle.languageserver.lsp.text.ParsedDocument;
 
 /**
- * A diagnostics provider takes a (parsed) RDF/Turtle source document as input and creates a
- * diagnostics report for it.
+ * A violation provider takes a (parsed) RDF/Turtle source document as input and creates a
+ * violation report for it.
  */
-public interface DiagnosticsProvider {
+public interface ViolationProvider {
    /**
     * Validate the input document
     *
     * @param document the document
     * @return the corresponding diagnostics report
     */
-   DiagnosticReport validate( ParsedDocument document );
+   ViolationReport validate( ParsedDocument document );
 
    /**
     * The diagnostics provider can either be "fast" where it can be executed immediately on every model

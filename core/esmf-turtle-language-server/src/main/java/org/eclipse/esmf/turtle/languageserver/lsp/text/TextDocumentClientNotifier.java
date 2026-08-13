@@ -16,7 +16,7 @@ package org.eclipse.esmf.turtle.languageserver.lsp.text;
 import java.util.List;
 
 import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.DiagnosticMapper;
-import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.DiagnosticReport;
+import org.eclipse.esmf.aspectmodel.ViolationReport;
 
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.services.LanguageClient;
@@ -37,13 +37,13 @@ public class TextDocumentClientNotifier {
       this.client = client;
    }
 
-   public void publishDiagnostics( final Document document, final DiagnosticReport diagnostics ) {
+   public void publishDiagnostics( final Document document, final ViolationReport diagnostics ) {
       if ( client == null ) {
          LOG.warn( "[publishDiagnostics] client is null, skipping for URI={}", document.uri() );
          return;
       }
 
-      LOG.debug( "[publish diagnostics] publishing {} diagnostic(s) for URI={}", diagnostics.diagnostics().size(), document.uri() );
+      LOG.debug( "[publish diagnostics] publishing {} diagnostic(s) for URI={}", diagnostics.violations().size(), document.uri() );
       diagnosticMapper.apply( document, diagnostics ).forEach( ( uri, diags ) -> {
          client.publishDiagnostics( new PublishDiagnosticsParams( uri.toString(), diags ) );
       } );

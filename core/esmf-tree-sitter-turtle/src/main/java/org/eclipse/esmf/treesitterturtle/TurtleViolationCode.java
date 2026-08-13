@@ -11,23 +11,14 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package org.eclipse.esmf.turtle.languageserver.aspect.diagnostic;
+package org.eclipse.esmf.treesitterturtle;
 
-import java.util.Optional;
+import org.eclipse.esmf.aspectmodel.Violation;
+import org.eclipse.esmf.aspectmodel.ViolationCode;
 
-import org.eclipse.esmf.Diagnostic;
-
-public record AspectDiagnosticCode(
-      String code,
-      Optional<String> href
-) implements Diagnostic.Code {
-   @Override
-   public String description() {
-      return code;
-   }
-
-   @Override
-   public Optional<String> href() {
-      return href;
-   }
+/**
+ * Violation codes that are specific to the RDF/Turtle parser
+ */
+public class TurtleViolationCode {
+   public static final Violation.Code ERR_SYNTAX = new ViolationCode( "ERR_SYNTAX" );
 }

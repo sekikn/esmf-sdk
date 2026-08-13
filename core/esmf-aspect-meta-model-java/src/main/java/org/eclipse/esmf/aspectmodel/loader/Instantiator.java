@@ -32,6 +32,7 @@ import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.vocabulary.RDF;
 
 import org.eclipse.esmf.aspectmodel.AspectLoadingException;
+import org.eclipse.esmf.aspectmodel.AspectModelFile;
 import org.eclipse.esmf.aspectmodel.RdfUtil;
 import org.eclipse.esmf.aspectmodel.urn.AspectModelUrn;
 import org.eclipse.esmf.metamodel.AbstractEntity;
@@ -115,6 +116,10 @@ public abstract class Instantiator<T extends ModelElement> extends AttributeValu
       return scalar;
    }
 
+   protected AspectModelFile getSourceLocation( final RDFNode modelElement ) {
+      return modelElementFactory.getSourceLocation( modelElement );
+   }
+
    /**
     * Recursively search the datatype in a Characteristic chain, baseCharacteristics first
     *
@@ -127,9 +132,10 @@ public abstract class Instantiator<T extends ModelElement> extends AttributeValu
             .orElseGet( () -> {
                final Statement dataType = resource.getProperty( SammNs.SAMM.dataType() );
                if ( dataType == null ) {
+                  final AspectModelFile sourceFile = getSourceLocation( resource );
                   throw new AspectLoadingException(
                         String.format( "No datatype is defined on the Characteristic instance '%s'.", resource.getLocalName() ),
-                        resource );
+                        sourceFile.sourceUri(), sourceFile::sourceRepresentation, resource );
                }
                return dataType;
             } );
@@ -158,7 +164,11 @@ public abstract class Instantiator<T extends ModelElement> extends AttributeValu
       if ( node.isLiteral() ) {
          final Literal literal = node.asLiteral();
          return valueInstantiator.buildScalarValue( literal.getLexicalForm(), literal.getLanguage(), literal.getDatatypeURI() )
-               .orElseThrow( () -> new AspectLoadingException( "Literal can not be parsed: " + literal, literal ) );
+               .orElseThrow( () -> {
+                  final AspectModelFile sourceFile = getSourceLocation( node );
+                  return new AspectLoadingException( "Literal can not be parsed: " + literal,
+                        sourceFile.sourceUri(), sourceFile::sourceRepresentation, literal );
+               } );
       }
 
       if ( node.isResource() ) {
@@ -167,7 +177,9 @@ public abstract class Instantiator<T extends ModelElement> extends AttributeValu
             final Optional<String> valueOpt = optionalAttributeValue( resource, SammNs.SAMM.value() ).map( Statement::getString );
 
             if ( valueOpt.isEmpty() ) {
-               throw new AspectLoadingException( "samm:Value must contain a samm:value property", resource );
+               final AspectModelFile sourceFile = getSourceLocation( node );
+               throw new AspectLoadingException( "samm:Value must contain a samm:value property",
+                     sourceFile.sourceUri(), sourceFile::sourceRepresentation, resource );
             }
 
             return new DefaultScalarValue( buildBaseAttributes( resource ), valueOpt.get(), new DefaultScalar( type.getUrn() ) );
@@ -197,7 +209,9 @@ public abstract class Instantiator<T extends ModelElement> extends AttributeValu
 
       // This could happen if an entity instance should be constructed for an AbstractEntity type
       if ( !type.is( Entity.class ) ) {
-         throw new AspectLoadingException( "Expected type of value " + node + " to be samm:Entity, but it is not", node );
+         final AspectModelFile sourceFile = getSourceLocation( node );
+         throw new AspectLoadingException( "Expected type of value " + node + " to be samm:Entity, but it is not",
+               sourceFile.sourceUri(), sourceFile::sourceRepresentation, node );
       }
 
       // Entities
@@ -222,12 +236,17 @@ public abstract class Instantiator<T extends ModelElement> extends AttributeValu
             if ( property.isOptional() ) {
                return;
             }
+            final AspectModelFile sourceFile = getSourceLocation( entityInstance );
             throw new AspectLoadingException( "Mandatory Property " + property + " not found in Entity instance " + entityInstance,
-                  entityInstance );
+                  sourceFile.sourceUri(), sourceFile::sourceRepresentation, entityInstance );
          }
          final RDFNode rdfValue = entityInstance.getProperty( rdfProperty ).getObject();
          final Type propertyType = property.getDataType()
-               .orElseThrow( () -> new AspectLoadingException( "Invalid Property without a dataType found", entityInstance ) );
+               .orElseThrow( () -> {
+                  final AspectModelFile sourceFile = getSourceLocation( entityInstance );
+                  return new AspectLoadingException( "Invalid Property without a dataType found",
+                        sourceFile.sourceUri(), sourceFile::sourceRepresentation, entityInstance );
+               } );
          final Resource characteristic = attributeValue( rdfProperty, SammNs.SAMM.characteristic() ).getResource();
          final Value value = buildValue( rdfValue, Optional.of( characteristic ), propertyType );
          assertions.put( property, value );

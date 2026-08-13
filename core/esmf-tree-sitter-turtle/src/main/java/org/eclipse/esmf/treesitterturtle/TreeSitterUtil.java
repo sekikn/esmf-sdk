@@ -13,7 +13,7 @@
 
 package org.eclipse.esmf.treesitterturtle;
 
-import org.eclipse.esmf.Location;
+import org.eclipse.esmf.aspectmodel.Location;
 
 import org.jspecify.annotations.Nullable;
 import org.treesitter.TSNode;

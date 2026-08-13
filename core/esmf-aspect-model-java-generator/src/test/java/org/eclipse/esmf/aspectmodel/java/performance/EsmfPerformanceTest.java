@@ -21,9 +21,14 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.ResIterator;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
 
 import org.eclipse.esmf.aspectmodel.AspectModelFile;
 import org.eclipse.esmf.aspectmodel.java.Flags;
@@ -33,11 +38,6 @@ import org.eclipse.esmf.aspectmodel.resolver.modelfile.DefaultAspectModelFile;
 import org.eclipse.esmf.aspectmodel.urn.AspectModelUrn;
 import org.eclipse.esmf.samm.KnownVersion;
 
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.ResIterator;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
@@ -189,7 +189,7 @@ class EsmfPerformanceTest {
                new DefaultAspectModelFile(
                      ModelFactory.createDefaultModel().read( new StringReader( result.toString() ), "", "TTL" ),
                      List.of(),
-                     Optional.of( URI.create( "namespaceFile" + 0 ) ) )
+                     URI.create( "namespaceFile" + 0 ) )
          );
 
          for ( int aspect = 1; aspect < ASPECTS; aspect++ ) {
@@ -221,7 +221,7 @@ class EsmfPerformanceTest {
                   new DefaultAspectModelFile(
                         ModelFactory.createDefaultModel().read( new StringReader( result.toString() ), "", "TTL" ),
                         List.of(),
-                        Optional.of( URI.create( "namespaceFile" + aspect ) ) )
+                        URI.create( "namespaceFile" + aspect ) )
             );
          }
          return models;

@@ -13,7 +13,10 @@
 
 package org.eclipse.esmf.aspectmodel;
 
+import java.net.URI;
 import java.util.List;
+
+import org.apache.jena.rdf.model.RDFNode;
 
 /**
  * Signals that an Aspect Model file uses SAMM meta model terms that do not exist in the meta model
@@ -30,13 +33,18 @@ import java.util.List;
  * The exception carries one message per offending term. All problems found in the file are reported
  * together.
  */
-public class MetaModelVersionException extends AspectLoadingException {
+public class MetaModelVersionException extends RuntimeException {
    private static final long serialVersionUID = 4021530871503920214L;
 
-   private final List<String> problems;
+   public record Problem(
+         String message,
+         URI sourceLocation,
+         RDFNode highlight
+   ) {}
 
-   public MetaModelVersionException( final List<String> problems ) {
-      super( String.join( System.lineSeparator(), problems ) );
+   private final List<Problem> problems;
+
+   public MetaModelVersionException( final List<Problem> problems ) {
       this.problems = List.copyOf( problems );
    }
 
@@ -45,7 +53,7 @@ public class MetaModelVersionException extends AspectLoadingException {
     *
     * @return the messages
     */
-   public List<String> problems() {
+   public List<Problem> problems() {
       return problems;
    }
 }

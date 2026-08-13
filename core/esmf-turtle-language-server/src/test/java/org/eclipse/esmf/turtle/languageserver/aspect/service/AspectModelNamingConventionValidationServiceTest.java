@@ -18,10 +18,10 @@ import static org.eclipse.esmf.turtle.languageserver.aspect.TestUtil.parsedDocum
 
 import java.util.stream.Stream;
 
-import org.eclipse.esmf.Diagnostic;
 import org.eclipse.esmf.aspectmodel.VersionInfo;
-import org.eclipse.esmf.turtle.languageserver.aspect.diagnostic.AspectDocumentDiagnostic;
-import org.eclipse.esmf.turtle.languageserver.lsp.diagnostic.DiagnosticReport;
+import org.eclipse.esmf.aspectmodel.Violation;
+import org.eclipse.esmf.aspectmodel.ViolationReport;
+import org.eclipse.esmf.aspectmodel.validation.DefaultDocumentLocationViolation;
 import org.eclipse.esmf.turtle.languageserver.lsp.text.ParsedDocument;
 
 import org.junit.jupiter.params.ParameterizedTest;
@@ -264,12 +264,12 @@ class AspectModelNamingConventionValidationServiceTest {
          final String expectedHref, final String expectedMessage ) {
       final ParsedDocument document = parsedDocument( "Aspect.ttl", PREFIXES + content );
 
-      final DiagnosticReport report = service.validate( document );
+      final ViolationReport report = service.validate( document );
 
-      assertThat( report.diagnostics() ).singleElement().isInstanceOfSatisfying( AspectDocumentDiagnostic.class, diagnostic -> {
+      assertThat( report.violations() ).singleElement().isInstanceOfSatisfying( DefaultDocumentLocationViolation.class, diagnostic -> {
          assertThat( diagnostic.code().code() ).isEqualTo( expectedErrorCode );
          assertThat( diagnostic.code().href() ).contains( expectedHref );
-         assertThat( diagnostic.severity() ).isEqualTo( Diagnostic.Severity.WARNING );
+         assertThat( diagnostic.severity() ).isEqualTo( Violation.Severity.WARNING );
          assertThat( diagnostic.message() ).isEqualTo( expectedMessage );
       } );
    }
@@ -343,9 +343,7 @@ class AspectModelNamingConventionValidationServiceTest {
    @MethodSource( "noDiagnosticScenarios" )
    void producesNoDiagnostic( final String scenarioName, final String fileName, final String content ) {
       final ParsedDocument document = parsedDocument( fileName, content );
-
-      final DiagnosticReport report = service.validate( document );
-
-      assertThat( report.diagnostics() ).isEmpty();
+      final ViolationReport report = service.validate( document );
+      assertThat( report.violations() ).isEmpty();
    }
 }
