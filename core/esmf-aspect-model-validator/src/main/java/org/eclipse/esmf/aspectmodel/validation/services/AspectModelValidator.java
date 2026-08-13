@@ -42,6 +42,7 @@ import org.eclipse.esmf.aspectmodel.loader.AspectModelLoader;
 import org.eclipse.esmf.aspectmodel.resolver.exceptions.ModelResolutionException;
 import org.eclipse.esmf.aspectmodel.resolver.exceptions.ParserException;
 import org.eclipse.esmf.aspectmodel.resolver.modelfile.MetaModelFile;
+import org.eclipse.esmf.aspectmodel.service.ExtensionService;
 import org.eclipse.esmf.aspectmodel.shacl.ShaclValidator;
 import org.eclipse.esmf.aspectmodel.validation.InvalidLexicalValueViolationBuilder;
 import org.eclipse.esmf.aspectmodel.validation.InvalidSyntaxViolation;
@@ -237,11 +238,15 @@ public class AspectModelValidator implements Validator {
     */
    @Override
    public ViolationReport validateModel( final Model model ) {
-      return Stream.<Supplier<RdfBasedValidator>>of(
+      final Stream<Supplier<RdfBasedValidator>> builtInValidators = Stream.of(
             () -> shaclValidator,
             ModelCycleDetector::new,
             RegularExpressionExampleValueValidator::new
-      )
+      );
+      final Stream<Supplier<RdfBasedValidator>> extensionValidators =
+            ExtensionService.getRdfBasedValidators().stream()
+                  .map( validator -> () -> validator );
+      return Stream.concat( builtInValidators, extensionValidators )
             .map( validator -> validator.get().validateModel( model ) )
             .filter( result -> !result.isEmpty() )
             .findFirst()

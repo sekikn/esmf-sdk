@@ -22,6 +22,7 @@ import org.eclipse.esmf.annotations.InterfaceVersion;
 import org.eclipse.esmf.annotations.RequiredInterfaceVersion;
 import org.eclipse.esmf.aspectmodel.resolver.ResolutionStrategy;
 import org.eclipse.esmf.aspectmodel.resolver.exceptions.ModelResolutionException;
+import org.eclipse.esmf.aspectmodel.validation.RdfBasedValidator;
 
 import net.harawata.appdirs.AppDirsFactory;
 import org.slf4j.Logger;
@@ -42,11 +43,16 @@ public class ExtensionService {
          Path.of( AppDirsFactory.getInstance().getUserDataDir( "esmf", "1", "esmf" ) ).resolve( "plugins" );
    private static final ClassLoader PLUGIN_CLASS_LOADER = createPluginClassLoader( PLUGIN_DIRECTORY );
    private static final List<ResolutionStrategy> RESOLUTION_STRATEGIES = loadServiceProviders( ResolutionStrategy.class );
+   private static final List<RdfBasedValidator> RDF_BASED_VALIDATORS = loadServiceProviders( RdfBasedValidator.class );
 
    private ExtensionService() {}
 
    public static List<ResolutionStrategy> getResolutionStrategies() {
       return RESOLUTION_STRATEGIES;
+   }
+
+   public static List<RdfBasedValidator> getRdfBasedValidators() {
+      return RDF_BASED_VALIDATORS;
    }
 
    /**

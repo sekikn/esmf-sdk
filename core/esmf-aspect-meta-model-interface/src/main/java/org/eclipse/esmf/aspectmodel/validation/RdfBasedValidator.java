@@ -15,11 +15,14 @@ package org.eclipse.esmf.aspectmodel.validation;
 
 import org.apache.jena.rdf.model.Model;
 
+import org.eclipse.esmf.annotations.InterfaceVersion;
+
 import org.eclipse.esmf.aspectmodel.ViolationReport;
 
 /**
  * Generic validator for Aspect Models on the raw RDF input
  */
+@InterfaceVersion( version = 1 )
 public interface RdfBasedValidator {
    /**
     * Validates a complete RDF input (i.e., this model is expected to contain all necessary
