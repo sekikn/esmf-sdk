@@ -300,7 +300,7 @@ class AspectModelOpenApiGeneratorTest {
    }
 
    @Test
-   void testOperationTemplateResponsesReplaceGeneratedResponses() throws IOException {
+   void testOperationTemplateResponsesKeepGeneratedSuccessResponseAndReplaceGeneratedErrors() throws IOException {
       final Aspect aspect = TestResources.load( TestAspect.ASPECT_WITHOUT_SEE_ATTRIBUTE ).aspect();
       final OpenApiSchemaGenerationConfig config = OpenApiSchemaGenerationConfigBuilder.builder()
             .useSemanticVersion( true )
@@ -323,13 +323,41 @@ class AspectModelOpenApiGeneratorTest {
 
       final OpenAPI openApi = result.getOpenAPI();
       final Operation getOperation = openApi.getPaths().values().stream().findFirst().orElseThrow().getGet();
-      assertThat( getOperation.getResponses() ).containsOnlyKeys( "400", "404" );
+      assertThat( getOperation.getResponses() ).containsOnlyKeys( "200", "400", "404" );
+      assertThat( getOperation.getResponses().get( "200" ).get$ref() ).isEqualTo( "#/components/responses/AspectWithoutSeeAttribute" );
       assertThat( getOperation.getResponses().get( "400" ).getDescription() ).isEqualTo( "Custom bad request response." );
       assertThat( getOperation.getResponses().get( "404" ).getDescription() ).isEqualTo( "Custom not found response." );
    }
 
    @Test
-   void testOperationTemplateResponsesDoNotForceGeneratedSuccessResponse() throws IOException {
+   void testOperationTemplateCustomSuccessResponseReplacesGeneratedSuccessResponse() throws IOException {
+      final Aspect aspect = TestResources.load( TestAspect.ASPECT_WITHOUT_SEE_ATTRIBUTE ).aspect();
+      final OpenApiSchemaGenerationConfig config = OpenApiSchemaGenerationConfigBuilder.builder()
+            .useSemanticVersion( true )
+            .baseUrl( TEST_BASE_URL )
+            .resourcePath( TEST_RESOURCE_PATH )
+            .template( getTemplateParameter( """
+               paths:
+                 __DEFAULT_QUERIES_TEMPLATE__:
+                   get:
+                     responses:
+                       "200":
+                         description: Custom success response.
+               """ ) )
+            .build();
+      final JsonNode json = new AspectModelOpenApiGenerator( aspect, config ).getContent();
+      final SwaggerParseResult result = new OpenAPIParser().readContents( json.toString(), null, null );
+      assertThat( result.getMessages() ).isEmpty();
+
+      final OpenAPI openApi = result.getOpenAPI();
+      final Operation getOperation = openApi.getPaths().values().stream().findFirst().orElseThrow().getGet();
+      assertThat( getOperation.getResponses() ).containsOnlyKeys( "200" );
+      assertThat( getOperation.getResponses().get( "200" ).getDescription() ).isEqualTo( "Custom success response." );
+      assertThat( getOperation.getResponses().get( "200" ).get$ref() ).isNull();
+   }
+
+   @Test
+   void testOperationTemplateResponse201KeepsGeneratedSuccessResponse() throws IOException {
       final Aspect aspect = TestResources.load( TestAspect.ASPECT_WITHOUT_SEE_ATTRIBUTE ).aspect();
       final OpenApiSchemaGenerationConfig config = OpenApiSchemaGenerationConfigBuilder.builder()
             .useSemanticVersion( true )
@@ -350,8 +378,90 @@ class AspectModelOpenApiGeneratorTest {
 
       final OpenAPI openApi = result.getOpenAPI();
       final Operation getOperation = openApi.getPaths().values().stream().findFirst().orElseThrow().getGet();
+      assertThat( getOperation.getResponses() ).containsOnlyKeys( "200", "201" );
+      assertThat( getOperation.getResponses().get( "200" ).get$ref() ).isEqualTo( "#/components/responses/AspectWithoutSeeAttribute" );
+      assertThat( getOperation.getResponses().get( "201" ).getDescription() ).isEqualTo( "Created by custom template." );
+   }
+
+   @Test
+   void testOperationTemplateCanDisableGeneratedSuccessResponse() throws IOException {
+      final Aspect aspect = TestResources.load( TestAspect.ASPECT_WITHOUT_SEE_ATTRIBUTE ).aspect();
+      final OpenApiSchemaGenerationConfig config = OpenApiSchemaGenerationConfigBuilder.builder()
+            .useSemanticVersion( true )
+            .baseUrl( TEST_BASE_URL )
+            .resourcePath( TEST_RESOURCE_PATH )
+            .template( getTemplateParameter( """
+               paths:
+                 __DEFAULT_QUERIES_TEMPLATE__:
+                   get:
+                     x-esmf-generate-success-response: false
+                     responses:
+                       "201":
+                         description: Created by custom template.
+               """ ) )
+            .build();
+      final JsonNode json = new AspectModelOpenApiGenerator( aspect, config ).getContent();
+      final SwaggerParseResult result = new OpenAPIParser().readContents( json.toString(), null, null );
+      assertThat( result.getMessages() ).isEmpty();
+
+      final OpenAPI openApi = result.getOpenAPI();
+      final Operation getOperation = openApi.getPaths().values().stream().findFirst().orElseThrow().getGet();
       assertThat( getOperation.getResponses() ).containsOnlyKeys( "201" );
-      assertThat( getOperation.getResponses() ).doesNotContainKey( "200" );
+      assertThat( getOperation.getResponses().get( "201" ).getDescription() ).isEqualTo( "Created by custom template." );
+   }
+
+   @Test
+   void testOperationTemplateDisableGeneratedSuccessResponseKeepsCustomSuccessResponse() throws IOException {
+      final Aspect aspect = TestResources.load( TestAspect.ASPECT_WITHOUT_SEE_ATTRIBUTE ).aspect();
+      final OpenApiSchemaGenerationConfig config = OpenApiSchemaGenerationConfigBuilder.builder()
+            .useSemanticVersion( true )
+            .baseUrl( TEST_BASE_URL )
+            .resourcePath( TEST_RESOURCE_PATH )
+            .template( getTemplateParameter( """
+               paths:
+                 __DEFAULT_QUERIES_TEMPLATE__:
+                   get:
+                     x-esmf-generate-success-response: false
+                     responses:
+                       "200":
+                         description: Custom success response.
+               """ ) )
+            .build();
+      final JsonNode json = new AspectModelOpenApiGenerator( aspect, config ).getContent();
+      final SwaggerParseResult result = new OpenAPIParser().readContents( json.toString(), null, null );
+      assertThat( result.getMessages() ).isEmpty();
+
+      final OpenAPI openApi = result.getOpenAPI();
+      final Operation getOperation = openApi.getPaths().values().stream().findFirst().orElseThrow().getGet();
+      assertThat( getOperation.getResponses() ).containsOnlyKeys( "200" );
+      assertThat( getOperation.getResponses().get( "200" ).getDescription() ).isEqualTo( "Custom success response." );
+      assertThat( getOperation.getResponses().get( "200" ).get$ref() ).isNull();
+   }
+
+   @Test
+   void testOperationsEndpointTemplateResponsesKeepGeneratedOperationSuccessResponse() throws IOException {
+      final Aspect aspect = TestResources.load( TestAspect.ASPECT_WITH_OPERATION ).aspect();
+      final OpenApiSchemaGenerationConfig config = OpenApiSchemaGenerationConfigBuilder.builder()
+            .useSemanticVersion( true )
+            .baseUrl( TEST_BASE_URL )
+            .resourcePath( TEST_RESOURCE_PATH )
+            .template( getTemplateParameter( """
+               paths:
+                 __DEFAULT_QUERIES_TEMPLATE__:
+                   post:
+                     responses:
+                       "400":
+                         description: Custom bad request response.
+               """ ) )
+            .build();
+      final JsonNode json = new AspectModelOpenApiGenerator( aspect, config ).getContent();
+      final SwaggerParseResult result = new OpenAPIParser().readContents( json.toString(), null, null );
+      assertThat( result.getMessages() ).isEmpty();
+
+      final OpenAPI openApi = result.getOpenAPI();
+      final Operation postOperation = openApi.getPaths().get( "/" + TEST_RESOURCE_PATH + "/operations" ).getPost();
+      assertThat( postOperation.getResponses() ).containsOnlyKeys( "200", "400" );
+      assertThat( postOperation.getResponses().get( "200" ).get$ref() ).isEqualTo( "#/components/responses/OperationResponse" );
    }
 
    @Test

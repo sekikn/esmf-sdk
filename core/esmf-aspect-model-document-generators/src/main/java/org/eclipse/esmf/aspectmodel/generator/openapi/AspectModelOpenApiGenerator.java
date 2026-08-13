@@ -84,6 +84,7 @@ public class AspectModelOpenApiGenerator extends JsonGenerator<Aspect, OpenApiSc
    private static final String FIELD_REQUEST_BODY = "requestBody";
    private static final String FIELD_REQUIRED = "required";
    private static final String FIELD_RESPONSES = "responses";
+   private static final String FIELD_GENERATE_SUCCESS_RESPONSE = "x-esmf-generate-success-response";
    private static final String FIELD_ALL_OF = "allOf";
    private static final String FIELD_SCHEMA = "schema";
    private static final String FIELD_SCHEMAS = "schemas";
@@ -456,9 +457,28 @@ public class AspectModelOpenApiGenerator extends JsonGenerator<Aspect, OpenApiSc
 
       final JsonNode responsesTemplate = methodTemplate.get( FIELD_RESPONSES );
       if ( responsesTemplate != null ) {
-         mergedOperation.set( FIELD_RESPONSES, responsesTemplate.deepCopy() );
+         mergedOperation.set( FIELD_RESPONSES, mergeOperationTemplateResponses( operationNode, methodTemplate, responsesTemplate ) );
       }
       return mergedOperation;
+   }
+
+   private ObjectNode mergeOperationTemplateResponses( final ObjectNode operationNode, final JsonNode methodTemplate,
+         final JsonNode responsesTemplate ) {
+      final ObjectNode mergedResponses = FACTORY.objectNode();
+      final boolean hasTemplateSuccessResponse = responsesTemplate.has( "200" );
+      if ( shouldGenerateSuccessResponse( methodTemplate ) && !hasTemplateSuccessResponse ) {
+         final JsonNode generatedSuccessResponse = operationNode.get( FIELD_RESPONSES ).get( "200" );
+         if ( generatedSuccessResponse != null ) {
+            mergedResponses.set( "200", generatedSuccessResponse.deepCopy() );
+         }
+      }
+      responsesTemplate.properties().forEach( response -> mergedResponses.set( response.getKey(), response.getValue().deepCopy() ) );
+      return mergedResponses;
+   }
+
+   private boolean shouldGenerateSuccessResponse( final JsonNode methodTemplate ) {
+      final JsonNode generateSuccessResponse = methodTemplate.get( FIELD_GENERATE_SUCCESS_RESPONSE );
+      return generateSuccessResponse == null || !generateSuccessResponse.isBoolean() || generateSuccessResponse.asBoolean();
    }
 
    private JsonNode getRequestBodyForPropertyList( final Map.Entry<String, List<Property>> propertyEntry ) {

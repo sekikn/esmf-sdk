@@ -169,7 +169,9 @@ public class AspectModelValidator implements Validator {
    }
 
    private static ViolationReport reportForModelResolutionException( final ModelResolutionException exception ) {
-      return new ViolationReport( exception.getCheckedLocations().stream().<Violation>map( Function.identity() ).toList() );
+      return exception.getCheckedLocations().isEmpty()
+            ? new ViolationReport( new ProcessingViolation( exception.getMessage(), Optional.of( exception ) ) )
+            : new ViolationReport( exception.getCheckedLocations().stream().<Violation>map( Function.identity() ).toList() );
    }
 
    private static ViolationReport reportForValueParsingException( final ValueParsingException exception ) {

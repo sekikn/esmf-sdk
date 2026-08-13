@@ -49,14 +49,6 @@ public class ViolationFormatter implements Function<ViolationReport, String> {
    public ViolationFormatter( final RdfTextFormatter textFormatter, final String additionalHints ) {
       this.textFormatter = textFormatter;
       formatter = new RustLikeFormatter( textFormatter );
-   }
-
-   public ViolationFormatter( final RdfTextFormatter textFormatter ) {
-      this( textFormatter, "" );
-   }
-
-   public ViolationFormatter() {
-      this( new PlainTextFormatter() );
 
       // Order matters: Handlers for the classes or their interfaces are tried top to bottom.
       // So more specific at the top, more generic at the bottom.
@@ -70,6 +62,14 @@ public class ViolationFormatter implements Function<ViolationReport, String> {
       handlers.put( InvalidLexicalValueViolation.class, v -> handleInvalidLexicalValueViolation( (InvalidLexicalValueViolation) v ) );
       handlers.put( DocumentLocationViolation.class, v -> handleDocumentLocationViolation( (DocumentLocationViolation) v ) );
       handlers.put( Violation.class, this::handleViolation );
+   }
+
+   public ViolationFormatter( final RdfTextFormatter textFormatter ) {
+      this( textFormatter, "" );
+   }
+
+   public ViolationFormatter() {
+      this( new PlainTextFormatter() );
    }
 
    protected String handleShaclViolation( final ShaclViolation violation ) {
@@ -95,9 +95,8 @@ public class ViolationFormatter implements Function<ViolationReport, String> {
             ? textFormatter.formatHyperlink( violation.code().code(), violation.code().href().get() )
             : violation.code().code();
       return "[%s] %s".formatted( code,
-            formatter.formatError( 1, sourceContext, violation.location().fromLine(),
-                  violation.location().fromColumn(), violation.message(),
-                  violation.sourceDocument() ) );
+            formatter.formatError( 1, sourceContext, violation.location().fromLine() + 1,
+                  violation.location().fromColumn() + 1, violation.message(), violation.sourceDocument() ) );
    }
 
    protected String handleInvalidLexicalValueViolation( final InvalidLexicalValueViolation violation ) {
@@ -107,9 +106,8 @@ public class ViolationFormatter implements Function<ViolationReport, String> {
             ? textFormatter.formatHyperlink( violation.code().code(), violation.code().href().get() )
             : violation.code().code();
       return "[%s] %s".formatted( code,
-            formatter.formatError( violation.value().toString().length(), sourceContext, violation.location().fromLine(),
-                  violation.location().fromColumn(), violation.message(),
-                  violation.sourceDocument() ) );
+            formatter.formatError( violation.value().toString().length(), sourceContext, violation.location().fromLine() + 1,
+                  violation.location().fromColumn() + 1, violation.message(), violation.sourceDocument() ) );
    }
 
    protected String handleElementFocussedViolation( final ElementFocussedViolation violation ) {
@@ -154,7 +152,7 @@ public class ViolationFormatter implements Function<ViolationReport, String> {
             .filter( entry -> entry.getKey().isAssignableFrom( violation.getClass() ) )
             .map( Map.Entry::getValue )
             .findFirst()
-            .orElse( Object::toString );
+            .orElse( this::handleViolation );
    }
 
    protected String formatUri( final URI sourceDocument ) {
